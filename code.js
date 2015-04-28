@@ -1,58 +1,73 @@
-var data = [ 
-  {"id" : "1",
-  "text":[
-  {"word": "this", "importance" : 12},
-  {"word": "is", "importance" : 8},
-  {"word": "very", "importance" : 20},
-  {"word": "important", "importance" : 20},
-  {"word": ",", "importance" : 20},
-  {"word": "or", "importance" : 2},
-  {"word": "is", "importance" : 2},
-  {"word": "it", "importance" : 2},
-  {"word": "?", "importance" : 2},
-  {"word": "\n", "importance" : 2},
-  {"word": "new", "importance" : -10}],
-  "true_class" : "1",
-  "prediction": "0.6"},
-  {"id" : "2",
-  "text":[
-  {"word": "this", "importance" : 12},
-  {"word": "new", "importance" : -10},
-  {"word": "word", "importance" : 5}],
-  "true_class" : "1",
-  "prediction": "0.2"}];
+var weights;
+var docs;
+var size;
+var accuracy;
+d3.json("docs.json",  function(error, json) {
+  if (error) return console.warn(error);
+  docs = json.docs;
+  weights = json.weights;
+  accuracy = json.accuracy;
+  docs[0].text = GenerateWeights(docs[0].text)
+  var max = d3.max(_.map(_.values(weights), Math.abs))
+  var min = d3.min(_.map(_.values(weights), Math.abs))
+  size = d3.scale.linear().domain([min, max]).range([15, 50])
+
+  ShowExample(docs[0])
+})
+
+function GenerateWeights(word_array) {
+  return _.map(word_array, function(w) {
+    return {"word" : w, "weight": _.has(weights, w) ? weights[w] : 0};
+    }
+  )
+}
 
 current = 0;
 function run() {
-  if (current === 0) {
-    current = 1;
-  }
-  else {
+  if (current === docs.length - 1) {
     current = 0;
   }
-  ShowExample(data[current]);
-  current_text = _.map(data[current]["text"], function(x) {return x.word;}).join(" ")
-  d3.select("#text").node().value = current_text;
+  else {
+    current += 1;
+  }
+  if (typeof docs[current].text[0].weight == 'undefined') {
+    docs[current].text = GenerateWeights(docs[current].text);
+  }
+  ShowExample(docs[current]);
 }
+function Predict(ex) {
+  // Assumes I'm getting a well-formed document, with word-weights
+  var z = 0;
+  _.forEach(ex.text, function(w) { z += w.weight; });
+  z = Math.exp(z);
+  result = z / (1 + z);
+  return +result.toFixed(2);
+}
+function change() {
+  current_text = d3.select("#text").node().value;
+  var ex = Object();
+  ex.text = _.map(current_text.split(" "), function(w) { return {"word" : w, "weight": _.has(weights, w) ? weights[w] : 0};});
+  ex.true_class = docs[current].true_class;
+  ex.prediction = Predict(ex);
+  ShowExample(ex);
+}
+
 
 var div = d3.select("#d3");
 var height = "50%";
 div.style("width", "50%");
 div.style("height", height);
 div.style("float", "left");
+div.style("overflow", "scroll");
 var svg = d3.select("svg")
 svg.attr("width", "50%").attr("height", height);
 svg.style("float", "left");
-ex = data[0]["text"];
-var max = d3.max(ex, function(d) {return Math.abs(d.importance);});
-var min = d3.min(ex, function(d) {return Math.abs(d.importance);});
-var size = d3.scale.linear() .domain([min, max]).range([15, 50])
 var bar_height = 130;
 var y = d3.scale.linear().range([bar_height, 0]);
 var bar_x = 50;
 function FirstDraw() {
   bar_width = 30;
-  bar_yshift = 20;
+  bar_yshift = 25;
   d = 0
   var bar = svg.append("g")
   bar.classed("prediction", true);
@@ -87,13 +102,13 @@ FirstDraw()
 function ShowExample(ex) {
   var text = div.selectAll("span").data(ex["text"]);
   text.enter().append("span")
-  text.text(function (d,i) {return d.word + " "; })
-      .style("color", function(d,i) {return d.importance < 0 ? "red" : "green";})
-      .style("font-size", function(d,i) {return size(Math.abs(d.importance))+"px";})
+  text.html(function (d,i) {return d.word != "\n" ? d.word + " " : "<br />"; })
+      .style("color", function(d,i) {return d.weight < 0 ? "red" : "green";})
+      .style("font-size", function(d,i) {return size(Math.abs(d.weight))+"px";})
       .on('click', function() {d3.select(this).transition().duration(1000).style("color", "blue");});
   text.exit().remove();
   bar_width = 30;
-  bar_yshift = 20;
+  bar_yshift = 25;
   d = ex.prediction
   var pred = svg.selectAll(".prediction")
   pred.select("rect").transition().duration(1000)
@@ -114,6 +129,9 @@ function ShowExample(ex) {
     .attr("cy",  80)
     .attr("r",  40)
     .attr("fill", d >= .5 ? "green" : "red");
+  current_text = _.map(ex.text, function(x) {return x.word;}).join(" ")
+  d3.select("#text").node().value = current_text;
 }
-ShowExample(data[0])
+//docs[0].text = GenerateWeights(docs[0].text)
+//ShowExample(docs[0])
 
