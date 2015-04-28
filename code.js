@@ -54,6 +54,15 @@ function change(current_text) {
   ex.prediction = Predict(ex);
   ShowExample(ex);
 }
+function change_to_selection() {
+  text = document.getSelection().toString();
+  if (text !== "") {
+    change(text.replace(/\n/g, "\n "))
+  }
+  if (window.getSelection) {
+        window.getSelection().removeAllRanges();
+   }
+}
 
 
 var div = d3.select("#d3");
@@ -62,16 +71,6 @@ div.style("width", "50%");
 div.style("height", height);
 div.style("float", "left");
 div.style("overflow", "scroll");
-
-div.on('mouseup', function() {
-  text = document.getSelection().toString();
-  if (text !== "") {
-    change(text.replace(/\n/g, "\n "))
-  }
-  if (window.getSelection) {
-        window.getSelection().removeAllRanges();
-    }
-  });
 var svg = d3.select("svg")
 svg.attr("width", "50%").attr("height", height);
 svg.style("float", "left");
