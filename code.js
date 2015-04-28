@@ -116,7 +116,6 @@ function ShowExample(ex) {
   var text = div.selectAll("span").data(ex["text"]);
   text.enter().append("span")
   text.html(function (d,i) {return d.word != "\n" ? d.word + " " : "<br />"; })
-      //.style("color", function(d, i) {return d.weight < 0 ? "rgba(1, 0, 0, 1)" : "green";})
       .style("color", function(d, i) {
         var w = 5;
         if (d.weight < 0) {
