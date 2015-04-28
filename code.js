@@ -116,8 +116,17 @@ function ShowExample(ex) {
   var text = div.selectAll("span").data(ex["text"]);
   text.enter().append("span")
   text.html(function (d,i) {return d.word != "\n" ? d.word + " " : "<br />"; })
-      .style("color", function(d,i) {return d.weight < 0 ? "red" : "green";})
-      .style("font-size", function(d,i) {return size(Math.abs(d.weight))+"px";})
+      //.style("color", function(d, i) {return d.weight < 0 ? "rgba(1, 0, 0, 1)" : "green";})
+      .style("color", function(d, i) {
+        var w = 5;
+        if (d.weight < 0) {
+          return "rgba(255, 0, 0, " + (-w*d.weight+0.2) +")";
+        }
+        else {
+          return "rgba(0, 150, 0, " + (w*d.weight+0.2) +")";
+        }
+      })
+      //.style("font-size", function(d,i) {return size(Math.abs(d.weight))+"px";})
       .on('click', function() {d3.select(this).transition().duration(1000).style("color", "blue");});
   text.exit().remove();
   bar_width = 30;
