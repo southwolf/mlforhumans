@@ -44,8 +44,10 @@ function Predict(ex) {
   result = z / (1 + z);
   return +result.toFixed(2);
 }
-function change() {
-  current_text = d3.select("#text").node().value;
+function change(current_text) {
+  if (current_text === null) {
+    current_text = d3.select("#text").node().value;
+  }
   var ex = Object();
   ex.text = _.map(current_text.split(" "), function(w) { return {"word" : w, "weight": _.has(weights, w) ? weights[w] : 0};});
   ex.true_class = docs[current].true_class;
@@ -60,6 +62,16 @@ div.style("width", "50%");
 div.style("height", height);
 div.style("float", "left");
 div.style("overflow", "scroll");
+
+div.on('mouseup', function() {
+  text = document.getSelection().toString();
+  if (text !== "") {
+    change(text.replace(/\n/g, "\n "))
+  }
+  if (window.getSelection) {
+        window.getSelection().removeAllRanges();
+    }
+  });
 var svg = d3.select("svg")
 svg.attr("width", "50%").attr("height", height);
 svg.style("float", "left");
