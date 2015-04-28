@@ -7,12 +7,13 @@ d3.json("docs.json",  function(error, json) {
   docs = json.docs;
   weights = json.weights;
   accuracy = json.accuracy;
-  docs[0].text = GenerateWeights(docs[0].text)
-  var max = d3.max(_.map(_.values(weights), Math.abs))
-  var min = d3.min(_.map(_.values(weights), Math.abs))
-  size = d3.scale.linear().domain([min, max]).range([15, 50])
+  docs[0].text = GenerateWeights(docs[0].text);
+  var max = d3.max(_.map(_.values(weights), Math.abs));
+  var min = d3.min(_.map(_.values(weights), Math.abs));
+  size = d3.scale.linear().domain([min, max]).range([15, 50]);
 
-  ShowExample(docs[0])
+  FirstDraw();
+  ShowExample(docs[0]);
 })
 
 function GenerateWeights(word_array) {
@@ -97,8 +98,9 @@ function FirstDraw() {
     .attr("r",  40)
     .attr("fill", d >= .5 ? "green" : "red");
   bar.append("text").attr("x", true_class_x - 30).attr("y", 12).attr("fill", "black").text("True Class");
+  bar.append("text").attr("x", bar_x - 20).attr("y", bar_height + bar_yshift + 50).attr("fill", "black").text("Classifier Accuracy: " + accuracy );
 }
-FirstDraw()
+//FirstDraw()
 function ShowExample(ex) {
   var text = div.selectAll("span").data(ex["text"]);
   text.enter().append("span")
