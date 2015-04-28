@@ -125,7 +125,6 @@ function ShowExample(ex) {
           return "rgba(0, 150, 0, " + (w*d.weight+0.2) +")";
         }
       })
-      //.style("font-size", function(d,i) {return size(Math.abs(d.weight))+"px";})
       .on('click', function() {d3.select(this).transition().duration(1000).style("color", "blue");});
   text.exit().remove();
   bar_width = 30;
