@@ -70,12 +70,14 @@ function change(current_text, sort) {
 }
 function change_to_selection() {
   text = document.getSelection().toString();
-  if (text !== "") {
-    change(text.replace(/\n/g, "\n "))
-  }
-  if (window.getSelection) {
-        window.getSelection().removeAllRanges();
-   }
+  change(" ");
+  setTimeout(function(){ console.log(text);
+        if (text !== "") {
+          change(text.replace(/\n/g, "\n "))
+        }
+        if (window.getSelection) {
+              window.getSelection().removeAllRanges();
+       }}, 1000);
 }
 
 function sort(){
@@ -138,7 +140,7 @@ function FirstDraw() {
 //FirstDraw()
 function ShowExample(ex) {
   var text = div.selectAll("span").data(ex["text"]);
-  text.enter().append("span")
+  text.enter().append("span");
   text.html(function (d,i) {return d.word != "\n" ? d.word + " " : "<br />"; })
       .style("color", function(d, i) {
         var w = 5;
@@ -153,10 +155,10 @@ function ShowExample(ex) {
         }
       })
       .style("font-size", function(d,i) {return size(Math.abs(d.weight))+"px";})
-      .on('click', function() {d3.select(this).transition().duration(1000).style("color", "blue");});
+      .on('click', function() {d3.select(this).transition().duration(400).style("color", "blue");});
   // do the remove first, then the add
-  //text.exit().transition().duration(1000).style("opacity", 0).remove();
-  text.exit().remove();
+  text.exit().transition().duration(150).style("opacity", 0).remove();
+  //text.exit().remove();
   bar_width = 30;
   bar_yshift = 25;
   d = ex.prediction
