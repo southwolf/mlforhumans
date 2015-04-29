@@ -44,12 +44,18 @@ function Predict(ex) {
   result = z / (1 + z);
   return +result.toFixed(2);
 }
-function change(current_text) {
+function change(current_text, sort) {
   if (current_text === null) {
     current_text = d3.select("#text").node().value;
   }
   var ex = Object();
   ex.text = _.map(current_text.split(" "), function(w) { return {"word" : w, "weight": _.has(weights, w) ? weights[w] : 0};});
+  if(sort !== undefined){
+    if(sort === true){
+      ex.text = _.sortBy(ex.text, "weight");
+      console.log(ex);
+      }
+    }
   ex.true_class = docs[current].true_class;
   ex.prediction = Predict(ex);
   ShowExample(ex);
@@ -62,6 +68,10 @@ function change_to_selection() {
   if (window.getSelection) {
         window.getSelection().removeAllRanges();
    }
+}
+
+function sort(){
+  change(null, true);
 }
 
 
