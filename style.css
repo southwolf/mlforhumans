@@ -1,0 +1,12 @@
+
+.hovercard {
+    width: 200px;
+    height: 150px;
+    border: 0;
+    border-radius: 2px;
+    background-color: white;
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, .1), 0 1px 10px rgba(0, 0, 0, .35);
+    -webkit-border-radius: 2px;
+    -webkit-box-shadow: 0 0 0 1px rgba(0, 0, 0, .1), 0 1px 10px rgba(0, 0, 0, .35);
+}
+
