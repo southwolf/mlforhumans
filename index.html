@@ -1,34 +1,37 @@
-<html><head>
-<script type="text/javascript" src="d3.min.js"></script>
-<script type="text/javascript" src="lodash.js"></script>
+<html>
+<head>
+    <script type="text/javascript" src="d3.min.js"></script>
+    <script type="text/javascript" src="lodash.js"></script>
 </head>
 <body>
 <div style="width:50%;">
-Cross validation predictions for 20 newsgroups dataset. Positive (green) class is Christianity, negative class is
-Atheism.
-<br />
-We are using bag of words (case sensitive), and logistic regression. The size of
-a word is proportional to its weight coefficient in logistic regression.
-<br />
-<br />
+    Cross validation predictions for 20 newsgroups dataset. Positive (green) class is Christianity, negative class is
+    Atheism.
+    <br/>
+    We are using bag of words (case sensitive), and logistic regression. The size of
+    a word is proportional to its weight coefficient in logistic regression.
+    <br/>
+    <br/>
 </div>
 <div>
-<button onclick="run();">Look at another example </button>
-<button onclick="change(null);">Change text to textarea</button>
-<button onclick="change_to_selection();">Change text to highlighted selection </button>
+    <button onclick="run();">Look at another example</button>
+    <button onclick="change(null);">Change text to textarea</button>
+    <button onclick="change_to_selection();">Change text to highlighted selection</button>
+    <button onclick="sort();">Sort based on weights</button>
+    <button onclick="revert_sort();">Return to original order</button>
 </div>
 
-<div id= "d3">
+<div id="d3">
 </div>
 <svg>
-<!--<text x="15", y="30"> You are <tspan style="fill: red; font-size:25px;"> not </tspan> a <tspan
-style="color:blue"> banana </tspan> a </text> --!>
-</svg>
-<br />
-<div style="width:"50%"; float:left;">
-<textarea id="text" rows="10" style = "width:50%;">
-</textarea>
-</div>
-<script src="code.js"></script>
-</body>
-</html>
+    <!--<text x="15", y="30"> You are <tspan style="fill: red; font-size:25px;"> not </tspan> a <tspan
+    style="color:blue"> banana </tspan> a </text> --!>
+    </svg>
+    <br />
+    <div style="width:"50%"; float:left;">
+    <textarea id="text" rows="10" style = "width:50%;">
+    </textarea>
+    </div>
+    <script src="code.js"></script>
+    </body>
+    </html>

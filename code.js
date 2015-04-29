@@ -2,6 +2,8 @@ var weights;
 var docs;
 var size;
 var accuracy;
+var previous_text;
+
 d3.json("docs.json",  function(error, json) {
   if (error) return console.warn(error);
   docs = json.docs;
@@ -24,6 +26,7 @@ function GenerateWeights(word_array) {
 
 current = 0;
 function run() {
+  previous_text = null;
   if (current === docs.length - 1) {
     current = 0;
   }
@@ -43,12 +46,25 @@ function Predict(ex) {
   result = z / (1 + z);
   return +result.toFixed(2);
 }
-function change(current_text) {
+function change(current_text, sort) {
   if (current_text === null) {
     current_text = d3.select("#text").node().value;
   }
   var ex = Object();
   ex.text = _.map(current_text.split(" "), function(w) { return {"word" : w, "weight": _.has(weights, w) ? weights[w] : 0};});
+  if(sort !== undefined){
+    if(sort === true){
+      previous_text = current_text;
+      ex.text = _.sortBy(ex.text, function(w) {return Math.abs(w["weight"])}).reverse();
+      ex.text = _.remove(ex.text, function(w) {
+              if (w["word"] === "\n" || w["word"] === "\t" || w["word"] === " ")
+                return false;
+              else
+                return true;
+        });
+      console.log(ex);
+      }
+    }
   ex.true_class = docs[current].true_class;
   ex.prediction = Predict(ex);
   ShowExample(ex);
@@ -63,6 +79,16 @@ function change_to_selection() {
    }
 }
 
+function sort(){
+  change(null, true);
+}
+
+function revert_sort(){
+  if(previous_text !== undefined || previous_text === null)
+    change(previous_text,false);
+  else
+    change(null, false);
+}
 
 var div = d3.select("#d3");
 var height = "50%";
@@ -115,7 +141,18 @@ function ShowExample(ex) {
   var text = div.selectAll("span").data(ex["text"]);
   text.enter().append("span")
   text.html(function (d,i) {return d.word != "\n" ? d.word + " " : "<br />"; })
-      .style("color", function(d,i) {return d.weight < 0 ? "red" : "green";})
+      .style("color", function(d, i) {
+        var w = 5;
+        var color_thresh = 0.1;
+        if (d.weight < -color_thresh) {
+          return "rgba(255, 0, 0, " + (-w*d.weight+0.2) +")";
+        }
+        else if (d.weight > color_thresh) {
+          return "rgba(0, 150, 0, " + (w*d.weight+0.2) +")";
+        } else {
+          return "rgba(0, 0, 0, " + (w*d.weight+0.2) +")";
+        }
+      })
       .style("font-size", function(d,i) {return size(Math.abs(d.weight))+"px";})
       .on('click', function() {d3.select(this).transition().duration(1000).style("color", "blue");});
   // do the remove first, then the add
