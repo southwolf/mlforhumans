@@ -135,7 +135,18 @@ function ShowExample(ex) {
   var text = div.selectAll("span").data(ex["text"]);
   text.enter().append("span")
   text.html(function (d,i) {return d.word != "\n" ? d.word + " " : "<br />"; })
-      .style("color", function(d,i) {return d.weight < 0 ? "red" : "green";})
+      .style("color", function(d, i) {
+        var w = 5;
+        var color_thresh = 0.1;
+        if (d.weight < -color_thresh) {
+          return "rgba(255, 0, 0, " + (-w*d.weight+0.2) +")";
+        }
+        else if (d.weight > color_thresh) {
+          return "rgba(0, 150, 0, " + (w*d.weight+0.2) +")";
+        } else {
+          return "rgba(0, 0, 0, " + (w*d.weight+0.2) +")";
+        }
+      })
       .style("font-size", function(d,i) {return size(Math.abs(d.weight))+"px";})
       .on('click', function() {d3.select(this).transition().duration(1000).style("color", "blue");});
   text.exit().remove();
