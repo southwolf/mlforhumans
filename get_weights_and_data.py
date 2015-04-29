@@ -43,6 +43,16 @@ def main():
     ww[word] = weight
   jsonz['weights'] = ww
   jsonz['accuracy'] = round(metrics.accuracy_score(newsgroups_test.target, classifier.predict(test_vectors)), 3)
+  jsonz['feature_statistics'] = {}
+  train_v = train_vectors.toarray()
+  for word, index in vectorizer.vocabulary_.iteritems():
+    nz = train_v[:,index].nonzero()[0]
+    prob = float(len(nz)) / train_labels.shape[0]
+    if prob > .01:
+      jsonz['feature_statistics'][word] = {}
+      jsonz['feature_statistics'][word]['freq'] = round(prob, 2)
+      jsonz['feature_statistics'][word]['distribution'] = round(np.mean(train_labels[nz]), 2)
+
   json.dump(jsonz, doc_file)
 
 
