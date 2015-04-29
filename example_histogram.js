@@ -2,24 +2,34 @@ var margin = {top: 20, right: 20, bottom: 30, left: 40},
     width = 960 - margin.left - margin.right,
     height = 500 - margin.top - margin.bottom;
 
+function set_doc_ids(docs) {
+    for (var i=0; i<docs.length; i++) {
+        docs[i].doc_id = i;
+    }
+}
 
 function map_examples_to_bin(docs, n_bins) {
     for (var i=0; i<docs.length; i++) {
         var pred = docs[i].prediction;
         docs[i].pred_bin = Math.floor(pred*n_bins);
+        if (docs[i].pred_bin >= n_bins) {
+            docs[i].pred_bin -= 1;
+        }
     }
 }
 
 function map_examples_to_pos(docs, n_bins, bin_width) {
     var correct_bin_index = [];
     var incorrect_bin_index = [];
-    for (var i=0; i<n_bins+1; i++) {
+    for (var i=0; i<n_bins; i++) {
         correct_bin_index[i] = 0;
         incorrect_bin_index[i] = 0;
     }
 
 
     for (var i=0; i<docs.length; i++) {
+        var bin = docs[i].pred_bin;
+
         var correct = false;
         if (docs[i].prediction >= 0.5 && docs[i].true_class >= 0.5) {
             correct = true;
@@ -27,7 +37,6 @@ function map_examples_to_pos(docs, n_bins, bin_width) {
             correct = true;
         }
 
-        var bin = docs[i].pred_bin;
         // Set the relative x position of the data point
         var bin_x = 0.0;
         if (correct) {
@@ -82,10 +91,18 @@ var refLineFunction = d3.svg.line()
     .y(function (d) { return yMap(d); })
     .interpolate("linear");
 
+// add the tooltip area to the webpage
+var tooltip = d3.select("body").append("div")
+    .attr("class", "tooltip")
+    .style("opacity", 0);
+
 // load data
 d3.json("docs.json", function(error, data) {
+    // Initialize the document IDs
+    set_doc_ids(data.docs)
+
     // Figure out which examples go in which bins
-    var n_bins = 9;
+    var n_bins = 10;
     map_examples_to_bin(data.docs, n_bins);
     map_examples_to_pos(data.docs, n_bins, 7);
 
@@ -106,14 +123,13 @@ d3.json("docs.json", function(error, data) {
         .attr("x", xMap)
         .attr("y", yMap)
         .attr("fill-opacity", 1.0)
-        //.style("fill", function(d) { return color(cValue(d));})
         .style("fill", function(d) { if (d.true_class >= 0.5) {return "rgb(0,150,0)"} else {return "rgb(255,0,0)"} })
         .on("mouseover", function(d) {
             tooltip.transition()
                 .duration(200)
-                .style("opacity", .9);
-            tooltip.html(d["Cereal Name"] + "<br/> (" + xValue(d)
-            + ", " + yValue(d) + ")")
+                .style("opacity", .9)
+                .attr("fill", "rgb(255, 255, 255)");
+            tooltip.html("Document ID: " + d.doc_id + "<br />True class: " + d.true_class + "<br/>Prediction: " + d.prediction)
                 .style("left", (d3.event.pageX + 5) + "px")
                 .style("top", (d3.event.pageY - 28) + "px");
         })
@@ -124,7 +140,7 @@ d3.json("docs.json", function(error, data) {
         });
 
     // add a reference line
-    var refLineData = [ {"bin_x": 0.525, "bin_y":-0.1}, {"bin_x":0.525, "bin_y":0.6}];
+    var refLineData = [ {"bin_x": 0.485, "bin_y":-0.1}, {"bin_x":0.485, "bin_y":1.0}];
     var refLine = svg.append("path")
         .attr("d", refLineFunction(refLineData))
         .attr("stroke", "black")
