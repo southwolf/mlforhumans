@@ -2,6 +2,8 @@ var weights;
 var docs;
 var size;
 var accuracy;
+var previous_text;
+
 d3.json("docs.json",  function(error, json) {
   if (error) return console.warn(error);
   docs = json.docs;
@@ -52,7 +54,8 @@ function change(current_text, sort) {
   ex.text = _.map(current_text.split(" "), function(w) { return {"word" : w, "weight": _.has(weights, w) ? weights[w] : 0};});
   if(sort !== undefined){
     if(sort === true){
-      ex.text = _.sortBy(ex.text, "weight");
+      previous_text = current_text;
+      ex.text = _.sortBy(ex.text, function(w) {return Math.abs(w["weight"])}).reverse();
       console.log(ex);
       }
     }
@@ -74,6 +77,12 @@ function sort(){
   change(null, true);
 }
 
+function revert_sort(){
+  if(previous_text !== undefined)
+    change(previous_text,false);
+  else
+    change(null, false);
+}
 
 var div = d3.select("#d3");
 var height = "50%";
