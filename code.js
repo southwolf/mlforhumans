@@ -27,6 +27,7 @@ function GenerateWeights(word_array) {
 
 current = 0;
 function run() {
+  previous_text = null;
   if (current === docs.length - 1) {
     current = 0;
   }
@@ -56,6 +57,12 @@ function change(current_text, sort) {
     if(sort === true){
       previous_text = current_text;
       ex.text = _.sortBy(ex.text, function(w) {return Math.abs(w["weight"])}).reverse();
+      ex.text = _.remove(ex.text, function(w) {
+              if (w["word"] === "\n" || w["word"] === "\t" || w["word"] === " ")
+                return false;
+              else
+                return true;
+        });
       console.log(ex);
       }
     }
@@ -78,7 +85,7 @@ function sort(){
 }
 
 function revert_sort(){
-  if(previous_text !== undefined)
+  if(previous_text !== undefined || previous_text === null)
     change(previous_text,false);
   else
     change(null, false);
