@@ -12,7 +12,7 @@ d3.json("docs.json",  function(error, json) {
   docs[0].text = GenerateWeights(docs[0].text);
   var max = d3.max(_.map(_.values(weights), Math.abs));
   var min = d3.min(_.map(_.values(weights), Math.abs));
-  size = d3.scale.linear().domain([min, max]).range([15, 50]);
+  size = d3.scale.linear().domain([min, max]).range([15, 30]);
   FirstDraw();
   ShowExample(docs[0]);
 })
@@ -62,7 +62,6 @@ function change(current_text, sort) {
               else
                 return true;
         });
-      console.log(ex);
       }
     }
   ex.true_class = docs[current].true_class;
@@ -150,14 +149,14 @@ function ShowExample(ex) {
         else if (d.weight > color_thresh) {
           return "rgba(0, 150, 0, " + (w*d.weight+0.2) +")";
         } else {
-          return "rgba(0, 0, 0, " + (w*d.weight+0.2) +")";
+          return "rgba(0, 0, 0, " + Math.max(0.15,(w*d.weight+0.2)) +")";
         }
       })
       .style("font-size", function(d,i) {return size(Math.abs(d.weight))+"px";})
       .on('click', function() {d3.select(this).transition().duration(1000).style("color", "blue");});
   // do the remove first, then the add
   //text.exit().transition().duration(1000).style("opacity", 0).remove();
-  text.exit().transition().remove();
+  text.exit().remove();
   bar_width = 30;
   bar_yshift = 25;
   d = ex.prediction
