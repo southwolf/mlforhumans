@@ -11,7 +11,6 @@ d3.json("docs.json",  function(error, json) {
   var max = d3.max(_.map(_.values(weights), Math.abs));
   var min = d3.min(_.map(_.values(weights), Math.abs));
   size = d3.scale.linear().domain([min, max]).range([15, 50]);
-
   FirstDraw();
   ShowExample(docs[0]);
 })
@@ -119,7 +118,9 @@ function ShowExample(ex) {
       .style("color", function(d,i) {return d.weight < 0 ? "red" : "green";})
       .style("font-size", function(d,i) {return size(Math.abs(d.weight))+"px";})
       .on('click', function() {d3.select(this).transition().duration(1000).style("color", "blue");});
-  text.exit().remove();
+  // do the remove first, then the add
+  //text.exit().transition().duration(1000).style("opacity", 0).remove();
+  text.exit().transition().remove();
   bar_width = 30;
   bar_yshift = 25;
   d = ex.prediction
