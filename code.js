@@ -3,17 +3,21 @@ var docs;
 var size;
 var accuracy;
 var previous_text;
+var word_statistics;
+
 
 d3.json("docs.json",  function(error, json) {
   if (error) return console.warn(error);
   docs = json.docs;
   weights = json.weights;
   accuracy = json.accuracy;
+  word_statistics = json.feature_statistics;
   docs[0].text = GenerateWeights(docs[0].text);
   var max = d3.max(_.map(_.values(weights), Math.abs));
   var min = d3.min(_.map(_.values(weights), Math.abs));
   size = d3.scale.linear().domain([min, max]).range([15, 30]);
   FirstDraw();
+  FirstDrawTooltip()
   ShowExample(docs[0]);
 })
 
@@ -103,6 +107,60 @@ svg.style("float", "left");
 var bar_height = 130;
 var y = d3.scale.linear().range([bar_height, 0]);
 var bar_x = 50;
+
+
+var t_bar_yshift = 60;
+var t_bar_height = 80;
+var t_y = d3.scale.linear().range([t_bar_height,0 ])
+
+var tooltip = d3.select(".hovercard")
+    .style("opacity", 0)
+    .style("position", "absolute")
+    .style("left", "10px")
+    .style("pointer-events", "none")
+
+function FirstDrawTooltip() {
+  bar_width = 20;
+  var bar = tooltip.append("g");
+  bar.attr("id", "feature_freq");
+  bar.append("rect")
+    .attr("x", 30)
+    .attr("y", t_bar_yshift)
+    .attr("height", 0)
+    .attr("width", 20)
+  bar.append("rect")
+    .attr("x", 30)
+    .attr("y", t_bar_yshift)
+    .attr("height", t_bar_height)
+    .attr("width", 20)
+    .attr("fill-opacity", 0)
+    .attr("stroke", "black");
+  // This is the text that we'll move around
+  bar.append("text").attr("x", 30 + 20);
+  // This is the word
+  bar.append("text").attr("id", "focus_feature").attr("x", 10).attr("y",  20).attr("fill", "black").text("Word:");
+  bar.append("text").attr("x", 10).attr("y",  50).attr("fill", "black").text("Frequency");
+  bar.append("text").attr("x", 110).attr("y",  50).attr("fill", "black").text("Distribution");
+  bar2 = tooltip.append("g");
+  bar2.attr("id", "feature_dist");
+  bar2.append("rect")
+    .attr("x", 130)
+    .attr("y", t_bar_yshift)
+    .attr("height", 0)
+    .attr("width", 20)
+  bar2.append("rect")
+    .attr("x", 130)
+    .attr("y", t_bar_yshift)
+    .attr("height", t_bar_height)
+    .attr("width", 20)
+    .attr("fill-opacity", 0)
+    .attr("stroke", "black");
+  // This is the text that we'll move around
+  bar2.append("text").attr("x", 130 + 20);
+  //bar.append("text").attr("x", bar_x - 20).attr("y", 12).attr("fill", "black").text("Prediction");
+}
+
+
 function FirstDraw() {
   bar_width = 30;
   bar_yshift = 25;
@@ -137,7 +195,6 @@ function FirstDraw() {
   bar.append("text").attr("x", true_class_x - 30).attr("y", 12).attr("fill", "black").text("True Class");
   bar.append("text").attr("x", bar_x - 20).attr("y", bar_height + bar_yshift + 50).attr("fill", "black").text("Classifier Accuracy: " + accuracy );
 }
-//FirstDraw()
 function ShowExample(ex) {
   var text = div.selectAll("span").data(ex["text"]);
   text.enter().append("span");
@@ -155,7 +212,52 @@ function ShowExample(ex) {
         }
       })
       .style("font-size", function(d,i) {return size(Math.abs(d.weight))+"px";})
-      .on('click', function() {d3.select(this).transition().duration(400).style("color", "blue");});
+      .on('click', function() {d3.select(this).transition().duration(1000).style("color", "blue");})
+      .on("mouseover", function(d) {
+         var freq;
+         var prob;
+         if (typeof word_statistics[d.word] == 'undefined') {
+           freq = 0;
+           prob = "0.5";
+         }
+         else {
+           freq = word_statistics[d.word]['freq'];
+           prob = word_statistics[d.word]['distribution'];
+         }
+         tooltip.transition()
+              .delay(1000)
+              .duration(200)
+              .style("opacity", .9);
+              tooltip.style("left", (d3.event.pageX ) + "px")
+              .style("top", (d3.event.pageY - 28) + "px");
+         var freq_bar = tooltip.select("#feature_freq")
+         freq_bar.select("rect")
+           .attr("y", t_y(freq) + t_bar_yshift)
+           .attr("height", t_bar_height - t_y(freq))
+           .attr("fill", "black");
+         freq_bar.select("text")
+           .attr("y",  t_y(freq) + t_bar_yshift)
+           .attr("fill", "black")
+           .text(freq > 0 ? freq : "< .01");
+         var dist_bar = tooltip.select("#feature_dist")
+         dist_bar.select("rect")
+           .attr("y", t_y(prob) + t_bar_yshift)
+           .attr("height", t_bar_height - t_y(prob))
+           .attr("fill", prob > 0.5 ? "green" : "red");
+         dist_bar.select("text")
+           .attr("y",  t_y(prob) + t_bar_yshift)
+           .attr("fill", "black")
+           .text(prob);
+         var word = tooltip.select("#focus_feature")
+         word.text(d.word);
+
+     })
+     .on("mouseout", function(d) {
+         tooltip.transition()
+              .duration(500)
+              .style("opacity", 0);
+     });
+
   // do the remove first, then the add
   text.exit().transition().duration(150).style("opacity", 0).remove();
   //text.exit().remove();
