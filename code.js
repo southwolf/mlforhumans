@@ -149,7 +149,7 @@ function ShowExample(ex) {
         else if (d.weight > color_thresh) {
           return "rgba(0, 150, 0, " + (w*d.weight+0.2) +")";
         } else {
-          return "rgba(0, 0, 0, " + Math.max(0.15,(w*d.weight+0.2)) +")";
+          return "rgba(0, 0, 0, 0.35)";
         }
       })
       .style("font-size", function(d,i) {return size(Math.abs(d.weight))+"px";})
