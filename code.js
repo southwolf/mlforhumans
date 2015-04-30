@@ -2,8 +2,6 @@ var weights;
 var docs;
 var size;
 var accuracy;
-var previous_text;
-
 d3.json("docs.json",  function(error, json) {
   if (error) return console.warn(error);
   docs = json.docs;
@@ -54,8 +52,7 @@ function change(current_text, sort) {
   ex.text = _.map(current_text.split(" "), function(w) { return {"word" : w, "weight": _.has(weights, w) ? weights[w] : 0};});
   if(sort !== undefined){
     if(sort === true){
-      previous_text = current_text;
-      ex.text = _.sortBy(ex.text, function(w) {return Math.abs(w["weight"])}).reverse();
+      ex.text = _.sortBy(ex.text, "weight");
       console.log(ex);
       }
     }
@@ -77,21 +74,15 @@ function sort(){
   change(null, true);
 }
 
-function revert_sort(){
-  if(previous_text !== undefined)
-    change(previous_text,false);
-  else
-    change(null, false);
-}
 
-var div = d3.select("#d3");
-var height = "50%";
-div.style("width", "50%");
-div.style("height", height);
-div.style("float", "left");
-div.style("overflow", "scroll");
+var div = d3.select("#text_weight_area");
+//var height = "30%";
+//div.style("width", "50%");
+//div.style("height", height);
+//div.style("float", "left");
+//div.style("overflow", "scroll");
 var svg = d3.select("svg")
-svg.attr("width", "50%").attr("height", height);
+svg.attr("width", "50%").attr("height", "35%");
 svg.style("float", "left");
 var bar_height = 130;
 var y = d3.scale.linear().range([bar_height, 0]);

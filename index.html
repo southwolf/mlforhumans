@@ -18,15 +18,13 @@
     <button onclick="change(null);">Change text to textarea</button>
     <button onclick="change_to_selection();">Change text to highlighted selection</button>
     <button onclick="sort();">Sort based on weights</button>
-    <button onclick="revert_sort();">Return to original order</button>
 </div>
+
+<div id="text_weight_area" style="width:50%;height:30%;float:left;overflow:scroll"></div>
 
 <div id="d3">
 </div>
-<svg>
-    <!--<text x="15", y="30"> You are <tspan style="fill: red; font-size:25px;"> not </tspan> a <tspan
-    style="color:blue"> banana </tspan> a </text> --!>
-    </svg>
+<svg></svg>
     <br />
     <div style="width:"50%"; float:left;">
     <textarea id="text" rows="10" style = "width:50%;">
@@ -35,3 +33,6 @@
     <script src="code.js"></script>
     </body>
     </html>
+<div id="histogram_div" style="width:100%; height:30%; float:left;"></div>
+<script src="example_histogram.js"></script>
+

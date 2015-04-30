@@ -1,4 +1,4 @@
-var margin = {top: 20, right: 20, bottom: 30, left: 40},
+var margin = {top: 0, right: 0, bottom: 0, left: 0},
     width = 960 - margin.left - margin.right,
     height = 500 - margin.top - margin.bottom;
 
@@ -75,7 +75,7 @@ var yValue = function(d) { return d.bin_y;}, // data -> value
     yAxis = d3.svg.axis().scale(yScale).orient("left");
 
 // add the graph canvas to the body of the webpage
-var svg = d3.select("body").append("svg")
+var svg_hist = d3.select("#histogram_div").append("svg")
     .attr("width", width + margin.left + margin.right)
     .attr("height", height + margin.top + margin.bottom)
     .append("g")
@@ -96,6 +96,13 @@ var tooltip = d3.select("body").append("div")
     .attr("class", "tooltip")
     .style("opacity", 0);
 
+var on_click_document = function(d) {
+    if (typeof docs[d.doc_id].text[0].weight == 'undefined') {
+        docs[d.doc_id].text = GenerateWeights(docs[d.doc_id].text);
+    }
+    ShowExample(docs[d.doc_id]);
+}
+
 // load data
 d3.json("docs.json", function(error, data) {
     // Initialize the document IDs
@@ -103,8 +110,9 @@ d3.json("docs.json", function(error, data) {
 
     // Figure out which examples go in which bins
     var n_bins = 10;
+    var bin_width = 8;
     map_examples_to_bin(data.docs, n_bins);
-    map_examples_to_pos(data.docs, n_bins, 7);
+    map_examples_to_pos(data.docs, n_bins, bin_width);
 
     // Then map them to an actual x/y position within [0, 1]
 
@@ -114,17 +122,22 @@ d3.json("docs.json", function(error, data) {
 
     var square_size = 6;
     // draw dots
-    svg.selectAll(".dot")
+    svg_hist.selectAll(".dot")
         .data(data.docs)
         .enter().append("rect")
+        //.enter().append("circle")
         .attr("class", "dot")
+        //.attr("r", square_size)
+        //.attr("cx", xMap)
+        //.attr("cy", yMap)
         .attr("width", square_size)
-        .attr("height", square_size+3)
+        .attr("height", square_size)
         .attr("x", xMap)
         .attr("y", yMap)
         .attr("fill-opacity", 1.0)
         .style("fill", function(d) { if (d.true_class >= 0.5) {return "rgb(0,150,0)"} else {return "rgb(255,0,0)"} })
         .on("mouseover", function(d) {
+            console.log(d3.event.pageX + " " + d3.event.pageY);
             tooltip.transition()
                 .duration(200)
                 .style("opacity", .9)
@@ -137,11 +150,12 @@ d3.json("docs.json", function(error, data) {
             tooltip.transition()
                 .duration(500)
                 .style("opacity", 0);
-        });
+        })
+        .on("click", function(d) {on_click_document(d)});
 
     // add a reference line
-    var refLineData = [ {"bin_x": 0.485, "bin_y":-0.1}, {"bin_x":0.485, "bin_y":1.0}];
-    var refLine = svg.append("path")
+    var refLineData = [ {"bin_x": 0.485, "bin_y":-0.1}, {"bin_x":0.485, "bin_y":0.3}];
+    var refLine = svg_hist.append("path")
         .attr("d", refLineFunction(refLineData))
         .attr("stroke", "black")
         .attr("stroke-width", 0.8)
