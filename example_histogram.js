@@ -81,20 +81,15 @@ var svg_hist = d3.select("#histogram_div").append("svg")
     .append("g")
     .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-// add the tooltip area to the webpage
-//var tooltip = d3.select("body").append("div")
-//    .attr("class", "tooltip")
-//    .style("opacity", 0);
+// add the hist_tooltip area to the webpage
+var hist_tooltip = d3.select("body").append("div")
+    .attr("class", "hist_tooltip")
+    .style("opacity", 0);
 
 var refLineFunction = d3.svg.line()
     .x(function (d) { return xMap(d); })
     .y(function (d) { return yMap(d); })
     .interpolate("linear");
-
-// add the tooltip area to the webpage
-//var tooltip = d3.select("body").append("div")
-//    .attr("class", "tooltip")
-//    .style("opacity", 0);
 
 var on_click_document = function(d) {
     if (typeof docs[d.doc_id].text[0].weight == 'undefined') {
@@ -122,14 +117,10 @@ d3.json("docs.json", function(error, data) {
 
     var square_size = 6;
     // draw dots
-    svg_hist.selectAll(".dot")
+    svg_hist.selectAll(".hist_dot")
         .data(data.docs)
         .enter().append("rect")
-        //.enter().append("circle")
-        .attr("class", "dot")
-        //.attr("r", square_size)
-        //.attr("cx", xMap)
-        //.attr("cy", yMap)
+        .attr("class", "hist_dot")
         .attr("width", square_size)
         .attr("height", square_size)
         .attr("x", xMap)
@@ -138,18 +129,18 @@ d3.json("docs.json", function(error, data) {
         .style("fill", function(d) { if (d.true_class >= 0.5) {return "rgb(0,150,0)"} else {return "rgb(255,0,0)"} })
         .on("mouseover", function(d) {
             console.log(d3.event.pageX + " " + d3.event.pageY);
-            //tooltip.transition()
-            //    .duration(200)
-            //    .style("opacity", .9)
-            //    .attr("fill", "rgb(255, 255, 255)");
-            //tooltip.html("Document ID: " + d.doc_id + "<br />True class: " + d.true_class + "<br/>Prediction: " + d.prediction)
-            //    .style("left", (d3.event.pageX + 5) + "px")
-            //    .style("top", (d3.event.pageY - 28) + "px");
+            hist_tooltip.transition()
+                .duration(200)
+                .style("opacity", .9)
+                .attr("fill", "rgb(255, 255, 255)");
+            hist_tooltip.html("Document ID: " + d.doc_id + "<br />True class: " + d.true_class + "<br/>Prediction: " + d.prediction)
+                .style("left", (d3.event.pageX + 5) + "px")
+                .style("top", (d3.event.pageY - 28) + "px");
         })
         .on("mouseout", function(d) {
-            //tooltip.transition()
-            //    .duration(500)
-            //    .style("opacity", 0);
+            hist_tooltip.transition()
+                .duration(500)
+                .style("opacity", 0);
         })
         .on("click", function(d) {on_click_document(d)});
 
