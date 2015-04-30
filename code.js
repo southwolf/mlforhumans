@@ -5,7 +5,6 @@ var accuracy;
 var previous_text;
 var word_statistics;
 
-
 d3.json("docs.json",  function(error, json) {
   if (error) return console.warn(error);
   docs = json.docs;
@@ -74,14 +73,12 @@ function change(current_text, sort) {
 }
 function change_to_selection() {
   text = document.getSelection().toString();
-  change(" ");
-  setTimeout(function(){ console.log(text);
-        if (text !== "") {
-          change(text.replace(/\n/g, "\n "))
-        }
-        if (window.getSelection) {
-              window.getSelection().removeAllRanges();
-       }}, 1000);
+  if (text !== "") {
+    change(text.replace(/\n/g, "\n "))
+  }
+  if (window.getSelection) {
+        window.getSelection().removeAllRanges();
+  }
 }
 
 function sort(){
@@ -107,7 +104,6 @@ svg.style("float", "left");
 var bar_height = 130;
 var y = d3.scale.linear().range([bar_height, 0]);
 var bar_x = 50;
-
 
 var t_bar_yshift = 60;
 var t_bar_height = 80;
@@ -160,7 +156,6 @@ function FirstDrawTooltip() {
   //bar.append("text").attr("x", bar_x - 20).attr("y", 12).attr("fill", "black").text("Prediction");
 }
 
-
 function FirstDraw() {
   bar_width = 30;
   bar_yshift = 25;
@@ -212,54 +207,54 @@ function ShowExample(ex) {
         }
       })
       .style("font-size", function(d,i) {return size(Math.abs(d.weight))+"px";})
-      .on('click', function() {d3.select(this).transition().duration(1000).style("color", "blue");})
+      .on('click', function() {d3.select(this).transition().duration(400).style("color", "blue");})
       .on("mouseover", function(d) {
-         var freq;
-         var prob;
-         if (typeof word_statistics[d.word] == 'undefined') {
-           freq = 0;
-           prob = "0.5";
-         }
-         else {
-           freq = word_statistics[d.word]['freq'];
-           prob = word_statistics[d.word]['distribution'];
-         }
-         tooltip.transition()
-              .delay(1000)
-              .duration(200)
-              .style("opacity", .9);
-              tooltip.style("left", (d3.event.pageX ) + "px")
-              .style("top", (d3.event.pageY - 28) + "px");
-         var freq_bar = tooltip.select("#feature_freq")
-         freq_bar.select("rect")
-           .attr("y", t_y(freq) + t_bar_yshift)
-           .attr("height", t_bar_height - t_y(freq))
-           .attr("fill", "black");
-         freq_bar.select("text")
-           .attr("y",  t_y(freq) + t_bar_yshift)
-           .attr("fill", "black")
-           .text(freq > 0 ? freq : "< .01");
-         var dist_bar = tooltip.select("#feature_dist")
-         dist_bar.select("rect")
-           .attr("y", t_y(prob) + t_bar_yshift)
-           .attr("height", t_bar_height - t_y(prob))
-           .attr("fill", prob > 0.5 ? "green" : "red");
-         dist_bar.select("text")
-           .attr("y",  t_y(prob) + t_bar_yshift)
-           .attr("fill", "black")
-           .text(prob);
-         var word = tooltip.select("#focus_feature")
-         word.text(d.word);
+          var freq;
+          var prob;
+          if (typeof word_statistics[d.word] == 'undefined') {
+            freq = 0;
+            prob = "0.5";
+          }
+          else {
+            freq = word_statistics[d.word]['freq'];
+            prob = word_statistics[d.word]['distribution'];
+          }
+          tooltip.transition()
+               .delay(1000)
+               .duration(200)
+               .style("opacity", .9);
+               tooltip.style("left", (d3.event.pageX ) + "px")
+               .style("top", (d3.event.pageY - 28) + "px");
+          var freq_bar = tooltip.select("#feature_freq")
+          freq_bar.select("rect")
+            .attr("y", t_y(freq) + t_bar_yshift)
+            .attr("height", t_bar_height - t_y(freq))
+            .attr("fill", "black");
+          freq_bar.select("text")
+            .attr("y",  t_y(freq) + t_bar_yshift)
+            .attr("fill", "black")
+            .text(freq > 0 ? freq : "< .01");
+          var dist_bar = tooltip.select("#feature_dist")
+          dist_bar.select("rect")
+            .attr("y", t_y(prob) + t_bar_yshift)
+            .attr("height", t_bar_height - t_y(prob))
+            .attr("fill", prob > 0.5 ? "green" : "red");
+          dist_bar.select("text")
+            .attr("y",  t_y(prob) + t_bar_yshift)
+            .attr("fill", "black")
+            .text(prob);
+          var word = tooltip.select("#focus_feature")
+          word.text(d.word);
 
-     })
-     .on("mouseout", function(d) {
-         tooltip.transition()
-              .duration(500)
-              .style("opacity", 0);
-     });
+      })
+      .on("mouseout", function(d) {
+          tooltip.transition()
+               .duration(500)
+               .style("opacity", 0);
+      });
 
   // do the remove first, then the add
-  text.exit().transition().duration(150).style("opacity", 0).remove();
+  text.exit().transition().duration(1000).style("opacity", 0).remove();
   //text.exit().remove();
   bar_width = 30;
   bar_yshift = 25;
