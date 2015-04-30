@@ -22,8 +22,8 @@ d3.json("docs.json",  function(error, json) {
 
 function GenerateWeights(word_array) {
   return _.map(word_array, function(w) {
-    return {"word" : w, "weight": _.has(weights, w) ? weights[w] : 0};
-    }
+        return {"word" : w, "weight": _.has(weights, w) ? weights[w] : 0};
+      }
   )
 }
 
@@ -60,13 +60,13 @@ function change(current_text, sort) {
       previous_text = current_text;
       ex.text = _.sortBy(ex.text, function(w) {return Math.abs(w["weight"])}).reverse();
       ex.text = _.remove(ex.text, function(w) {
-              if (w["word"] === "\n" || w["word"] === "\t" || w["word"] === " ")
-                return false;
-              else
-                return true;
-        });
-      }
+        if (w["word"] === "\n" || w["word"] === "\t" || w["word"] === " ")
+          return false;
+        else
+          return true;
+      });
     }
+  }
   ex.true_class = docs[current].true_class;
   ex.prediction = Predict(ex);
   ShowExample(ex);
@@ -77,7 +77,7 @@ function change_to_selection() {
     change(text.replace(/\n/g, "\n "))
   }
   if (window.getSelection) {
-        window.getSelection().removeAllRanges();
+    window.getSelection().removeAllRanges();
   }
 }
 
@@ -92,14 +92,14 @@ function revert_sort(){
     change(null, false);
 }
 
-var div = d3.select("#text_weight_area");
-//var height = "30%";
-//div.style("width", "50%");
-//div.style("height", height);
-//div.style("float", "left");
-//div.style("overflow", "scroll");
+var div = d3.select("#d3");
+var height = "50%";
+div.style("width", "50%");
+div.style("height", height);
+div.style("float", "left");
+div.style("overflow", "scroll");
 var svg = d3.select("svg")
-svg.attr("width", "50%").attr("height", "35%");
+svg.attr("width", "50%").attr("height", height);
 svg.style("float", "left");
 var bar_height = 130;
 var y = d3.scale.linear().range([bar_height, 0]);
@@ -120,17 +120,17 @@ function FirstDrawTooltip() {
   var bar = tooltip.append("g");
   bar.attr("id", "feature_freq");
   bar.append("rect")
-    .attr("x", 30)
-    .attr("y", t_bar_yshift)
-    .attr("height", 0)
-    .attr("width", 20)
+      .attr("x", 30)
+      .attr("y", t_bar_yshift)
+      .attr("height", 0)
+      .attr("width", 20)
   bar.append("rect")
-    .attr("x", 30)
-    .attr("y", t_bar_yshift)
-    .attr("height", t_bar_height)
-    .attr("width", 20)
-    .attr("fill-opacity", 0)
-    .attr("stroke", "black");
+      .attr("x", 30)
+      .attr("y", t_bar_yshift)
+      .attr("height", t_bar_height)
+      .attr("width", 20)
+      .attr("fill-opacity", 0)
+      .attr("stroke", "black");
   // This is the text that we'll move around
   bar.append("text").attr("x", 30 + 20);
   // This is the word
@@ -140,17 +140,17 @@ function FirstDrawTooltip() {
   bar2 = tooltip.append("g");
   bar2.attr("id", "feature_dist");
   bar2.append("rect")
-    .attr("x", 130)
-    .attr("y", t_bar_yshift)
-    .attr("height", 0)
-    .attr("width", 20)
+      .attr("x", 130)
+      .attr("y", t_bar_yshift)
+      .attr("height", 0)
+      .attr("width", 20)
   bar2.append("rect")
-    .attr("x", 130)
-    .attr("y", t_bar_yshift)
-    .attr("height", t_bar_height)
-    .attr("width", 20)
-    .attr("fill-opacity", 0)
-    .attr("stroke", "black");
+      .attr("x", 130)
+      .attr("y", t_bar_yshift)
+      .attr("height", t_bar_height)
+      .attr("width", 20)
+      .attr("fill-opacity", 0)
+      .attr("stroke", "black");
   // This is the text that we'll move around
   bar2.append("text").attr("x", 130 + 20);
   //bar.append("text").attr("x", bar_x - 20).attr("y", 12).attr("fill", "black").text("Prediction");
@@ -163,18 +163,18 @@ function FirstDraw() {
   var bar = svg.append("g")
   bar.classed("prediction", true);
   bar.append("rect")
-    .attr("x", bar_x)
-    .attr("y", y(d) + bar_yshift)
-    .attr("height", bar_height - y(d))
-    .attr("width", bar_width - 1)
-    .attr("fill", d >= .5 ? "green" : "red");
+      .attr("x", bar_x)
+      .attr("y", y(d) + bar_yshift)
+      .attr("height", bar_height - y(d))
+      .attr("width", bar_width - 1)
+      .attr("fill", d >= .5 ? "green" : "red");
   bar.append("rect")
-    .attr("x", bar_x)
-    .attr("y", y(1) + bar_yshift)
-    .attr("height", bar_height - y(1))
-    .attr("width", bar_width - 1)
-    .attr("fill-opacity", 0)
-    .attr("stroke", "black");
+      .attr("x", bar_x)
+      .attr("y", y(1) + bar_yshift)
+      .attr("height", bar_height - y(1))
+      .attr("width", bar_width - 1)
+      .attr("fill-opacity", 0)
+      .attr("stroke", "black");
   bar.append("text").attr("x", bar_x + bar_width).attr("y",  y(d) + bar_yshift).attr("fill", "black").text(d);
   bar.append("text").attr("x", bar_x - 20).attr("y", 12).attr("fill", "black").text("Prediction");
 
@@ -183,10 +183,10 @@ function FirstDraw() {
   var true_class = svg.append("g")
   true_class.classed("true_class", true);
   true_class.append("circle")
-    .attr("cx", true_class_x + 5)
-    .attr("cy",  80)
-    .attr("r",  40)
-    .attr("fill", d >= .5 ? "green" : "red");
+      .attr("cx", true_class_x + 5)
+      .attr("cy",  80)
+      .attr("r",  40)
+      .attr("fill", d >= .5 ? "green" : "red");
   bar.append("text").attr("x", true_class_x - 30).attr("y", 12).attr("fill", "black").text("True Class");
   bar.append("text").attr("x", bar_x - 20).attr("y", bar_height + bar_yshift + 50).attr("fill", "black").text("Classifier Accuracy: " + accuracy );
 }
@@ -209,48 +209,48 @@ function ShowExample(ex) {
       .style("font-size", function(d,i) {return size(Math.abs(d.weight))+"px";})
       .on('click', function() {d3.select(this).transition().duration(400).style("color", "blue");})
       .on("mouseover", function(d) {
-          var freq;
-          var prob;
-          if (typeof word_statistics[d.word] == 'undefined') {
-            freq = 0;
-            prob = "0.5";
-          }
-          else {
-            freq = word_statistics[d.word]['freq'];
-            prob = word_statistics[d.word]['distribution'];
-          }
-          tooltip.transition()
-               .delay(1000)
-               .duration(200)
-               .style("opacity", .9);
-               tooltip.style("left", (d3.event.pageX ) + "px")
-               .style("top", (d3.event.pageY - 28) + "px");
-          var freq_bar = tooltip.select("#feature_freq")
-          freq_bar.select("rect")
+        var freq;
+        var prob;
+        if (typeof word_statistics[d.word] == 'undefined') {
+          freq = 0;
+          prob = "0.5";
+        }
+        else {
+          freq = word_statistics[d.word]['freq'];
+          prob = word_statistics[d.word]['distribution'];
+        }
+        tooltip.transition()
+            .delay(1000)
+            .duration(200)
+            .style("opacity", .9);
+        tooltip.style("left", (d3.event.pageX ) + "px")
+            .style("top", (d3.event.pageY - 28) + "px");
+        var freq_bar = tooltip.select("#feature_freq")
+        freq_bar.select("rect")
             .attr("y", t_y(freq) + t_bar_yshift)
             .attr("height", t_bar_height - t_y(freq))
             .attr("fill", "black");
-          freq_bar.select("text")
+        freq_bar.select("text")
             .attr("y",  t_y(freq) + t_bar_yshift)
             .attr("fill", "black")
             .text(freq > 0 ? freq : "< .01");
-          var dist_bar = tooltip.select("#feature_dist")
-          dist_bar.select("rect")
+        var dist_bar = tooltip.select("#feature_dist")
+        dist_bar.select("rect")
             .attr("y", t_y(prob) + t_bar_yshift)
             .attr("height", t_bar_height - t_y(prob))
             .attr("fill", prob > 0.5 ? "green" : "red");
-          dist_bar.select("text")
+        dist_bar.select("text")
             .attr("y",  t_y(prob) + t_bar_yshift)
             .attr("fill", "black")
             .text(prob);
-          var word = tooltip.select("#focus_feature")
-          word.text(d.word);
+        var word = tooltip.select("#focus_feature")
+        word.text(d.word);
 
       })
       .on("mouseout", function(d) {
-          tooltip.transition()
-               .duration(500)
-               .style("opacity", 0);
+        tooltip.transition()
+            .duration(500)
+            .style("opacity", 0);
       });
 
   // do the remove first, then the add
@@ -261,23 +261,23 @@ function ShowExample(ex) {
   d = ex.prediction
   var pred = svg.selectAll(".prediction")
   pred.select("rect").transition().duration(1000)
-    .attr("x", bar_x)
-    .attr("y", y(d) + bar_yshift)
-    .attr("height", bar_height - y(d))
-    .attr("width", bar_width - 1)
-    .attr("fill", d >= .5 ? "green" : "red");
+      .attr("x", bar_x)
+      .attr("y", y(d) + bar_yshift)
+      .attr("height", bar_height - y(d))
+      .attr("width", bar_width - 1)
+      .attr("fill", d >= .5 ? "green" : "red");
   pred.select("text").transition().duration(1000)
-    .attr("x", bar_x + bar_width).attr("y",  y(d) + bar_yshift)
-    .attr("fill", "black")
-    .text(d);
+      .attr("x", bar_x + bar_width).attr("y",  y(d) + bar_yshift)
+      .attr("fill", "black")
+      .text(d);
   true_class_x = bar_x + 150;
   d = ex.true_class
   var true_class = svg.selectAll(".true_class")
   true_class.select("circle").transition().duration(1000)
-    .attr("cx", true_class_x + 5)
-    .attr("cy",  80)
-    .attr("r",  40)
-    .attr("fill", d >= .5 ? "green" : "red");
+      .attr("cx", true_class_x + 5)
+      .attr("cy",  80)
+      .attr("r",  40)
+      .attr("fill", d >= .5 ? "green" : "red");
   current_text = _.map(ex.text, function(x) {return x.word;}).join(" ")
   d3.select("#text").node().value = current_text;
 }

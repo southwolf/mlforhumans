@@ -82,9 +82,9 @@ var svg_hist = d3.select("#histogram_div").append("svg")
     .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
 // add the tooltip area to the webpage
-var tooltip = d3.select("body").append("div")
-    .attr("class", "tooltip")
-    .style("opacity", 0);
+//var tooltip = d3.select("body").append("div")
+//    .attr("class", "tooltip")
+//    .style("opacity", 0);
 
 var refLineFunction = d3.svg.line()
     .x(function (d) { return xMap(d); })
@@ -92,9 +92,9 @@ var refLineFunction = d3.svg.line()
     .interpolate("linear");
 
 // add the tooltip area to the webpage
-var tooltip = d3.select("body").append("div")
-    .attr("class", "tooltip")
-    .style("opacity", 0);
+//var tooltip = d3.select("body").append("div")
+//    .attr("class", "tooltip")
+//    .style("opacity", 0);
 
 var on_click_document = function(d) {
     if (typeof docs[d.doc_id].text[0].weight == 'undefined') {
@@ -138,18 +138,18 @@ d3.json("docs.json", function(error, data) {
         .style("fill", function(d) { if (d.true_class >= 0.5) {return "rgb(0,150,0)"} else {return "rgb(255,0,0)"} })
         .on("mouseover", function(d) {
             console.log(d3.event.pageX + " " + d3.event.pageY);
-            tooltip.transition()
-                .duration(200)
-                .style("opacity", .9)
-                .attr("fill", "rgb(255, 255, 255)");
-            tooltip.html("Document ID: " + d.doc_id + "<br />True class: " + d.true_class + "<br/>Prediction: " + d.prediction)
-                .style("left", (d3.event.pageX + 5) + "px")
-                .style("top", (d3.event.pageY - 28) + "px");
+            //tooltip.transition()
+            //    .duration(200)
+            //    .style("opacity", .9)
+            //    .attr("fill", "rgb(255, 255, 255)");
+            //tooltip.html("Document ID: " + d.doc_id + "<br />True class: " + d.true_class + "<br/>Prediction: " + d.prediction)
+            //    .style("left", (d3.event.pageX + 5) + "px")
+            //    .style("top", (d3.event.pageY - 28) + "px");
         })
         .on("mouseout", function(d) {
-            tooltip.transition()
-                .duration(500)
-                .style("opacity", 0);
+            //tooltip.transition()
+            //    .duration(500)
+            //    .style("opacity", 0);
         })
         .on("click", function(d) {on_click_document(d)});
 
