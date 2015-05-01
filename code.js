@@ -188,8 +188,8 @@ function FirstDraw() {
       .attr("cy",  80)
       .attr("r",  40)
       .attr("fill", d >= .5 ? pos_hex : neg_hex);
-  bar.append("text").attr("x", true_class_x - 30).attr("y", 12).attr("fill", "black").text("True Class");
-  bar.append("text").attr("x", bar_x - 20).attr("y", bar_height + bar_yshift + 50).attr("fill", "black").text("Classifier Accuracy: " + accuracy );
+  bar.append("text").attr("x", true_class_x - 30).attr("y", 12).attr("fill", "black").style("font", "14px tahoma, sans-serif").text("True Class");
+  bar.append("text").attr("x", bar_x - 20).attr("y", bar_height + bar_yshift + 50).style("font", "14px tahoma, sans-serif").attr("fill", "black").text("Classifier Accuracy: " + accuracy );
 }
 function ShowExample(ex) {
   var text = div.selectAll("span").data(ex["text"]);
