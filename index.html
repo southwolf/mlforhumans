@@ -4,6 +4,9 @@
 .hist_dot {
 }
 
+.hist_dot:hover {
+}
+
 .hist_tooltip {
     position: absolute;
     width: 200px;
@@ -11,6 +14,66 @@
     pointer-events: none;
     background-color: #ffffff;
 }
+
+.green_button,
+.blue_button {
+    color: #fff;
+    padding: 5px 10px;
+}
+
+.green_button:hover,
+.blue_button:hover {
+    text-decoration: none;
+}
+
+.green_button {
+    background-color: #b2ce96;
+    border: 1px solid #b2ce96;
+}
+
+.green_button:hover {
+    background-color: #86a36e;
+    border: 1px solid #86a36e;
+}
+
+.blue_button {
+    background-color: #afcde3;
+    border: 1px solid #afcde3;
+}
+
+.blue_button:hover {
+    background-color: #83a2be;
+    border: 1px solid #83a2be;
+}
+
+.black_overlay{
+    display: none;
+    position: absolute;
+    top: 0%;
+    left: 0%;
+    width: 100%;
+    height: 100%;
+    background-color: black;
+    z-index:1001;
+    -moz-opacity: 0.8;
+    opacity:.80;
+    filter: alpha(opacity=80);
+}
+.white_content {
+    display: none;
+    position: absolute;
+    top: 25%;
+    left: 25%;
+    width: 50%;
+    height: 50%;
+    padding: 16px;
+    border: 8px solid #b2ce96;
+    background-color: white;
+    z-index:1002;
+    overflow: auto;
+    font: 15px arial, sans-serif;
+}
+
 </style>
 
 <head>
@@ -18,22 +81,32 @@
     <script type="text/javascript" src="lodash.js"></script>
     <link rel="stylesheet" type="text/css" href="style.css">
 </head>
+
 <body>
-<div style="width:50%;">
+<div id="light" class="white_content">
     Cross validation predictions for 20 newsgroups dataset. Positive (green) class is Christianity, negative class is
     Atheism.
+    <br/>
     <br/>
     We are using bag of words (case sensitive), and logistic regression. The size of
     a word is proportional to its weight coefficient in logistic regression.
     <br/>
     <br/>
+    <br/>
+
+    <a href = "javascript:void(0)" onclick = "hide_info()">Close</a></div>
+<div id="fade" class="black_overlay"></div>
+
+<div style="float:right">
+    <button class="blue_button" onclick="show_info()">info</button>
 </div>
+
 <div>
-    <button onclick="run();">Look at another example</button>
-    <button onclick="change(null);">Change text to textarea</button>
-    <button onclick="change_to_selection();">Change text to highlighted selection</button>
-    <button onclick="sort();">Sort based on weights</button>
-    <button onclick="revert_sort();">Return to original order</button>
+    <button class="green_button" onclick="run();">Look at another example</button>
+    <button class="green_button" onclick="change(null);">Change text to textarea</button>
+    <button class="green_button" onclick="change_to_selection();">Change text to highlighted selection</button>
+    <button class="green_button" onclick="sort();">Sort based on weights</button>
+    <button class="green_button" onclick="revert_sort();">Return to original order</button>
 </div>
 
 <div id="d3">
@@ -51,4 +124,5 @@
     </html>
 <div id="histogram_div","float:left;"></div>
 <script src="example_histogram.js"></script>
+<script src="info_box.js"></script>
 
