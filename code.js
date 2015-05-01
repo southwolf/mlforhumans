@@ -98,6 +98,7 @@ div.style("width", "50%");
 div.style("height", height);
 div.style("float", "left");
 div.style("overflow", "scroll");
+div.style("font", "18px tahoma, sans-serif")
 var svg = d3.select("svg")
 svg.attr("width", "50%").attr("height", height);
 svg.style("float", "left");
@@ -167,7 +168,7 @@ function FirstDraw() {
       .attr("y", y(d) + bar_yshift)
       .attr("height", bar_height - y(d))
       .attr("width", bar_width - 1)
-      .attr("fill", d >= .5 ? "green" : "red");
+      .attr("fill", d >= .5 ? pos_hex : neg_hex);
   bar.append("rect")
       .attr("x", bar_x)
       .attr("y", y(1) + bar_yshift)
@@ -175,8 +176,8 @@ function FirstDraw() {
       .attr("width", bar_width - 1)
       .attr("fill-opacity", 0)
       .attr("stroke", "black");
-  bar.append("text").attr("x", bar_x + bar_width).attr("y",  y(d) + bar_yshift).attr("fill", "black").text(d);
-  bar.append("text").attr("x", bar_x - 20).attr("y", 12).attr("fill", "black").text("Prediction");
+  bar.append("text").attr("x", bar_x + bar_width).attr("y",  y(d) + bar_yshift).style("font", "14px tahoma, sans-serif").attr("fill", "black").text(d);
+  bar.append("text").attr("x", bar_x - 20).attr("y", 12).attr("fill", "black").style("font", "14px tahoma, sans-serif").text("Prediction");
 
   true_class_x = bar_x + 150;
   d = 0
@@ -186,7 +187,7 @@ function FirstDraw() {
       .attr("cx", true_class_x + 5)
       .attr("cy",  80)
       .attr("r",  40)
-      .attr("fill", d >= .5 ? "green" : "red");
+      .attr("fill", d >= .5 ? pos_hex : neg_hex);
   bar.append("text").attr("x", true_class_x - 30).attr("y", 12).attr("fill", "black").text("True Class");
   bar.append("text").attr("x", bar_x - 20).attr("y", bar_height + bar_yshift + 50).attr("fill", "black").text("Classifier Accuracy: " + accuracy );
 }
@@ -198,10 +199,10 @@ function ShowExample(ex) {
         var w = 5;
         var color_thresh = 0.1;
         if (d.weight < -color_thresh) {
-          return "rgba(255, 0, 0, " + (-w*d.weight+0.2) +")";
+          return "rgba(" + neg_color +", " + (-w*d.weight+0.2) +")";
         }
         else if (d.weight > color_thresh) {
-          return "rgba(0, 150, 0, " + (w*d.weight+0.2) +")";
+          return "rgba(" + pos_color + ", " + (w*d.weight+0.2) +")";
         } else {
           return "rgba(0, 0, 0, 0.35)";
         }
@@ -238,7 +239,7 @@ function ShowExample(ex) {
         dist_bar.select("rect")
             .attr("y", t_y(prob) + t_bar_yshift)
             .attr("height", t_bar_height - t_y(prob))
-            .attr("fill", prob > 0.5 ? "green" : "red");
+            .attr("fill", prob > 0.5 ? pos_hex : neg_hex);
         dist_bar.select("text")
             .attr("y",  t_y(prob) + t_bar_yshift)
             .attr("fill", "black")
@@ -265,7 +266,7 @@ function ShowExample(ex) {
       .attr("y", y(d) + bar_yshift)
       .attr("height", bar_height - y(d))
       .attr("width", bar_width - 1)
-      .attr("fill", d >= .5 ? "green" : "red");
+      .attr("fill", d >= .5 ? pos_hex : neg_hex);
   pred.select("text").transition().duration(1000)
       .attr("x", bar_x + bar_width).attr("y",  y(d) + bar_yshift)
       .attr("fill", "black")
@@ -277,7 +278,7 @@ function ShowExample(ex) {
       .attr("cx", true_class_x + 5)
       .attr("cy",  80)
       .attr("r",  40)
-      .attr("fill", d >= .5 ? "green" : "red");
+      .attr("fill", d >= .5 ? pos_hex : neg_hex);
   current_text = _.map(ex.text, function(x) {return x.word;}).join(" ")
   d3.select("#text").node().value = current_text;
 }
