@@ -1,6 +1,6 @@
 var margin = {top: 0, right: 0, bottom: 0, left: 0},
-    width = 1200 - margin.left - margin.right,
-    height = 300 - margin.top - margin.bottom;
+    width = 1350 - margin.left - margin.right,
+    height = 400 - margin.top - margin.bottom;
 
 function set_doc_ids(docs) {
     for (var i=0; i<docs.length; i++) {
@@ -104,7 +104,7 @@ d3.json("docs.json", function(error, data) {
     set_doc_ids(data.docs)
 
     // Figure out which examples go in which bins
-    var n_bins = 10;
+    var n_bins = 14;
     var bin_width = 8;
     map_examples_to_bin(data.docs, n_bins);
     map_examples_to_pos(data.docs, n_bins, bin_width);
@@ -126,14 +126,19 @@ d3.json("docs.json", function(error, data) {
         .attr("x", xMap)
         .attr("y", yMap)
         .attr("fill-opacity", 1.0)
-        .style("fill", function(d) { if (d.true_class >= 0.5) {return "rgb("+pos_color+")"} else {return "rgb("+neg_color+")"} })
+        .style("fill", function(d) { if (d.true_class >= 0.5) {return "rgba("+pos_color+", 1.0)"} else {return "rgba("+neg_color+", 1.0)"} })
         .on("mouseover", function(d) {
-            console.log(d3.event.pageX + " " + d3.event.pageY);
             hist_tooltip.transition()
                 .duration(200)
                 .style("opacity", .9)
                 .attr("fill", "rgb(255, 255, 255)");
-            hist_tooltip.html("Document ID: " + d.doc_id + "<br />True class: " + d.true_class + "<br/>Prediction: " + d.prediction)
+
+            var s = "Document ID: " + d.doc_id + "<br />True class: ";
+            s += d.true_class > 0.5 ? "Christianity" : "Athiesm";
+            s += "<br/>Prediction: ";
+            s += d.prediction > 0.5 ? "Christianity" : "Athiesm";
+            hist_tooltip.html(s)
+                //"Document ID: " + d.doc_id + "<br />True class: " + d.true_class + "<br/>Prediction: " + d.prediction)
                 .style("left", (d3.event.pageX + 5) + "px")
                 .style("top", (d3.event.pageY - 70) + "px");
         })
@@ -152,4 +157,48 @@ d3.json("docs.json", function(error, data) {
         .attr("stroke-width", 0.8)
         .attr("stroke-dasharray", "5,5")
         .attr("fill", "none");
+    // add a zero line
+    var refLineData = [ {"bin_x": 0, "bin_y":-0.005}, {"bin_x":0.988, "bin_y":-0.005}];
+    var refLine = svg_hist.append("path")
+        .attr("d", refLineFunction(refLineData))
+        .attr("stroke", "black")
+        .attr("stroke-width", 0.8)
+        .attr("fill", "none");
+
+
+    // draw legend
+    var legend_x = 120;
+    var legend_y = 30;
+    svg_hist.append("text")
+        .attr("x", legend_x + 25)
+        .attr("y", legend_y + 20)
+        .style("font-size", "14px")
+        .text("True class: Christianity");
+    svg_hist.append("text")
+        .attr("x", legend_x + 25)
+        .attr("y", legend_y + 20)
+        .attr("dy", "14px")
+        .style("font-size", "14px")
+        .text("True class: Athiesm");
+    svg_hist.append("rect")
+        .attr("class", "hist_dot")
+        .attr("x", legend_x + 10)
+        .attr("y", legend_y + 10)
+        .attr("width", 10)
+        .attr("height", 10)
+        .style("fill", "rgb(" + pos_color + ")");
+    svg_hist.append("rect")
+        .attr("class", "hist_dot")
+        .attr("x", legend_x + 10)
+        .attr("y", legend_y + 25)
+        .attr("width", 10)
+        .attr("height", 10)
+        .style("fill", "rgb(" + neg_color + ")");
+    svg_hist.append("rect")
+        .attr("x", legend_x)
+        .attr("y", legend_y)
+        .attr("width", 170)
+        .attr("height", 45)
+        .style("stroke", "#86a36e")
+        .style("fill", "none");
 });
