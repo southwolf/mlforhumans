@@ -19,15 +19,10 @@ Our visualization lets users:
 
 Some quick exploration quickly tells a story that many top researchers in the field seem to have missed (probably due to just looking at summary statistics). Even though the accuracy for this particular dataset is very high, the algorithm is learning to distinguish between features that are artifacts of how the data was collected. A lot of weight is put on user names and email addresses who usually post to only one newsgroup. One particular example is the word 'rutgers' in the email address, which appears in 22% of the documents in the data - **always** in documents about Christianity. Removing these words quickly makes sure-fire predictions wrong. We note that just looking at the raw dataset does not immediately produce such insights (who would think to look at the class distribution for a word like 'rutgers' in this task?) - they come from seeing how the machine learning algorithm is making predictions.
 
-## Running Instructions **TODO**
+## Running Instructions
 
-Put your running instructions here. (Tell us how to run your visualization.) 
+Access our visualization at [this link](https://cse512-15s.github.io/a3-marcotcr-shrainik-bdol/) or download this repository and run `python -m SimpleHTTPServer 9000` and access this from http://localhost:9000/.
 
-If your visualization is web-based,  it would be great if your submission can be opened online. [Github Pages](http://pages.github.com/) is a good and easy way to put your visualization online so you can put your link here.  For example:
-
-Access our visualization at http://cse512-15s.github.io/a3-jheer-domoritz-jasnyder/ or download this repository and run `python -m SimpleHTTPServer 9000` and access this from http://localhost:9000/.
-
-If you put your work online, please also write a [one-line description and add a link to your final work](http://note.io/1n3u46s) so people can access it directly from the CSE512-15S page.
 
 ## Story Board **TODO**
 
