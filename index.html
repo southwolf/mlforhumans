@@ -84,8 +84,13 @@
 </head>
 
 <body>
-<script src="colors.js"></script>
+<script type="text/javascript" src="colors.js"></script>
 
+<!--Info button-->
+<div style="float:right">
+    <button class="blue_button" onclick="show_info()">info</button>
+</div>
+<!--Info button contents-->
 <div id="light" class="white_content">
     Cross validation predictions for 20 newsgroups dataset. Positive (green) class is Christianity, negative class is
     Atheism.
@@ -99,33 +104,42 @@
 
     <a href = "javascript:void(0)" onclick = "hide_info()">Close</a></div>
 <div id="fade" class="black_overlay"></div>
+<!---->
 
-<div style="float:right">
-    <button class="blue_button" onclick="show_info()">info</button>
+<svg class="hovercard"></svg>
+
+
+<br/>
+
+<div id="text_editing">
+    <div style="width:30%;float:left;">
+        <textarea id="text" style = "width:100%;height:50%">
+        </textarea>
+    </div>
+
+
+    <div id="d3"></div>
+    <script src="code.js"></script>
+    <div id="text_buttons_div" style="height:50%">
+        <button class="green_button" onclick="change(null);">Change text to textarea--></button>
+        <br/>
+        <button class="green_button" onclick="change_to_selection();"><--Edit highlighted selection</button>
+    </div>
+
 </div>
 
-<div>
+<br/>
+<div id="weights_button_div", style="margin-top:10px">
     <button class="green_button" onclick="run();">Look at another example</button>
-    <button class="green_button" onclick="change(null);">Change text to textarea</button>
-    <button class="green_button" onclick="change_to_selection();">Change text to highlighted selection</button>
     <button class="green_button" onclick="sort();">Sort based on weights</button>
     <button class="green_button" onclick="revert_sort();">Return to original order</button>
 </div>
 
-<div id="d3">
-</div>
-<svg></svg>
-<svg class="hovercard">
-<svg>
-    <br />
-    <div style="width:"50%"; float:left;">
-    <textarea id="text" rows="10" style = "width:50%;">
-    </textarea>
-    </div>
-    <script src="code.js"></script>
-    </body>
-    </html>
-<div id="histogram_div","float:left;"></div>
+
+
+<div id="histogram_div"></div>
 <script src="example_histogram.js"></script>
 <script src="info_box.js"></script>
 
+</body>
+</html>

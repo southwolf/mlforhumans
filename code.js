@@ -96,7 +96,7 @@ var div = d3.select("#d3");
 var height = "50%";
 div.style("width", "50%");
 div.style("height", height);
-div.style("float", "left");
+div.style("float", "right");
 div.style("overflow", "scroll");
 div.style("font", "18px tahoma, sans-serif")
 var svg = d3.select("svg")

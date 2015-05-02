@@ -1,6 +1,6 @@
 var margin = {top: 0, right: 0, bottom: 0, left: 0},
-    width = 960 - margin.left - margin.right,
-    height = 500 - margin.top - margin.bottom;
+    width = 1200 - margin.left - margin.right,
+    height = 300 - margin.top - margin.bottom;
 
 function set_doc_ids(docs) {
     for (var i=0; i<docs.length; i++) {
