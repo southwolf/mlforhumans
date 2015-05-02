@@ -212,7 +212,6 @@ function ShowExample(ex) {
         }
       })
       .style("font-size", function(d,i) {return size(Math.abs(d.weight))+"px";})
-      .on('click', function() {d3.select(this).transition().duration(400).style("color", "blue");})
       .on("mouseover", function(d) {
         var freq;
         var prob;
