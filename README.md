@@ -9,7 +9,7 @@ a3-marcotcr-shrainik-bdol
 
 ## Understanding Machine Learning for NLP
 
-Many people use machine learning algorithms blindly, just looking at summary statistics (i.e. accuracy). We have produced an interactive visualization that lets users better understand what their algorithms are actually doing. As a test case, we chose a subset of [20 newsgroups](http://qwone.com/~jason/20Newsgroups/), a standard dataset where the task is to learn to distinguish between different newsgroups. Our task here is distinguishing between the Christianity and Atheistm newsgroups. As an algorithm, we used a standard L2 regularized logistic regression, a baseline for many papers, such as [this recent one](http://www.cs.cmu.edu/~dyogatam/papers/yogatama+smith.icml2014.pdf).
+Many people use machine learning algorithms blindly, just looking at summary statistics (i.e. accuracy). We have produced an interactive visualization that lets users better understand what their algorithms are actually doing. As a test case, we chose a subset of [20 newsgroups](http://qwone.com/~jason/20Newsgroups/), a standard dataset where the task is to learn to distinguish between different newsgroups. Our task here is distinguishing between the Christianity and Atheistm newsgroups. As an algorithm, we used a standard L2 regularized logistic regression, a baseline for many papers, such as [this recent one](http://www.cs.cmu.edu/~dyogatam/papers/yogatama+smith.icml2014.pdf). The data we're visualizing is a combination of the raw dataset and the machine learning model learned from it.
 
 Our visualization lets users:
 * Quickly see what words the model thinks are most important for each class.
@@ -17,7 +17,7 @@ Our visualization lets users:
 * Zoom in particular words (by hovering), to better understand why the model is learning what it is learning.
 * See all of the cross validation examples ordered by algorithm prediction, and interactively visualize any example.
 
-Some quick exploration quickly tells a story that many top researchers in the field seem to have missed (probably due to just looking at summary statistics). Even though the accuracy for this particular dataset is very high, the algorithm is learning to distinguish between features that are artifacts of how the data was collected. A lot of weight is put on user names and email addresses who usually post to only one newsgroup. One particular example is the word 'rutgers' in the email address, which appears in 22% of the documents in the data - **always** in documents about Christianity. Removing these words quickly makes sure-fire predictions wrong.
+Some quick exploration quickly tells a story that many top researchers in the field seem to have missed (probably due to just looking at summary statistics). Even though the accuracy for this particular dataset is very high, the algorithm is learning to distinguish between features that are artifacts of how the data was collected. A lot of weight is put on user names and email addresses who usually post to only one newsgroup. One particular example is the word 'rutgers' in the email address, which appears in 22% of the documents in the data - **always** in documents about Christianity. Removing these words quickly makes sure-fire predictions wrong. We note that just looking at the raw dataset does not immediately produce such insights (who would think to look at the class distribution for a word like 'rutgers' in this task?) - they come from seeing how the machine learning algorithm is making predictions.
 
 ## Running Instructions **TODO**
 
