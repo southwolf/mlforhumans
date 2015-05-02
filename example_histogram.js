@@ -1,6 +1,7 @@
 var margin = {top: 0, right: 0, bottom: 0, left: 0},
     width = 1350 - margin.left - margin.right,
     height = 400 - margin.top - margin.bottom;
+var selected_document = 0;
 
 function set_doc_ids(docs) {
     for (var i=0; i<docs.length; i++) {
@@ -92,6 +93,9 @@ var refLineFunction = d3.svg.line()
     .interpolate("linear");
 
 var on_click_document = function(d) {
+    selected_document = d.doc_id;
+
+
     if (typeof docs[d.doc_id].text[0].weight == 'undefined') {
         docs[d.doc_id].text = GenerateWeights(docs[d.doc_id].text);
     }
@@ -125,9 +129,20 @@ d3.json("docs.json", function(error, data) {
         .attr("height", square_size)
         .attr("x", xMap)
         .attr("y", yMap)
-        .attr("fill-opacity", 1.0)
-        .style("fill", function(d) { if (d.true_class >= 0.5) {return "rgba("+pos_color+", 1.0)"} else {return "rgba("+neg_color+", 1.0)"} })
+        .style("fill", function(d) { return d.true_class >= 0.5 ? "rgb("+pos_color+")" : "rgb("+neg_color+")" })
+        .style("opacity", function(d) { return d.doc_id === selected_document ? 1.0 : 0.4})
         .on("mouseover", function(d) {
+            var xPosition = parseFloat(d3.select(this).attr("x"));
+            var yPosition = parseFloat(d3.select(this).attr("y"));
+
+            // Change the style of the square
+            d3.select(this)
+                .attr("height", square_size + 10)
+                .attr("width", square_size + 10)
+                .attr("x", xPosition-square_size)
+                .attr("y", yPosition-square_size)
+                .style("opacity", 1.0)
+
             hist_tooltip.transition()
                 .duration(200)
                 .style("opacity", .9)
@@ -143,11 +158,30 @@ d3.json("docs.json", function(error, data) {
                 .style("top", (d3.event.pageY - 70) + "px");
         })
         .on("mouseout", function(d) {
+            var xPosition = parseFloat(d3.select(this).attr("x"));
+            var yPosition = parseFloat(d3.select(this).attr("y"));
+
+            d3.select(this)
+                .attr("height", square_size)
+                .attr("width", square_size)
+                .attr("dx", 0.1)
+                .attr("x", xPosition+square_size)
+                .attr("y", yPosition+square_size)
+                .style("opacity", function(d){return d.doc_id == selected_document ? 1.0 : 0.4});
+
             hist_tooltip.transition()
                 .duration(500)
                 .style("opacity", 0);
         })
-        .on("click", function(d) {on_click_document(d)});
+        .on("click", function(d) {
+            d3.selectAll(".hist_dot")
+                .style("opacity", 0.4);
+
+            d3.select(this)
+                .style("opacity", 1.0);
+
+            on_click_document(d);
+        });
 
     // add a reference line
     var refLineData = [ {"bin_x": 0.485, "bin_y":-0.03}, {"bin_x":0.485, "bin_y":0.3}];
