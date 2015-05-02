@@ -13,6 +13,10 @@
 <div id="info_button">
     <button class="blue_button" onclick="show_info()">info</button>
 </div>
+<div id="weights_button_div", style="margin-top:10px">
+    <button class="green_button" onclick="run();">Look at another example</button>
+    <button class="green_button" id ="sort_button" onclick="sort();">Sort based on weights</button>
+</div>
 <!--Info button contents-->
 <div id="light" class="white_content">
     Cross validation predictions for 20 newsgroups dataset. Positive (green) class is Christianity, negative class is
@@ -49,10 +53,6 @@
 </div>
 <br />
 
-<div id="weights_button_div", style="margin-top:10px">
-    <button class="green_button" onclick="run();">Look at another example</button>
-    <button class="green_button" id ="sort_button" onclick="sort();">Sort based on weights</button>
-</div>
     <script src="code.js"></script>
 <div id="histogram_div"></div>
 <script src="example_histogram.js"></script>
