@@ -4,6 +4,7 @@ var size;
 var accuracy;
 var previous_text;
 var word_statistics;
+var sort_order = "document_order";
 
 d3.json("docs.json",  function(error, json) {
   if (error) return console.warn(error);
@@ -82,7 +83,16 @@ function change_to_selection() {
 }
 
 function sort(){
-  change(null, true);
+  if (sort_order == "document_order") {
+    change(null, true);
+    sort_order = "weight_order";
+    d3.select("#sort_button").text("Revert to original word order")
+  }
+  else {
+    revert_sort();
+    sort_order = "document_order";
+    d3.select("#sort_button").text("Sort based on weights")
+  }
 }
 
 function revert_sort(){
