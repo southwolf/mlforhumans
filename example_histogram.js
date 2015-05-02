@@ -165,6 +165,14 @@ d3.json("docs.json", function(error, data) {
         .attr("stroke-width", 0.8)
         .attr("fill", "none");
 
+    // Draw title
+    svg_hist.append("text")
+        .attr("x", width/2-100)
+        .attr("y", 50)
+        .style("font-size", "16px")
+        .style("font-weight", "bold")
+        .text("Overall Model Performance")
+
     // Draw x-axis label
     svg_hist.append("text")
         .attr("x", width/2-52)
@@ -189,8 +197,8 @@ d3.json("docs.json", function(error, data) {
         .text("1.0")
 
     // draw legend
-    var legend_x = 120;
-    var legend_y = 30;
+    var legend_x = 110;
+    var legend_y = 40;
     svg_hist.append("text")
         .attr("x", legend_x + 25)
         .attr("y", legend_y + 20)
