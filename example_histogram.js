@@ -150,7 +150,7 @@ d3.json("docs.json", function(error, data) {
         .on("click", function(d) {on_click_document(d)});
 
     // add a reference line
-    var refLineData = [ {"bin_x": 0.485, "bin_y":-0.1}, {"bin_x":0.485, "bin_y":0.3}];
+    var refLineData = [ {"bin_x": 0.485, "bin_y":-0.03}, {"bin_x":0.485, "bin_y":0.3}];
     var refLine = svg_hist.append("path")
         .attr("d", refLineFunction(refLineData))
         .attr("stroke", "black")
@@ -165,6 +165,28 @@ d3.json("docs.json", function(error, data) {
         .attr("stroke-width", 0.8)
         .attr("fill", "none");
 
+    // Draw x-axis label
+    svg_hist.append("text")
+        .attr("x", width/2-52)
+        .attr("y", height-25)
+        .style("font-size", "14px")
+        .style("font-weight", "bold")
+        .text("Model prediction")
+    svg_hist.append("text")
+        .attr("x", width/2-15)
+        .attr("y", height-45)
+        .style("font-size", "14px")
+        .text("0.5")
+    svg_hist.append("text")
+        .attr("x", 112)
+        .attr("y", height-45)
+        .style("font-size", "14px")
+        .text("0.0")
+    svg_hist.append("text")
+        .attr("x", width-122)
+        .attr("y", height-45)
+        .style("font-size", "14px")
+        .text("1.0")
 
     // draw legend
     var legend_x = 120;
