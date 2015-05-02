@@ -10,7 +10,7 @@
 <script type="text/javascript" src="colors.js"></script>
 
 <!--Info button-->
-<div style="float:right">
+<div id="info_button">
     <button class="blue_button" onclick="show_info()">info</button>
 </div>
 <!--Info button contents-->
@@ -32,33 +32,28 @@
 <svg class="hovercard"></svg>
 
 
-<br/>
-
-<div id="text_editing">
-    <div style="width:30%;float:left;">
-        <textarea id="text" style = "width:100%;height:50%">
+    <br />
+<div id="side_by_side_text">
+    <div id="textarea_div">
+        <textarea id="textarea">
         </textarea>
     </div>
-
-
-    <div id="d3"></div>
-    <script src="code.js"></script>
-    <div id="text_buttons_div" style="height:50%">
-        <button class="green_button" onclick="change(null);">Change text to textarea--></button>
+    <div id="text_buttons_div">
+        <button class="green_button" onclick="change(null);">--></button>
         <br/>
-        <button class="green_button" onclick="change_to_selection();"><--Edit highlighted selection</button>
+        <button class="green_button" onclick="change_to_selection();"><--</button>
     </div>
-
+    <div id="d3">
+    </div>
+   <svg id="prediction_bar"></svg>
 </div>
+<br />
 
-<br/>
 <div id="weights_button_div", style="margin-top:10px">
     <button class="green_button" onclick="run();">Look at another example</button>
     <button class="green_button" id ="sort_button" onclick="sort();">Sort based on weights</button>
 </div>
-
-
-
+    <script src="code.js"></script>
 <div id="histogram_div"></div>
 <script src="example_histogram.js"></script>
 <script src="info_box.js"></script>

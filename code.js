@@ -52,7 +52,7 @@ function Predict(ex) {
 }
 function change(current_text, sort) {
   if (current_text === null) {
-    current_text = d3.select("#text").node().value;
+    current_text = d3.select("#textarea").node().value;
   }
   var ex = Object();
   ex.text = _.map(current_text.split(" "), function(w) { return {"word" : w, "weight": _.has(weights, w) ? weights[w] : 0};});
@@ -104,17 +104,12 @@ function revert_sort(){
 
 var div = d3.select("#d3");
 var height = "50%";
-div.style("width", "50%");
-div.style("height", height);
-div.style("float", "right");
-div.style("overflow", "scroll");
-div.style("font", "18px tahoma, sans-serif")
-var svg = d3.select("svg")
-svg.attr("width", "50%").attr("height", height);
+var svg = d3.select("#prediction_bar")
+svg.attr("width", "80px").attr("height", 225);
 svg.style("float", "left");
 var bar_height = 130;
 var y = d3.scale.linear().range([bar_height, 0]);
-var bar_x = 50;
+var bar_x = 20;
 
 var t_bar_yshift = 60;
 var t_bar_height = 80;
@@ -189,17 +184,16 @@ function FirstDraw() {
   bar.append("text").attr("x", bar_x + bar_width).attr("y",  y(d) + bar_yshift).style("font", "14px tahoma, sans-serif").attr("fill", "black").text(d);
   bar.append("text").attr("x", bar_x - 20).attr("y", 12).attr("fill", "black").style("font", "14px tahoma, sans-serif").text("Prediction");
 
-  true_class_x = bar_x + 150;
   d = 0
   var true_class = svg.append("g")
   true_class.classed("true_class", true);
   true_class.append("circle")
-      .attr("cx", true_class_x + 5)
-      .attr("cy",  80)
-      .attr("r",  40)
+      .attr("cx", bar_x + bar_width / 2)
+      .attr("cy",  y(0) + 3 * bar_yshift)
+      .attr("r",  bar_width /2)
       .attr("fill", d >= .5 ? pos_hex : neg_hex);
-  bar.append("text").attr("x", true_class_x - 30).attr("y", 12).attr("fill", "black").style("font", "14px tahoma, sans-serif").text("True Class");
-  bar.append("text").attr("x", bar_x - 20).attr("y", bar_height + bar_yshift + 50).style("font", "14px tahoma, sans-serif").attr("fill", "black").text("Classifier Accuracy: " + accuracy );
+  bar.append("text").attr("x", bar_x - 20).attr("y", y(0) + 2 * bar_yshift).attr("fill", "black").style("font", "14px tahoma, sans-serif").text("True Class");
+  //bar.append("text").attr("x", bar_x - 20).attr("y", bar_height + bar_yshift + 50).style("font", "14px tahoma, sans-serif").attr("fill", "black").text("Classifier Accuracy: " + accuracy );
 }
 function ShowExample(ex) {
   var text = div.selectAll("span").data(ex["text"]);
@@ -285,12 +279,9 @@ function ShowExample(ex) {
   d = ex.true_class
   var true_class = svg.selectAll(".true_class")
   true_class.select("circle").transition().duration(1000)
-      .attr("cx", true_class_x + 5)
-      .attr("cy",  80)
-      .attr("r",  40)
       .attr("fill", d >= .5 ? pos_hex : neg_hex);
   current_text = _.map(ex.text, function(x) {return x.word;}).join(" ")
-  d3.select("#text").node().value = current_text;
+  d3.select("#textarea").node().value = current_text;
 }
 //docs[0].text = GenerateWeights(docs[0].text)
 //ShowExample(docs[0])
