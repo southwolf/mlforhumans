@@ -1,5 +1,5 @@
 var margin = {top: 0, right: 0, bottom: 0, left: 0},
-    width = 1350 - margin.left - margin.right,
+    width = 1100 - margin.left - margin.right,
     height = 400 - margin.top - margin.bottom;
 var selected_document = 0;
 
@@ -115,8 +115,8 @@ d3.json("docs.json", function(error, data) {
 
     // Then map them to an actual x/y position within [0, 1]
 
+    xScale.domain([d3.min(data.docs, xValue), d3.max(data.docs, xValue)]);
     // don't want dots overlapping axis, so add in buffer to data domain
-    xScale.domain([d3.min(data.docs, xValue)-0.1, d3.max(data.docs, xValue)+0.1]);
     yScale.domain([d3.min(data.docs, yValue)-0.1, d3.max(data.docs, yValue)+0.1]);
 
     var square_size = 6;
@@ -149,9 +149,11 @@ d3.json("docs.json", function(error, data) {
                 .attr("fill", "rgb(255, 255, 255)");
 
             var s = "Document ID: " + d.doc_id + "<br />True class: ";
-            s += d.true_class > 0.5 ? "Christianity" : "Athiesm";
+            s += d.true_class > 0.5 ? "Christianity" : "Atheism";
             s += "<br/>Prediction: ";
-            s += d.prediction > 0.5 ? "Christianity" : "Athiesm";
+            s += d.prediction > 0.5 ? "Christianity" : "Atheism";
+            s += "<br /> P(Christianity) = ";
+            s += + d.prediction;
             hist_tooltip.html(s)
                 //"Document ID: " + d.doc_id + "<br />True class: " + d.true_class + "<br/>Prediction: " + d.prediction)
                 .style("left", (d3.event.pageX + 5) + "px")
@@ -201,31 +203,38 @@ d3.json("docs.json", function(error, data) {
 
     // Draw title
     svg_hist.append("text")
-        .attr("x", width/2-100)
+        .attr("x", width/2-200)
         .attr("y", 50)
         .style("font-size", "16px")
         .style("font-weight", "bold")
-        .text("Overall Model Performance")
+        .text("Overall Model Performance. Held-out accuracy: 0.925")
+        // TODO: Change this hardcode
 
     // Draw x-axis label
     svg_hist.append("text")
-        .attr("x", width/2-52)
+        .attr("x", width/2-130)
         .attr("y", height-25)
         .style("font-size", "14px")
         .style("font-weight", "bold")
-        .text("Model prediction")
+        .text("P(Christianity | example), given by the model")
+    svg_hist.append("text")
+        .attr("x", width/2-130)
+        .attr("y", height-10)
+        .style("font-size", "14px")
+        .style("font-weight", "bold")
+        .text("Examples above the horizontal axis are classified correctly.")
     svg_hist.append("text")
         .attr("x", width/2-15)
         .attr("y", height-45)
         .style("font-size", "14px")
         .text("0.5")
     svg_hist.append("text")
-        .attr("x", 112)
+        .attr("x", 0)
         .attr("y", height-45)
         .style("font-size", "14px")
         .text("0.0")
     svg_hist.append("text")
-        .attr("x", width-122)
+        .attr("x", width - 20)
         .attr("y", height-45)
         .style("font-size", "14px")
         .text("1.0")
@@ -243,16 +252,14 @@ d3.json("docs.json", function(error, data) {
         .attr("y", legend_y + 20)
         .attr("dy", "14px")
         .style("font-size", "14px")
-        .text("True class: Athiesm");
+        .text("True class: Atheism");
     svg_hist.append("rect")
-        .attr("class", "hist_dot")
         .attr("x", legend_x + 10)
         .attr("y", legend_y + 10)
         .attr("width", 10)
         .attr("height", 10)
         .style("fill", "rgb(" + pos_color + ")");
     svg_hist.append("rect")
-        .attr("class", "hist_dot")
         .attr("x", legend_x + 10)
         .attr("y", legend_y + 25)
         .attr("width", 10)

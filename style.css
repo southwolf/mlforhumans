@@ -134,6 +134,7 @@
 
 #histogram_div {
   width:100%;
+  margin: 0px 0px 0px 20px;
 }
 ::-webkit-scrollbar {
     -webkit-appearance: none;
