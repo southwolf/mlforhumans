@@ -182,7 +182,7 @@ function FirstDraw() {
       .attr("fill-opacity", 0)
       .attr("stroke", "black");
   bar.append("text").attr("x", bar_x + bar_width).attr("y",  y(d) + bar_yshift).style("font", "14px tahoma, sans-serif").attr("fill", "black").text(d);
-  bar.append("text").attr("x", bar_x - 20).attr("y", 12).attr("fill", "black").style("font", "14px tahoma, sans-serif").text("Prediction");
+  bar.append("text").attr("x", bar_x - 30).attr("y", 12).attr("fill", "black").style("font", "14px tahoma, sans-serif").text("P(Christianity)");
 
   d = 0
   var true_class = svg.append("g")
@@ -192,6 +192,7 @@ function FirstDraw() {
       .attr("cy",  y(0) + 3 * bar_yshift)
       .attr("r",  bar_width /2)
       .attr("fill", d >= .5 ? pos_hex : neg_hex);
+  true_class.append("svg:title").text("");
   bar.append("text").attr("x", bar_x - 20).attr("y", y(0) + 2 * bar_yshift).attr("fill", "black").style("font", "14px tahoma, sans-serif").text("True Class");
   //bar.append("text").attr("x", bar_x - 20).attr("y", bar_height + bar_yshift + 50).style("font", "14px tahoma, sans-serif").attr("fill", "black").text("Classifier Accuracy: " + accuracy );
 }
@@ -279,6 +280,7 @@ function ShowExample(ex) {
   var true_class = svg.selectAll(".true_class")
   true_class.select("circle").transition().duration(1000)
       .attr("fill", d >= .5 ? pos_hex : neg_hex);
+  true_class.select("title").text(d > .5 ? "Christianity" : "Atheism" );
   current_text = _.map(ex.text, function(x) {return x.word;}).join(" ")
   d3.select("#textarea").node().value = current_text;
 }
