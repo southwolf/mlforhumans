@@ -7,7 +7,7 @@
 .hist_tooltip {
     position: absolute;
     width: 200px;
-    height: 60px;
+    height: 75px;
     pointer-events: none;
     background-color: #ffffff;
     font: 15px tahoma, sans-serif;
