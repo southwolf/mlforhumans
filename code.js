@@ -259,8 +259,8 @@ function ShowExample(ex) {
       });
 
   // do the remove first, then the add
-  text.exit().transition().duration(1000).style("opacity", 0).remove();
-  //text.exit().remove();
+  //text.exit().transition().duration(1000).style("opacity", 0).remove();
+  text.exit().remove();
   bar_width = 30;
   bar_yshift = 25;
   d = ex.prediction
