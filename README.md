@@ -13,11 +13,19 @@ Many people use machine learning algorithms blindly, just looking at summary sta
 
 Our visualization lets users:
 * Quickly see what words the model thinks are most important for each class.
-* Interactively edit a document, and see how the prediction changes.
-* Zoom in particular words (by hovering), to better understand why the model is learning what it is learning.
-* See all of the cross validation examples ordered by algorithm prediction, and interactively visualize any example.
+* Interactively edit a document, and see how the prediction changes. This interaction can be done by:
+    - Editing the document in the text box.
+    - Selecting a part of the document from the displayed text.
+* Zoom in particular words (by hovering), to better understand why the model is learning what it is learning by the way of summary statistics.
+* See all of the cross validation examples ordered by algorithm prediction.
+    - Interactively choose an example and look at the model details.
 
 Some quick exploration quickly tells a story that many top researchers in the field seem to have missed (probably due to just looking at summary statistics). Even though the accuracy for this particular dataset is very high, the algorithm is learning to distinguish between features that are artifacts of how the data was collected. A lot of weight is put on user names and email addresses who usually post to only one newsgroup. One particular example is the word 'rutgers' in the email address, which appears in 22% of the documents in the data - **always** in documents about Christianity. Removing these words quickly makes sure-fire predictions wrong. We note that just looking at the raw dataset does not immediately produce such insights (who would think to look at the class distribution for a word like 'rutgers' in this task?) - they come from seeing how the machine learning algorithm is making predictions.
+
+### Encoding choices: **TODO**
+* Size of words represent the magnitude of its weight.
+* Color and opacity of words represent the what class it belongs to. 
+    - To avoid clutter, and make the most important words stand out, the words with weight below a certain threshold were given a neutral color.
 
 ## Running Instructions
 
