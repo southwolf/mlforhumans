@@ -86,12 +86,12 @@ function sort(){
   if (sort_order == "document_order") {
     change(null, true);
     sort_order = "weight_order";
-    d3.select("#sort_button").text("Revert to original word order")
+    d3.select("#sort_button").text("Revert words to original order")
   }
   else {
     revert_sort();
     sort_order = "document_order";
-    d3.select("#sort_button").text("Sort based on weights")
+    d3.select("#sort_button").text("Sort words based on weights")
   }
 }
 
