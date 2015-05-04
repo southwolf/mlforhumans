@@ -23,14 +23,14 @@ Our visualization lets users:
 Some quick exploration quickly tells a story that many top researchers in the field seem to have missed (probably due to just looking at summary statistics). Even though the accuracy for this particular dataset is very high, the algorithm is learning to distinguish between features that are artifacts of how the data was collected. A lot of weight is put on user names and email addresses who usually post to only one newsgroup. One particular example is the word 'rutgers' in the email address, which appears in 22% of the documents in the data - **always** in documents about Christianity. Removing these words quickly makes sure-fire predictions wrong. We note that just looking at the raw dataset does not immediately produce such insights (who would think to look at the class distribution for a word like 'rutgers' in this task?) - they come from seeing how the machine learning algorithm is making predictions. A few minutes with the visualization lets us see that this classifier will probably not generalize to data outside of this particular dataset.
 
 ### Some rationale for encoding choices:
-** Text on the right:**
+**Text on the right:**
 * Size of words represent the magnitude of its weight. At some point we changed this to opacity, but we changed it back. Size is just easier for people to quickly glance what the most important words are. We left opacity as a double encoding, but it is barely perceptible. Since weight is quantitative, we think size is a good choice (position was already taken by the text itself).
 * Color: represents what class the word 'belongs to' - i.e. is the weight positive or negative for the 'Christianity' class. To avoid clutter, and make the most important words stand out, the words with weight below a certain threshold were given a neutral color. Since this is a nominal attribute, color works well.
 
-** Prediction bar on the right: **
+**Prediction bar on the right:**
 * We used a triple encoding for the prediction: bar position (animated as we change the text), text (value) and color for pointing out when the class changes. Color in this case is redundant, since one can figure out the class by checking if the value is higher or lower than 0.5. Bar position helps us track the changes interactively, color takes out the mental effort of having to think which class it is (especially with the true class on the bottom), and value lets us have precision if it is needed.
  
-** Dataset visualization on the bottom:**
+**Dataset visualization on the bottom:**
 * Each square is a training example. The prediction of the model is encoded by horizontal position (binned into 14 separate bins), and the true class by color. Note that this is somewhat redundant with the prediction bar on the right - but the prediction right on the bar is much better for the task of visualizing one example (and tracking it's changes), while this provides us an overview of the whole data.
 * We encode whether or not an example is classified correctly by vertical position (up is correctly classified, down is incorrectly). Combined with the encoding above, this give us powerful insights over the performance of a particular classifier: we can visually perceive the proportion of misclassified examples by comparing what is above and below the horizontal line, we can quickly pick out examples where the model is most mistaken about (bottom right and left corners), or examples in the decision boundary (close to the vertical line), which are both useful for understanding the model.
 * The distinction between the example being visualized in the top and the rest is encoded by opacity (low values for the rest of the dataset).
@@ -41,7 +41,7 @@ Some quick exploration quickly tells a story that many top researchers in the fi
 Access our visualization at [this link](https://cse512-15s.github.io/a3-marcotcr-shrainik-bdol/) or download this repository and run `python -m SimpleHTTPServer 9000` and access this from http://localhost:9000/.
 
 
-## Story Board **TODO**
+## Story Board
 
 [Here it is.](storyboards.pdf?raw=true).
 
