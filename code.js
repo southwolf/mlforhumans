@@ -1,5 +1,6 @@
 var weights;
 var docs;
+var current;
 var size;
 var accuracy;
 var previous_text;

@@ -94,6 +94,7 @@ var refLineFunction = d3.svg.line()
 
 var on_click_document = function(d) {
     selected_document = d.doc_id;
+    current = d.doc_id;
 
 
     if (typeof docs[d.doc_id].text[0].weight == 'undefined') {
