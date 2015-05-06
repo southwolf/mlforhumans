@@ -95,6 +95,8 @@ var refLineFunction = d3.svg.line()
 var on_click_document = function(d) {
     selected_document = d.doc_id;
     current = d.doc_id;
+    sort_order = "document_order";
+    d3.select("#sort_button").text("Sort words based on weights")
 
 
     if (typeof docs[d.doc_id].text[0].weight == 'undefined') {
