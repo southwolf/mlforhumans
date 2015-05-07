@@ -11,7 +11,7 @@ function set_doc_ids(docs) {
 
 function map_examples_to_bin(docs, n_bins) {
     for (var i=0; i<docs.length; i++) {
-        var pred = docs[i].prediction;
+        var pred = docs[i].predict_proba[1];
         docs[i].pred_bin = Math.floor(pred*n_bins);
         if (docs[i].pred_bin >= n_bins) {
             docs[i].pred_bin -= 1;
@@ -32,12 +32,9 @@ function map_examples_to_pos(docs, n_bins, bin_width) {
         var bin = docs[i].pred_bin;
 
         var correct = false;
-        if (docs[i].prediction >= 0.5 && docs[i].true_class >= 0.5) {
-            correct = true;
-        } else if (docs[i].prediction < 0.5 && docs[i].true_class < 0.5) {
+        if (docs[i].prediction === docs[i].true_class) {
             correct = true;
         }
-
         // Set the relative x position of the data point
         var bin_x = 0.0;
         if (correct) {
@@ -97,42 +94,39 @@ var on_click_document = function(d) {
     current = d.doc_id;
     sort_order = "document_order";
     d3.select("#sort_button").text("Sort words based on weights")
-
-
-    if (typeof docs[d.doc_id].text[0].weight == 'undefined') {
-        docs[d.doc_id].text = GenerateWeights(docs[d.doc_id].text);
-    }
-    ShowExample(docs[d.doc_id]);
+    GetPredictionAndShowExample(d.text, d.true_class);
 }
 
 // load data
-d3.json("docs.json", function(error, data) {
+d3.json("new.json", function(error, data) {
     // Initialize the document IDs
-    set_doc_ids(data.docs)
+    set_doc_ids(data.test)
+    test_accuracy = data.test_accuracy;
 
+    var class_names = data.class_names;
     // Figure out which examples go in which bins
     var n_bins = 14;
     var bin_width = 8;
-    map_examples_to_bin(data.docs, n_bins);
-    map_examples_to_pos(data.docs, n_bins, bin_width);
+    map_examples_to_bin(data.test, n_bins);
+    map_examples_to_pos(data.test, n_bins, bin_width);
 
     // Then map them to an actual x/y position within [0, 1]
 
-    xScale.domain([d3.min(data.docs, xValue), d3.max(data.docs, xValue)]);
+    xScale.domain([d3.min(data.test, xValue), d3.max(data.test, xValue)]);
     // don't want dots overlapping axis, so add in buffer to data domain
-    yScale.domain([d3.min(data.docs, yValue)-0.1, d3.max(data.docs, yValue)+0.1]);
+    yScale.domain([d3.min(data.test, yValue)-0.1, d3.max(data.test, yValue)+0.1]);
 
     var square_size = 6;
     // draw dots
     svg_hist.selectAll(".hist_dot")
-        .data(data.docs)
+        .data(data.test)
         .enter().append("rect")
         .attr("class", "hist_dot")
         .attr("width", square_size)
         .attr("height", square_size)
         .attr("x", xMap)
         .attr("y", yMap)
-        .style("fill", function(d) { return d.true_class >= 0.5 ? "rgb("+pos_color+")" : "rgb("+neg_color+")" })
+        .style("fill", function(d) { return d.true_class === 1 ? "rgb("+pos_color+")" : "rgb("+neg_color+")" })
         .style("opacity", function(d) { return d.doc_id === selected_document ? 1.0 : 0.4})
         .on("mouseover", function(d) {
             var xPosition = parseFloat(d3.select(this).attr("x"));
@@ -152,11 +146,11 @@ d3.json("docs.json", function(error, data) {
                 .attr("fill", "rgb(255, 255, 255)");
 
             var s = "Document ID: " + d.doc_id + "<br />True class: ";
-            s += d.true_class > 0.5 ? "Christianity" : "Atheism";
+            s += class_names[d.true_class];
             s += "<br/>Prediction: ";
-            s += d.prediction > 0.5 ? "Christianity" : "Atheism";
-            s += "<br /> P(Christianity) = ";
-            s += + d.prediction;
+            s += class_names[d.prediction];
+            s += "<br /> P(" + class_names[1] + ") = ";
+            s += + d.predict_proba[1];
             hist_tooltip.html(s)
                 //"Document ID: " + d.doc_id + "<br />True class: " + d.true_class + "<br/>Prediction: " + d.prediction)
                 .style("left", (d3.event.pageX + 5) + "px")
@@ -210,7 +204,7 @@ d3.json("docs.json", function(error, data) {
         .attr("y", 50)
         .style("font-size", "16px")
         .style("font-weight", "bold")
-        .text("Overall Model Performance. Held-out accuracy: 0.925")
+        .text("Overall Model Performance. Held-out accuracy: " + test_accuracy)
         // TODO: Change this hardcode
 
     // Draw x-axis label
@@ -219,7 +213,7 @@ d3.json("docs.json", function(error, data) {
         .attr("y", height-25)
         .style("font-size", "14px")
         .style("font-weight", "bold")
-        .text("P(Christianity | example), given by the model")
+        .text("P(" + class_names[1] + ") | example), given by the model")
     svg_hist.append("text")
         .attr("x", width/2-130)
         .attr("y", height-10)
@@ -249,13 +243,13 @@ d3.json("docs.json", function(error, data) {
         .attr("x", legend_x + 25)
         .attr("y", legend_y + 20)
         .style("font-size", "14px")
-        .text("True class: Christianity");
+        .text("True class: " + class_names[1]);
     svg_hist.append("text")
         .attr("x", legend_x + 25)
         .attr("y", legend_y + 20)
         .attr("dy", "14px")
         .style("font-size", "14px")
-        .text("True class: Atheism");
+        .text("True class: " + class_names[0]);
     svg_hist.append("rect")
         .attr("x", legend_x + 10)
         .attr("y", legend_y + 10)
