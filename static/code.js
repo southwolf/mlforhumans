@@ -15,7 +15,7 @@ d3.json("new.json",  function(error, json) {
   // var min = d3.min(_.map(_.values(weights), Math.abs));
   min = 0;
   max = 1;
-  size = d3.scale.linear().domain([min, max]).range([15, 30]);
+  size = d3.scale.linear().domain([min, max]).range([15, 40]);
   FirstDraw();
   FirstDrawTooltip()
   current = 0;
@@ -213,8 +213,8 @@ function ShowExample(ex) {
   text.enter().append("span");
   text.html(function (d,i) {return d.word != "\n" ? d.word + " " : "<br />"; })
       .style("color", function(d, i) {
-        var w = 5;
-        var color_thresh = 0.01;
+        var w = 20;
+        var color_thresh = 0.02;
         if (d.weight > color_thresh) {
           color = d.cl === 0 ? neg_color : pos_color;
           return "rgba(" + color +", " + (w*d.weight+0.2) +")";
