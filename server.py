@@ -49,7 +49,7 @@ def GenerateJSONs(class_names, train_data, train_labels, test_data, test_labels,
   output['class_names'] = class_names
   output['train'] = GetJsonExampleList(train_data, train_vectors, train_labels, classifier, tokenizer)
   output['test'] = GetJsonExampleList(test_data, test_vectors, test_labels, classifier, tokenizer)
-  output['word_attributes'] = {}
+  output['feature_attributes'] = {}
   output['test_accuracy'] = round(accuracy_score(test_labels, classifier.predict(test_vectors)), 3)
   predictions = classifier.predict(test_vectors)
   train_count = np.bincount(train_vectors.nonzero()[1])
@@ -58,16 +58,16 @@ def GenerateJSONs(class_names, train_data, train_labels, test_data, test_labels,
     prob = float(train_count[i]) / train_labels.shape[0]
     test_freq = float(test_count[i]) / test_labels.shape[0]
     if prob > .01:
-      output['word_attributes'][word] = {}
-      output['word_attributes'][word]['train_freq'] = round(prob, 2)
-      output['word_attributes'][word]['test_freq'] = round(test_freq, 2)
-      output['word_attributes'][word]['train_distribution'] = np.bincount(train_labels[train_vectors.nonzero()[0][train_vectors.nonzero()[1] == i]], minlength=len(class_names)).astype('float')
-      output['word_attributes'][word]['train_distribution'] /= sum(output['word_attributes'][word]['train_distribution'])
-      output['word_attributes'][word]['train_distribution'] = RoundAndListifyVector(output['word_attributes'][word]['train_distribution'])
-      output['word_attributes'][word]['test_distribution'] = np.bincount(predictions[test_vectors.nonzero()[0][test_vectors.nonzero()[1] == i]], minlength=len(class_names)).astype('float')
+      output['feature_attributes'][word] = {}
+      output['feature_attributes'][word]['train_freq'] = round(prob, 2)
+      output['feature_attributes'][word]['test_freq'] = round(test_freq, 2)
+      output['feature_attributes'][word]['train_distribution'] = np.bincount(train_labels[train_vectors.nonzero()[0][train_vectors.nonzero()[1] == i]], minlength=len(class_names)).astype('float')
+      output['feature_attributes'][word]['train_distribution'] /= sum(output['feature_attributes'][word]['train_distribution'])
+      output['feature_attributes'][word]['train_distribution'] = RoundAndListifyVector(output['feature_attributes'][word]['train_distribution'])
+      output['feature_attributes'][word]['test_distribution'] = np.bincount(predictions[test_vectors.nonzero()[0][test_vectors.nonzero()[1] == i]], minlength=len(class_names)).astype('float')
       if test_count[i] > 0:
-        output['word_attributes'][word]['test_distribution'] /= sum(output['word_attributes'][word]['test_distribution'])
-      output['word_attributes'][word]['test_distribution'] = RoundAndListifyVector(output['word_attributes'][word]['test_distribution'])
+        output['feature_attributes'][word]['test_distribution'] /= sum(output['feature_attributes'][word]['test_distribution'])
+      output['feature_attributes'][word]['test_distribution'] = RoundAndListifyVector(output['feature_attributes'][word]['test_distribution'])
   json.dump(output, open(output_json, 'w'))
   
 def LoadDataset(dataset_name):
@@ -92,7 +92,7 @@ def WordImportance(classifier, example, inverse_vocabulary):
     example[0,i] = 0
     pred = classifier.predict_proba(example)[0]
     imp[inverse_vocabulary[i]] = {}
-    imp[inverse_vocabulary[i]]['weight'] = sum(abs(pred - orig))
+    imp[inverse_vocabulary[i]]['weight'] = np.max(abs(pred - orig))
     imp[inverse_vocabulary[i]]['class'] = np.argmin(pred - orig)
     example[0,i] = val
   return imp
@@ -142,6 +142,8 @@ def main():
         ret['predict_proba'] = RoundAndListifyVector(classifier.predict_proba(v)[0])
         ret['prediction'] = classifier.predict(v)[0]
         ret['feature_weights'] = WordImportance(classifier, v, inverse_vocabulary)
+        make_map = lambda x:{'feature':x[0], 'weight' : x[1]['weight'], 'class': x[1]['class']}
+        ret['sorted_weights'] = map(make_map, sorted(ret['feature_weights'].iteritems(), key=lambda x:x[1]['weight'], reverse=True))
         return ret
     @route('/')
     def root_fun():

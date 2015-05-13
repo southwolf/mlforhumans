@@ -1,15 +1,17 @@
-var train_docs, test_docs, current, size, test_accuracy, previous_text, word_attributes;
+var train_docs, test_docs, current, size, test_accuracy, previous_text, feature_attributes;
 var sort_order = "document_order";
 var class_names;
+var class_colors;
 var current_object;
 
 d3.json("new.json",  function(error, json) {
   if (error) return console.warn(error);
   train_docs = json.train;
   test_docs = json.test;
-  word_attributes = json.word_attributes;
+  feature_attributes = json.feature_attributes;
   test_accuracy = json.test_accuracy;
   class_names = json.class_names;
+  class_colors = ["rgba(" + neg_color + ",1)", "rgba(" + pos_color + ",1)"];
   //docs[0].text = GenerateWeights(docs[0].text);
   // var max = d3.max(_.map(_.values(weights), Math.abs));
   // var min = d3.min(_.map(_.values(weights), Math.abs));
@@ -31,7 +33,12 @@ function GetPredictionAndShowExample(example_text_split, true_class) {
       if (xhr.status === 200) {
           var prediction_object = JSON.parse(xhr.responseText);
           current_object = GenerateObject(example_text_split, true_class, prediction_object);
-          ShowExample(current_object);
+          if (sort_order == "document_order") {
+            ShowExample(current_object);
+          }
+          else {
+            ShowWeights(current_object);
+          }
       }
   };
 //xhr.send();
@@ -42,20 +49,21 @@ xhr.send(JSON.stringify({
 
 // Takes in a word array and the object returned by the python server, outputs
 // an object that is used by ShowExample
-function GenerateObject(word_array, true_class, prediction_object) {
+function GenerateObject(feature_array, true_class, prediction_object) {
   ret = Object();
-  ret.text = _.map(word_array, function(w) {
+  ret.text = _.map(feature_array, function(w) {
         if (_.has(prediction_object.feature_weights, w)) {
-          return {"word" : w, "weight": prediction_object.feature_weights[w]["weight"], cl : prediction_object.feature_weights[w]["class"]};
+          return {"feature" : w, "weight": prediction_object.feature_weights[w]["weight"], cl : prediction_object.feature_weights[w]["class"]};
         }
         else {
-          return {"word" : w, "weight": 0, cl : 0};
+          return {"feature" : w, "weight": 0, cl : 0};
         }
       }
   )
   ret.prediction = prediction_object.prediction;
   ret.predict_proba = prediction_object.predict_proba;
   ret.true_class = true_class;
+  ret.sorted_weights = prediction_object.sorted_weights;
   return ret;
 }
 
@@ -89,19 +97,18 @@ function change_to_selection() {
   }
 }
 
-// TODO: sort
-// function sort(){
-//   if (sort_order == "document_order") {
-//     change(null, true);
-//     sort_order = "weight_order";
-//     d3.select("#sort_button").text("Revert words to original order")
-//   }
-//   else {
-//     revert_sort();
-//     sort_order = "document_order";
-//     d3.select("#sort_button").text("Sort words based on weights")
-//   }
-// }
+function sort(){
+  if (sort_order == "document_order") {
+    ShowWeights(current_object);
+    sort_order = "weight_order";
+    d3.select("#sort_button").text("Show text")
+  }
+  else {
+    ShowExample(current_object);
+    sort_order = "document_order";
+    d3.select("#sort_button").text("Show feature contributions")
+  }
+}
 
 // function revert_sort(){
 //   if(previous_text !== undefined || previous_text === null)
@@ -204,36 +211,70 @@ function FirstDraw() {
   bar.append("text").attr("x", bar_x - 20).attr("y", y(0) + 2 * bar_yshift).attr("fill", "black").style("font", "14px tahoma, sans-serif").text("True Class");
   //bar.append("text").attr("x", bar_x - 20).attr("y", bar_height + bar_yshift + 50).style("font", "14px tahoma, sans-serif").attr("fill", "black").text("Classifier Accuracy: " + accuracy );
 }
-// Takes in an object that has the following attributes:
-// text -> a list of (word,weight) pairs.
-// prediction -> a single integer
-// predict_proba -> list of floats, corresponding to the probability of each // class
-function ShowExample(ex) {
-  var text = div.selectAll("span").data(ex.text);
-  text.enter().append("span");
-  text.html(function (d,i) {return d.word != "\n" ? d.word + " " : "<br />"; })
-      .style("color", function(d, i) {
-        var w = 20;
-        var color_thresh = 0.02;
-        if (d.weight > color_thresh) {
-          color = d.cl === 0 ? neg_color : pos_color;
-          return "rgba(" + color +", " + (w*d.weight+0.2) +")";
-        }
-        else {
-          return "rgba(0, 0, 0, 0.35)";
-        }
-      })
-      .style("font-size", function(d,i) {return size(Math.abs(d.weight))+"px";})
-      .on("mouseover", function(d) {
+function CleanD3Div() {
+  div.selectAll("span").remove();
+  div.selectAll("svg").remove();
+}
+function ShowWeights(ex) {
+  CleanD3Div();
+  var data = ex.sorted_weights;
+  var n_bars = data.length;
+  var bar_height = 19;
+  var total_height = (bar_height + 10) * n_bars;
+  var xscale = d3.scale.linear()
+          .domain([0,1])
+          .range([0,500]);
+
+  var yscale = d3.scale.linear()
+          .domain([0, n_bars])
+          .range([0,total_height]);
+  var canvas = div.append("svg").attr({'width':'100%','height': (total_height + 10) + "px"});
+  // TODO make this axis appropriate
+  var yAxis = d3.svg.axis();
+      yAxis
+        .orient('left')
+        .scale(yscale)
+        .tickSize(2)
+        .tickFormat(function(d,i){ return i == 0 ? "" :  data[i - 1].feature })
+        .tickValues(d3.range(0,n_bars));
+    var y_xis = canvas.append('g')
+              .attr("transform", "translate(100, 0)")
+              .attr('id','yaxis')
+              .call(yAxis);
+  var chart = canvas.append('g')
+              .attr("transform", "translate(100,0)")
+              .attr('id','bars')
+              .selectAll('rect')
+              .data(data)
+              .enter()
+              .append('rect')
+              .attr('height',bar_height)
+              .attr({'x':0,'y':function(d,i){ return yscale(i)+bar_height; }})
+              .style('fill',function(d,i){ return class_colors[d.class]; })
+              .attr('width',function(d){ return xscale(d.weight); })
+              .on("mouseover", ShowFeatureTooltip)
+              .on("mouseout", HideFeatureTooltip);
+  // TODO: make hover work on this maybe
+  var bartext = canvas.select("#bars")
+                .selectAll("text")
+                .data(data)
+                .enter()
+                .append('text')
+                .attr({'x':function(d) {return xscale(d.weight) + 5; },'y':function(d,i){ return yscale(i)+35; }})
+                .text(function (d) {return d.weight.toFixed(3);});
+
+}
+function ShowFeatureTooltip(d) {
+  // Assumes d has d.feature
         var freq;
         var prob;
-        if (typeof word_attributes[d.word] == 'undefined') {
+        if (typeof feature_attributes[d.feature] == 'undefined') {
           freq = 0;
           prob = "0.5";
         }
         else {
-          freq = word_attributes[d.word]['train_freq'];
-          prob = word_attributes[d.word]['train_distribution'][1];
+          freq = feature_attributes[d.feature]['train_freq'];
+          prob = feature_attributes[d.feature]['train_distribution'][1];
         }
         tooltip.transition()
             .delay(1000)
@@ -260,14 +301,37 @@ function ShowExample(ex) {
             .attr("fill", "black")
             .text(prob);
         var word = tooltip.select("#focus_feature")
-        word.text(d.word);
+        word.text(d.feature);
+}
+function HideFeatureTooltip(){
+  tooltip.transition()
+      .duration(500)
+      .style("opacity", 0);
+}
 
+// Takes in an object that has the following attributes:
+// text -> a list of (word,weight) pairs.
+// prediction -> a single integer
+// predict_proba -> list of floats, corresponding to the probability of each // class
+function ShowExample(ex) {
+  CleanD3Div();
+  var text = div.selectAll("span").data(ex.text);
+  text.enter().append("span");
+  text.html(function (d,i) {return d.feature != "\n" ? d.feature + " " : "<br />"; })
+      .style("color", function(d, i) {
+        var w = 20;
+        var color_thresh = 0.02;
+        if (d.weight > color_thresh) {
+          color = d.cl === 0 ? neg_color : pos_color;
+          return "rgba(" + color +", " + (w*d.weight+0.2) +")";
+        }
+        else {
+          return "rgba(0, 0, 0, 0.35)";
+        }
       })
-      .on("mouseout", function(d) {
-        tooltip.transition()
-            .duration(500)
-            .style("opacity", 0);
-      });
+      .style("font-size", function(d,i) {return size(Math.abs(d.weight))+"px";})
+      .on("mouseover", ShowFeatureTooltip)
+      .on("mouseout", HideFeatureTooltip);
 
   // TODO:
   // do the remove first, then the add for smoothness
@@ -294,7 +358,7 @@ function ShowExample(ex) {
   true_class.select("circle").transition().duration(1000)
       .attr("fill", d >= .5 ? pos_hex : neg_hex);
   true_class.select("title").text(d > .5 ? class_names[1] : class_names[0] );
-  current_text = _.map(ex.text, function(x) {return x.word;}).join(" ")
+  current_text = _.map(ex.text, function(x) {return x.feature;}).join(" ")
   d3.select("#textarea").node().value = current_text;
 }
 
