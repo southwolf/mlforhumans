@@ -21,7 +21,7 @@ d3.json("new.json",  function(error, json) {
   FirstDraw();
   FirstDrawTooltip()
   current = 0;
-  GetPredictionAndShowExample(test_docs[0].text, test_docs[0].true_class);
+  GetPredictionAndShowExample(test_docs[0].features, test_docs[0].true_class);
   //ShowExample(docs[0]);
 })
 
@@ -43,7 +43,7 @@ function GetPredictionAndShowExample(example_text_split, true_class) {
   };
 //xhr.send();
 xhr.send(JSON.stringify({
-    text: example_text_split,
+    features: example_text_split,
 }));
 }
 
@@ -51,7 +51,7 @@ xhr.send(JSON.stringify({
 // an object that is used by ShowExample
 function GenerateObject(feature_array, true_class, prediction_object) {
   ret = Object();
-  ret.text = _.map(feature_array, function(w) {
+  ret.features = _.map(feature_array, function(w) {
         if (_.has(prediction_object.feature_weights, w)) {
           return {"feature" : w, "weight": prediction_object.feature_weights[w]["weight"], cl : prediction_object.feature_weights[w]["class"]};
         }
@@ -99,11 +99,13 @@ function change_to_selection() {
 
 function sort(){
   if (sort_order == "document_order") {
+    CleanD3Div();
     ShowWeights(current_object);
     sort_order = "weight_order";
     d3.select("#sort_button").text("Show text")
   }
   else {
+    CleanD3Div();
     ShowExample(current_object);
     sort_order = "document_order";
     d3.select("#sort_button").text("Show feature contributions")
@@ -216,7 +218,6 @@ function CleanD3Div() {
   div.selectAll("svg").remove();
 }
 function ShowWeights(ex) {
-  CleanD3Div();
   var data = ex.sorted_weights;
   var n_bars = data.length;
   var bar_height = 19;
@@ -228,7 +229,7 @@ function ShowWeights(ex) {
   var yscale = d3.scale.linear()
           .domain([0, n_bars])
           .range([0,total_height]);
-  var canvas = div.append("svg").attr({'width':'100%','height': (total_height + 10) + "px"});
+
   // TODO make this axis appropriate
   var yAxis = d3.svg.axis();
       yAxis
@@ -236,32 +237,52 @@ function ShowWeights(ex) {
         .scale(yscale)
         .tickSize(2)
         .tickFormat(function(d,i){ return i == 0 ? "" :  data[i - 1].feature })
-        .tickValues(d3.range(0,n_bars));
-    var y_xis = canvas.append('g')
+        .tickValues(d3.range(0,n_bars + 1));
+  var canvas;
+  var chart;
+  var y_xis;
+  if (div.select("svg").empty()) {
+    canvas = div.append("svg").attr({'width':'100%','height': (total_height + 10) + "px"});
+    chart = canvas.append('g')
+              .attr("transform", "translate(100,0)")
+              .attr('id','bars');
+    y_xis = canvas.append('g')
               .attr("transform", "translate(100, 0)")
               .attr('id','yaxis')
               .call(yAxis);
-  var chart = canvas.append('g')
-              .attr("transform", "translate(100,0)")
-              .attr('id','bars')
-              .selectAll('rect')
-              .data(data)
-              .enter()
-              .append('rect')
-              .attr('height',bar_height)
-              .attr({'x':0,'y':function(d,i){ return yscale(i)+bar_height; }})
-              .style('fill',function(d,i){ return class_colors[d.class]; })
-              .attr('width',function(d){ return xscale(d.weight); })
-              .on("mouseover", ShowFeatureTooltip)
-              .on("mouseout", HideFeatureTooltip);
+  }
+  else {
+  // This is a transition
+    canvas = div.select("svg");
+    chart = canvas.select('#bars');
+    canvas.select("#yaxis").transition().duration(1000).call(yAxis);
+    //canvas.transition().delay(1000).each("end", function (){canvas.select("#yaxis").transition().duration(1000).call(yAxis)});
+    //return;
+    //y_xis = canvas.select("#yaxis").transition().delay(3000).call(yAxis);
+  }
+  bars = chart.selectAll('rect').data(data)
+  bars.enter()
+      .append('rect')
+      .on("mouseover", ShowFeatureTooltip)
+      .attr('height',bar_height)
+      .attr({'x':0,'y':function(d,i){ return yscale(i)+bar_height; }})
+      .attr('width', 0)
+      .style('fill',function(d,i){ return class_colors[d.class]; })
+      .on("mouseout", HideFeatureTooltip)
+  bars.transition().duration(1000)
+      .attr('width',function(d){ return xscale(d.weight); })
+      .style('fill',function(d,i){ return class_colors[d.class]; })
+  bars.exit().transition().duration(1000).attr('width', 0).remove();
   // TODO: make hover work on this maybe
-  var bartext = canvas.select("#bars")
-                .selectAll("text")
-                .data(data)
-                .enter()
-                .append('text')
-                .attr({'x':function(d) {return xscale(d.weight) + 5; },'y':function(d,i){ return yscale(i)+35; }})
-                .text(function (d) {return d.weight.toFixed(3);});
+  var bartext = canvas.select("#bars").selectAll("text").data(data)
+  bartext.enter()
+         .append('text')
+         .attr({'x':function(d) {return xscale(d.weight) + 5; },'y':function(d,i){ return yscale(i)+35; }})
+  bartext.transition().duration(1000).
+    text(function (d) {return d.weight.toFixed(3);})
+    .attr({'x':function(d) {return xscale(d.weight) + 5; },'y':function(d,i){ return yscale(i)+35; }})
+  bartext.exit().transition().remove();
+  UpdatePredictionBar(ex);
 
 }
 function ShowFeatureTooltip(d) {
@@ -309,34 +330,11 @@ function HideFeatureTooltip(){
       .style("opacity", 0);
 }
 
+function UpdatePredictionBar(ex) {
 // Takes in an object that has the following attributes:
-// text -> a list of (word,weight) pairs.
+// features -> a list of (feature,weight) pairs.
 // prediction -> a single integer
 // predict_proba -> list of floats, corresponding to the probability of each // class
-function ShowExample(ex) {
-  CleanD3Div();
-  var text = div.selectAll("span").data(ex.text);
-  text.enter().append("span");
-  text.html(function (d,i) {return d.feature != "\n" ? d.feature + " " : "<br />"; })
-      .style("color", function(d, i) {
-        var w = 20;
-        var color_thresh = 0.02;
-        if (d.weight > color_thresh) {
-          color = d.cl === 0 ? neg_color : pos_color;
-          return "rgba(" + color +", " + (w*d.weight+0.2) +")";
-        }
-        else {
-          return "rgba(0, 0, 0, 0.35)";
-        }
-      })
-      .style("font-size", function(d,i) {return size(Math.abs(d.weight))+"px";})
-      .on("mouseover", ShowFeatureTooltip)
-      .on("mouseout", HideFeatureTooltip);
-
-  // TODO:
-  // do the remove first, then the add for smoothness
-  //text.exit().transition().duration(1000).style("opacity", 0).remove();
-  text.exit().remove();
   bar_width = 30;
   bar_yshift = 25;
   // TODO: change for multiclass
@@ -358,7 +356,36 @@ function ShowExample(ex) {
   true_class.select("circle").transition().duration(1000)
       .attr("fill", d >= .5 ? pos_hex : neg_hex);
   true_class.select("title").text(d > .5 ? class_names[1] : class_names[0] );
-  current_text = _.map(ex.text, function(x) {return x.feature;}).join(" ")
+  current_text = _.map(ex.features, function(x) {return x.feature;}).join(" ")
   d3.select("#textarea").node().value = current_text;
+}
+// Takes in an object that has the following attributes:
+// features -> a list of (feature,weight) pairs.
+// prediction -> a single integer
+// predict_proba -> list of floats, corresponding to the probability of each // class
+function ShowExample(ex) {
+  var text = div.selectAll("span").data(ex.features);
+  text.enter().append("span");
+  text.html(function (d,i) {return d.feature != "\n" ? d.feature + " " : "<br />"; })
+      .style("color", function(d, i) {
+        var w = 20;
+        var color_thresh = 0.02;
+        if (d.weight > color_thresh) {
+          color = d.cl === 0 ? neg_color : pos_color;
+          return "rgba(" + color +", " + (w*d.weight+0.2) +")";
+        }
+        else {
+          return "rgba(0, 0, 0, 0.35)";
+        }
+      })
+      .style("font-size", function(d,i) {return size(Math.abs(d.weight))+"px";})
+      .on("mouseover", ShowFeatureTooltip)
+      .on("mouseout", HideFeatureTooltip);
+
+  // TODO:
+  // do the remove first, then the add for smoothness
+  //text.exit().transition().duration(1000).style("opacity", 0).remove();
+  text.exit().remove();
+  UpdatePredictionBar(ex);
 }
 

@@ -29,7 +29,7 @@ def GetJsonExampleList(data, data_vectors, labels, classifier, tokenizer):
   out = []
   for i, doc in enumerate(data):
     temp = {}
-    temp['text'] = ' \n '.join(map(lambda x: ' '.join(tokenizer(x)), doc.split('\n'))).split(' ')
+    temp['features'] = ' \n '.join(map(lambda x: ' '.join(tokenizer(x)), doc.split('\n'))).split(' ')
     temp['true_class'] = int(labels[i])
     temp['predict_proba'] = RoundAndListifyVector(classifier.predict_proba(data_vectors[i])[0])
     temp['prediction'] = classifier.predict(data_vectors[i])[0]
@@ -134,7 +134,7 @@ def main():
     def predict_fun():
         print request.json
         ret = {}
-        ex = ' '.join(request.json['text'])
+        ex = ' '.join(request.json['features'])
         v = vectorizer.transform([ex])
         print 'Example:', ex
         print 'Pred:'
