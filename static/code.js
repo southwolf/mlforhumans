@@ -7,6 +7,7 @@ d3.json("new.json",  function(error, json) {
   if (error) return console.warn(error);
   train_docs = json.train;
   test_docs = json.test;
+    console.log("Loaded test docs: "+test_docs)
   word_attributes = json.word_attributes;
   test_accuracy = json.test_accuracy;
   class_names = json.class_names;
@@ -20,7 +21,7 @@ d3.json("new.json",  function(error, json) {
   FirstDrawTooltip()
   current = 0;
   GetPredictionAndShowExample(test_docs[0].text, test_docs[0].true_class);
-  //ShowExample(docs[0]);
+  setup_histogram();
 })
 
 function GetPredictionAndShowExample(example_text_split, true_class) {
