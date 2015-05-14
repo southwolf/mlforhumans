@@ -11,11 +11,7 @@ function set_doc_ids(docs) {
 
 function map_examples_to_bin(docs, n_bins) {
     for (var i=0; i<docs.length; i++) {
-        var pred = docs[i].predict_proba[1];
-        docs[i].pred_bin = Math.floor(pred*n_bins);
-        if (docs[i].pred_bin >= n_bins) {
-            docs[i].pred_bin -= 1;
-        }
+        docs[i].pred_bin = docs[i].prediction;
     }
 }
 
@@ -97,14 +93,21 @@ var on_click_document = function(d) {
     GetPredictionAndShowExample(d.text, d.true_class);
 }
 
-var setup_histogram = function() {
+var setup_databin = function() {
     // Initialize the document IDs
     set_doc_ids(test_docs);
-    //test_accuracy = test_accuracy;
 
-    // Figure out which examples go in which bins
-    var n_bins = 14;
-    var bin_width = 8;
+    // Figure out how many bins there are based on the # of classes
+    // This assumes we have k classes, where k=0 is the first class
+    var n_bins = -1;
+    for (var i=0; i<test_docs.length; i++) {
+        if (test_docs[i].true_class > n_bins) {
+            n_bins = test_docs[i].true_class;
+        }
+    }
+    n_bins += 1;
+
+    var bin_width = 100/n_bins;
     map_examples_to_bin(test_docs, n_bins);
     map_examples_to_pos(test_docs, n_bins, bin_width);
 
@@ -186,13 +189,13 @@ var setup_histogram = function() {
         });
 
     // add a reference line
-    var refLineData = [{"bin_x": 0.485, "bin_y": -0.03}, {"bin_x": 0.485, "bin_y": 0.3}];
-    var refLine = svg_hist.append("path")
-        .attr("d", refLineFunction(refLineData))
-        .attr("stroke", "black")
-        .attr("stroke-width", 0.8)
-        .attr("stroke-dasharray", "5,5")
-        .attr("fill", "none");
+    //var refLineData = [{"bin_x": 0.485, "bin_y": -0.03}, {"bin_x": 0.485, "bin_y": 0.3}];
+    //var refLine = svg_hist.append("path")
+    //    .attr("d", refLineFunction(refLineData))
+    //    .attr("stroke", "black")
+    //    .attr("stroke-width", 0.8)
+    //    .attr("stroke-dasharray", "5,5")
+    //    .attr("fill", "none");
     // add a zero line
     var refLineData = [{"bin_x": 0, "bin_y": -0.005}, {"bin_x": 0.988, "bin_y": -0.005}];
     var refLine = svg_hist.append("path")
@@ -203,7 +206,8 @@ var setup_histogram = function() {
 
     // Draw title
     svg_hist.append("text")
-        .attr("x", width / 2 - 200)
+        .attr("text-anchor", "middle")
+        .attr("x", xScale(0.5))
         .attr("y", 50)
         .style("font-size", "16px")
         .style("font-weight", "bold")
@@ -211,37 +215,37 @@ var setup_histogram = function() {
     // TODO: Change this hardcode
 
     // Draw x-axis label
-    svg_hist.append("text")
-        .attr("x", width / 2 - 130)
-        .attr("y", height - 25)
-        .style("font-size", "14px")
-        .style("font-weight", "bold")
-        .text("P(" + class_names[1] + ") | example), given by the model")
-    svg_hist.append("text")
-        .attr("x", width / 2 - 130)
-        .attr("y", height - 10)
-        .style("font-size", "14px")
-        .style("font-weight", "bold")
-        .text("Examples above the horizontal axis are classified correctly.")
-    svg_hist.append("text")
-        .attr("x", width / 2 - 15)
-        .attr("y", height - 45)
-        .style("font-size", "14px")
-        .text("0.5")
-    svg_hist.append("text")
-        .attr("x", 0)
-        .attr("y", height - 45)
-        .style("font-size", "14px")
-        .text("0.0")
-    svg_hist.append("text")
-        .attr("x", width - 20)
-        .attr("y", height - 45)
-        .style("font-size", "14px")
-        .text("1.0")
+    //svg_hist.append("text")
+    //    .attr("x", xScale(width/2))
+    //    .attr("y", height - 25)
+    //    .style("font-size", "14px")
+    //    .style("font-weight", "bold")
+    //    .text("P(" + class_names[1] + ") | example), given by the model")
+    //svg_hist.append("text")
+    //    .attr("x", width / 2 - 130)
+    //    .attr("y", height - 10)
+    //    .style("font-size", "14px")
+    //    .style("font-weight", "bold")
+    //    .text("Examples above the horizontal axis are classified correctly.")
+    //svg_hist.append("text")
+    //    .attr("x", width / 2 - 15)
+    //    .attr("y", height - 45)
+    //    .style("font-size", "14px")
+    //    .text("0.5")
+    //svg_hist.append("text")
+    //    .attr("x", 0)
+    //    .attr("y", height - 45)
+    //    .style("font-size", "14px")
+    //    .text("0.0")
+    //svg_hist.append("text")
+    //    .attr("x", width - 20)
+    //    .attr("y", height - 45)
+    //    .style("font-size", "14px")
+    //    .text("1.0")
 
     // draw legend
-    var legend_x = 110;
-    var legend_y = 40;
+    var legend_x = 0;
+    var legend_y = 20;
     svg_hist.append("text")
         .attr("x", legend_x + 25)
         .attr("y", legend_y + 20)
