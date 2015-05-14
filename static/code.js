@@ -71,7 +71,7 @@ function change(current_text, sort) {
   if (current_text === null) {
     current_text = d3.select("#textarea").node().value;
   }
-  example_text_split = current_text.split(" ");
+  example_text_split = current_text.replace("\n", " \n ").split(" ");
   // TODO: sort
   // if(sort !== undefined){
   //   if(sort === true){
