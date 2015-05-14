@@ -22,7 +22,7 @@ d3.json("new.json",  function(error, json) {
   FirstDrawTooltip()
   current = 0;
   GetPredictionAndShowExample(test_docs[0].features, test_docs[0].true_class);
-  //ShowExample(docs[0]);
+  setup_databin();
 })
 
 function GetPredictionAndShowExample(example_text_split, true_class) {
