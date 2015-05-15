@@ -98,7 +98,7 @@ var on_click_document = function(d) {
 }
 
 // load data
-d3.json("new.json", function(error, data) {
+d3.json("3ng.json", function(error, data) {
     // Initialize the document IDs
     set_doc_ids(data.test)
     test_accuracy = data.test_accuracy;

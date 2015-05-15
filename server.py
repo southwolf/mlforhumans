@@ -71,15 +71,19 @@ def GenerateJSONs(class_names, train_data, train_labels, test_data, test_labels,
   json.dump(output, open(output_json, 'w'))
   
 def LoadDataset(dataset_name):
-  if dataset_name == '20ng':
-    cats = ['alt.atheism', 'soc.religion.christian']
+  if dataset_name.endswith('ng'):
+    if dataset_name == '2ng':
+      cats = ['alt.atheism', 'soc.religion.christian']
+      class_names = ['Atheism', 'Christianity']
+    if dataset_name == '3ng':
+      cats = ['comp.os.ms-windows.misc', 'comp.sys.ibm.pc.hardware', 'comp.windows.x']
+      class_names = ['windows.misc', 'ibm.hardware', 'windows.x']
     newsgroups_train = fetch_20newsgroups(subset='train',categories=cats)
     newsgroups_test = fetch_20newsgroups(subset='test',categories=cats)
     train_data = newsgroups_train.data
     train_labels = newsgroups_train.target
     test_data = newsgroups_test.data
     test_labels = newsgroups_test.target
-    class_names = ['Atheism', 'Christianity']
     return train_data, train_labels, test_data, test_labels, class_names
     
 # Right now, this is abs(P(Y) - P(Y | NOT x)). We probably want to normalize
@@ -110,7 +114,7 @@ def enable_cors(fn):
 def main():
   parser = argparse.ArgumentParser(description='Visualize some stuff')
   parser.add_argument('-json', type=str, help='generate json file')
-  parser.add_argument('-dataset', '-d', type=str, help='20ng for 20newsgroups', default='20ng')
+  parser.add_argument('-dataset', '-d', type=str, help='2ng for Christianity vs Atheism, 3ng for Windows misc, IBM hardward and Windows X,', default='2ng')
   parser.add_argument('-classifier', '-c', type=str, help='logistic for logistic regression', default='logistic')
   args = parser.parse_args()
   train_data, train_labels, test_data, test_labels, class_names = LoadDataset(args.dataset)
