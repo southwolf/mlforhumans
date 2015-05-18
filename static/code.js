@@ -1,7 +1,8 @@
 var train_docs, test_docs, current, size, test_accuracy, previous_text, feature_attributes;
 var sort_order = "document_order";
 var class_names;
-var class_colors;
+// class_colors_i is by index, class_colors is by name
+var class_colors, class_colors_i;
 var current_object;
 
 d3.json("3ng.json",  function(error, json) {
@@ -11,8 +12,19 @@ d3.json("3ng.json",  function(error, json) {
   feature_attributes = json.feature_attributes;
   test_accuracy = json.test_accuracy;
   class_names = json.class_names;
-  // TODO
-  class_colors = ["rgba(" + neg_color + ",1)", "rgba(" + pos_color + ",1)", "yellow"];
+  // TODO: this only works for at most 20 classes. I don't know if we should
+  // worry about this though - if you have more than 20, color is not going to
+  // work anyway
+  if (class_names.length <= 10) {
+    class_colors = d3.scale.category10().domain(class_names);
+    class_colors_i = d3.scale.category10().domain(_.range(class_names.length));
+  }
+  else {
+    class_colors = d3.scale.category20().domain(class_names);
+    class_colors_i = d3.scale.category20().domain(_.range(class_names.length));
+  }
+
+  //class_colors = ["rgba(" + neg_color + ",1)", "rgba(" + pos_color + ",1)", "yellow"];
   //docs[0].text = GenerateWeights(docs[0].text);
   // var max = d3.max(_.map(_.values(weights), Math.abs));
   // var min = d3.min(_.map(_.values(weights), Math.abs));
@@ -54,7 +66,7 @@ function GenerateObject(feature_array, true_class, prediction_object) {
   ret = Object();
   ret.features = _.map(feature_array, function(w) {
         if (_.has(prediction_object.feature_weights, w)) {
-          return {"feature" : w, "weight": prediction_object.feature_weights[w]["weight"], cl : prediction_object.feature_weights[w]["class"]};
+          return {"feature" : w, "weight": prediction_object.feature_weights[w]["weight"], 'class' : prediction_object.feature_weights[w]["class"]};
         }
         else {
           return {"feature" : w, "weight": 0, cl : 0};
@@ -124,7 +136,6 @@ var t_bar_height = 80;
 var t_y = d3.scale.linear().range([t_bar_height,0 ])
 var num_bars;
 var max_bars = 8;
-var other_color = "red";
 
 function FirstDraw() {
   num_bars = Math.min(class_names.length, max_bars);
@@ -169,7 +180,7 @@ function FirstDraw() {
 // aggregate the least probable ones into 'other';
 function MapClassesToNameProbsAndColors(predict_proba) {
   if (class_names.length <= max_bars) {
-    return [class_names, predict_proba, class_colors];
+    return [class_names, predict_proba];
   }
   class_dict = _.map(_.range(class_names.length), function (i) {return {'name': class_names[i], 'prob': predict_proba[i], 'i' : i};});
   sorted = _.sortBy(class_dict, function (d) {return -d.prob});
@@ -178,7 +189,6 @@ function MapClassesToNameProbsAndColors(predict_proba) {
   other_prob = 0;
   ret_probs = [];
   ret_names = [];
-  ret_colors = [];
   for (d = 0 ; d < sorted.length; d++) {
     if (other.has(sorted[d].name)) {
       other_prob += sorted[d].prob;
@@ -186,13 +196,11 @@ function MapClassesToNameProbsAndColors(predict_proba) {
     else {
       ret_probs.push(sorted[d].prob);
       ret_names.push(sorted[d].name);
-      ret_colors.push(class_colors[sorted[d].i]);
     }
   };
   ret_names.push("other");
   ret_probs.push(other_prob);
-  ret_colors.push(other_color);
-  return [ret_names, ret_probs, ret_colors];
+  return [ret_names, ret_probs];
 }
 function UpdatePredictionBar(ex) {
 // Takes in an object that has the following attributes:
@@ -203,7 +211,6 @@ function UpdatePredictionBar(ex) {
   mapped = MapClassesToNameProbsAndColors(ex.predict_proba)
   names = mapped[0];
   data = mapped[1];
-  colors = mapped[2];
   names = _.map(names, function(i) {
     return  i.length > 17 ? i.slice(0,14) + "..." : i;
   });
@@ -211,7 +218,7 @@ function UpdatePredictionBar(ex) {
   bars = pred.selectAll(".pred_rect").data(data);
   bars.transition().duration(1000)
       .attr("width", function(d) { return bar_x_scale(d)})
-      .style("fill", function(d, i) {return colors[i];});
+      .style("fill", function(d, i) {return class_colors(names[i]);});
   bar_text = pred.selectAll(".prob-text").data(data);
   bar_text.transition().duration(1000)
       .attr("x", function(d) { return bar_x + bar_x_scale(d) + 5;})
@@ -223,10 +230,9 @@ function UpdatePredictionBar(ex) {
   d = ex.true_class
   var true_class = svg.selectAll(".true_class")
   true_class.select("circle").transition().duration(500)
-      .style("fill", class_colors[d]);
+      .style("fill", class_colors_i(d));
   true_class.select("text").text(class_names[d]);
 }
-
 
 
 
@@ -262,8 +268,8 @@ function FirstDrawTooltip() {
   bar.append("text").attr("x", 30 + 20);
   // This is the word
   bar.append("text").attr("id", "focus_feature").attr("x", 10).attr("y",  20).attr("fill", "black").text("Word:");
-  bar.append("text").attr("x", 10).attr("y",  50).attr("fill", "black").text("Frequency");
-  bar.append("text").attr("x", 100).attr("y",  50).attr("fill", "black").text("P(" + class_names[1] + ")");
+  bar.append("text").attr("id", "frequency").attr("x", 10).attr("y",  35).attr("fill", "black").text("Frequency in train:");
+  bar.append("text").attr("x", 10).attr("y",  50).attr("fill", "black").text("Conditional distribution:");
   bar2 = tooltip.append("g");
   bar2.attr("id", "feature_dist");
   bar2.append("rect")
@@ -337,11 +343,11 @@ function ShowWeights(ex) {
       .attr('height',bar_height)
       .attr({'x':0,'y':function(d,i){ return yscale(i)+bar_height; }})
       .attr('width', 0)
-      .style('fill',function(d,i){ return class_colors[d.class]; })
+      .style('fill',function(d,i){ return class_colors_i(d.class); })
       .on("mouseout", HideFeatureTooltip)
   bars.transition().duration(1000)
       .attr('width',function(d){ return xscale(d.weight); })
-      .style('fill',function(d,i){ return class_colors[d.class]; })
+      .style('fill',function(d,i){ return class_colors_i(d.class); })
   bars.exit().transition().duration(1000).attr('width', 0).remove();
   // TODO: make hover work on this maybe
   var bartext = canvas.select("#bars").selectAll("text").data(data)
@@ -412,8 +418,8 @@ function ShowExample(ex) {
         var w = 20;
         var color_thresh = 0.02;
         if (d.weight > color_thresh) {
-          color = d.cl === 0 ? neg_color : pos_color;
-          return "rgba(" + color +", " + (w*d.weight+0.2) +")";
+          color = class_colors_i(d.class);
+          return color;
         }
         else {
           return "rgba(0, 0, 0, 0.35)";
