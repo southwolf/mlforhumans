@@ -178,14 +178,14 @@ function FirstDraw() {
 
 // Takes in a vector of predict_proba. If there are more than max_bars classes,
 // aggregate the least probable ones into 'other';
-function MapClassesToNameProbsAndColors(predict_proba) {
-  if (class_names.length <= max_bars) {
+function MapClassesToNameProbsAndColors(predict_proba, n_bars) {
+  if (class_names.length <= n_bars) {
     return [class_names, predict_proba];
   }
   class_dict = _.map(_.range(class_names.length), function (i) {return {'name': class_names[i], 'prob': predict_proba[i], 'i' : i};});
   sorted = _.sortBy(class_dict, function (d) {return -d.prob});
   other = new Set();
-  _.forEach(_.range(max_bars - 1, sorted.length), function(d) {other.add(sorted[d].name);});
+  _.forEach(_.range(n_bars - 1, sorted.length), function(d) {other.add(sorted[d].name);});
   other_prob = 0;
   ret_probs = [];
   ret_names = [];
@@ -208,7 +208,7 @@ function UpdatePredictionBar(ex) {
 // prediction -> a single integer
 // predict_proba -> list of floats, corresponding to the probability of each // class
   data = ex.predict_proba;
-  mapped = MapClassesToNameProbsAndColors(ex.predict_proba)
+  mapped = MapClassesToNameProbsAndColors(ex.predict_proba, max_bars)
   names = mapped[0];
   data = mapped[1];
   names = _.map(names, function(i) {
@@ -242,6 +242,8 @@ function UpdatePredictionBar(ex) {
 
 
 // Tooltip
+var tooltip_bars;
+var tooltip_xshift = 10;
 var tooltip = d3.select(".hovercard")
     .style("opacity", 0)
     .style("position", "absolute")
@@ -249,45 +251,81 @@ var tooltip = d3.select(".hovercard")
     .style("pointer-events", "none")
 
 function FirstDrawTooltip() {
-  //bar_width = 20;
+  tooltip_bars = Math.min(class_names.length, 5);
+  tooltip.style("height", 80 + bar_height * tooltip_bars);
   var bar = tooltip.append("g");
-  bar.attr("id", "feature_freq");
-  bar.append("rect")
-      .attr("x", 30)
-      .attr("y", t_bar_yshift)
-      .attr("height", 0)
-      .attr("width", 20)
-  bar.append("rect")
-      .attr("x", 30)
-      .attr("y", t_bar_yshift)
-      .attr("height", t_bar_height)
-      .attr("width", 20)
-      .attr("fill-opacity", 0)
-      .attr("stroke", "black");
-  // This is the text that we'll move around
-  bar.append("text").attr("x", 30 + 20);
+  for (i = 0; i < tooltip_bars; i++) {
+    rect = bar.append("rect");
+    rect.classed("pred_rect", true);
+    rect.attr("x", bar_x + tooltip_xshift)
+        .attr("y", BarY(i))
+        .attr("height", bar_height)
+        .attr("width", 0);
+    bar.append("rect").attr("x", bar_x + tooltip_xshift)
+        .attr("y", BarY(i))
+        .attr("height", bar_height)
+        .attr("width", bar_width - 1)
+        .attr("fill-opacity", 0)
+        .attr("stroke", "black");
+    text = bar.append("text");
+    text.classed("prob-text", true);
+    text.attr("y", BarY(i) + bar_height - 3).attr("fill", "black").style("font", "14px tahoma, sans-serif");
+    //bar.append("text").attr("x", bar_x - 30).attr("y", BarY(i)).style("font", "14px tahoma, sans-serif").attr("fill", "black").text(d);
+    text = bar.append("text");
+    text.classed("class-name", true)
+    text.attr("x", bar_x - 10 + tooltip_xshift).attr("y", BarY(i) + bar_height - 3).attr("fill", "black").attr("text-anchor", "end").style("font", "14px tahoma, sans-serif");
+  }
   // This is the word
   bar.append("text").attr("id", "focus_feature").attr("x", 10).attr("y",  20).attr("fill", "black").text("Word:");
   bar.append("text").attr("id", "frequency").attr("x", 10).attr("y",  35).attr("fill", "black").text("Frequency in train:");
   bar.append("text").attr("x", 10).attr("y",  50).attr("fill", "black").text("Conditional distribution:");
-  bar2 = tooltip.append("g");
-  bar2.attr("id", "feature_dist");
-  bar2.append("rect")
-      .attr("x", 130)
-      .attr("y", t_bar_yshift)
-      .attr("height", 0)
-      .attr("width", 20)
-  bar2.append("rect")
-      .attr("x", 130)
-      .attr("y", t_bar_yshift)
-      .attr("height", t_bar_height)
-      .attr("width", 20)
-      .attr("fill-opacity", 0)
-      .attr("stroke", "black");
-  // This is the text that we'll move around
-  bar2.append("text").attr("x", 130 + 20);
-  //bar.append("text").attr("x", bar_x - 20).attr("y", 12).attr("fill", "black").text("Prediction");
 }
+
+function ShowFeatureTooltip(d) {
+  // Assumes d has d.feature
+        var freq;
+        var prob;
+        if (typeof feature_attributes[d.feature] == 'undefined') {
+          freq = 0;
+          data = _.map(class_names, function () { return 0.0;});
+        }
+        else {
+          freq = feature_attributes[d.feature]['train_freq'];
+          data = feature_attributes[d.feature]['train_distribution'];
+        }
+        tooltip.transition()
+            .delay(1000)
+            .duration(200)
+            .style("opacity", .9);
+        tooltip.style("left", (d3.event.pageX ) + "px")
+            .style("top", (d3.event.pageY - 28) + "px");
+        var word = tooltip.select("#focus_feature")
+        word.text("Word: "+ d.feature);
+        var word = tooltip.select("#frequency")
+        word.text("Frequency in train: "+ freq.toFixed(2));
+        mapped = MapClassesToNameProbsAndColors(data, tooltip_bars)
+        names = mapped[0];
+        data = mapped[1];
+        bars = tooltip.selectAll(".pred_rect").data(data);
+        bars.attr("width", function(d) { return bar_x_scale(d)})
+            .style("fill", function(d, i) {return class_colors(names[i]);});
+        bar_text = tooltip.selectAll(".prob-text").data(data);
+        bar_text.attr("x", function(d) { return bar_x + bar_x_scale(d) + 5 + tooltip_xshift;})
+            .attr("fill", "black")
+            .text(function(d) { return d.toFixed(2)});
+        name_object = tooltip.selectAll(".class-name").data(names)
+        name_object.text(function(d) {return d;});
+}
+function HideFeatureTooltip(){
+  tooltip.transition()
+      .duration(300)
+      .style("opacity", 0);
+}
+
+
+
+
+
 
 function CleanD3Div() {
   div.selectAll("span").remove();
@@ -361,51 +399,6 @@ function ShowWeights(ex) {
   UpdatePredictionBar(ex);
 
 }
-function ShowFeatureTooltip(d) {
-  // Assumes d has d.feature
-        var freq;
-        var prob;
-        if (typeof feature_attributes[d.feature] == 'undefined') {
-          freq = 0;
-          prob = "0.5";
-        }
-        else {
-          freq = feature_attributes[d.feature]['train_freq'];
-          prob = feature_attributes[d.feature]['train_distribution'][1];
-        }
-        tooltip.transition()
-            .delay(1000)
-            .duration(200)
-            .style("opacity", .9);
-        tooltip.style("left", (d3.event.pageX ) + "px")
-            .style("top", (d3.event.pageY - 28) + "px");
-        var freq_bar = tooltip.select("#feature_freq")
-        freq_bar.select("rect")
-            .attr("y", t_y(freq) + t_bar_yshift)
-            .attr("height", t_bar_height - t_y(freq))
-            .attr("fill", "black");
-        freq_bar.select("text")
-            .attr("y",  t_y(freq) + t_bar_yshift)
-            .attr("fill", "black")
-            .text(freq > 0 ? freq : "< .01");
-        var dist_bar = tooltip.select("#feature_dist")
-        dist_bar.select("rect")
-            .attr("y", t_y(prob) + t_bar_yshift)
-            .attr("height", t_bar_height - t_y(prob))
-            .attr("fill", prob > 0.5 ? pos_hex : neg_hex);
-        dist_bar.select("text")
-            .attr("y",  t_y(prob) + t_bar_yshift)
-            .attr("fill", "black")
-            .text(prob);
-        var word = tooltip.select("#focus_feature")
-        word.text(d.feature);
-}
-function HideFeatureTooltip(){
-  tooltip.transition()
-      .duration(500)
-      .style("opacity", 0);
-}
-
 // Takes in an object that has the following attributes:
 // features -> a list of (feature,weight) pairs.
 // prediction -> a single integer
