@@ -135,6 +135,7 @@
   width:100%;
   margin: 0px 0px 0px 20px;
 }
+
 ::-webkit-scrollbar {
     -webkit-appearance: none;
     width: 4px;
@@ -143,4 +144,86 @@
     border-radius: 2px;
     background-color: rgba(0,0,0,.1);
     -webkit-box-shadow: 0 0 1px rgba(255,255,255,.5);
+}
+
+/*Tabular layout style*/
+.tab_span {
+  display:block;
+  position:fixed;
+  top:0;
+  left:0;
+}
+
+#tab {
+  width: 100%;
+  height: 50%;
+}
+
+#tab > ul {
+  margin:0 0;
+  padding:10px 0 0 0;
+  height:30px;
+  overflow:hidden;
+}
+
+
+#tab > ul li {
+  float:left;
+  display:inline;
+  list-style:none;
+  margin:0 4px 0 0;
+  padding:0 0;
+}
+
+#tab > ul li a {
+  display:block;
+  background-color:darkslategray;
+  font-weight:bold;
+  font-size:11px;
+  line-height:30px;
+  height:30px;
+  color:lightgray;
+  text-decoration:none;
+  padding:0 30px;
+}
+
+#tab > div {
+  clear:both;
+  background-color:ghostwhite;
+  border-style: dashed;
+  border-width: 1px;
+  height:0;
+  overflow:hidden;
+  visibility:hidden;
+}
+
+/* Reset the first tab button and the first tab content to the default behaviour if the hash is active */
+span:target ~ #tab > ul li:first-child a {
+  background-color:darkslategray;
+  color:white;
+}
+
+span:target ~ #tab > div:first-of-type {
+  visibility:hidden;
+  height:0;
+}
+
+/* Always show the first tab container by default */
+span ~ #tab > div:first-of-type,
+/* Show a specific tab content based on the 'selected' target element */
+#tab-1:target ~ #tab > div.tab-content-1,
+#tab-2:target ~ #tab > div.tab-content-2,
+#tab-3:target ~ #tab > div.tab-content-3 {
+  visibility:visible;
+  height:100%;
+}
+
+/* Always set the first tab with a 'current color' by default */
+span ~ #tab > ul li:first-child a,
+/* Set the current tab button color based on the 'selected' target element */
+#tab-1:target ~ #tab > ul li a[href$="#tab-1"],
+#tab-2:target ~ #tab > ul li a[href$="#tab-2"],
+#tab-3:target ~ #tab > ul li a[href$="#tab-3"] {
+  background-color:cadetblue;
+  color:black;
 }

@@ -43,7 +43,8 @@
 <svg class="hovercard"></svg>
 
 
-    <br />
+<br />
+
 <div id="side_by_side_text">
     <div id="textarea_div">
         <textarea id="textarea">
@@ -56,13 +57,35 @@
     </div>
     <div id="d3">
     </div>
-   <svg id="prediction_bar"></svg>
 </div>
 
-    <script src="code.js"></script>
-<div id="histogram_div"></div>
-<script src="example_histogram.js"></script>
+
 <script src="info_box.js"></script>
 
+<!--Tabular layout-->
+<span id="tab-1" class="tab_span"></span>
+<span id="tab-2" class="tab_span"></span>
+<span id="tab-3" class="tab_span"></span>
+
+<!-- The main markup -->
+<div id="tab">
+	<ul>
+		<li><a href="#tab-1">Dataset</a></li>
+		<li><a href="#tab-2">Example</a></li>
+		<li><a href="#tab-3">Feature</a></li>
+	</ul>
+	<div class="tab-content-1">
+        <div id="histogram_div"></div>
+    </div>
+	<div class="tab-content-2">
+        <svg id="prediction_bar"></svg>
+        <div id="sorted_weights_div"><svg id="sorted_weights"/></div>
+    </div>
+	<div class="tab-content-3">Feature-level visualizations go here.</div>
+</div>
+
+<script src="code.js"></script>
+<script src="example_histogram.js"></script>
 </body>
+
 </html>
