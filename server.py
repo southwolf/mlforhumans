@@ -150,12 +150,14 @@ def main():
   parser = argparse.ArgumentParser(description='Visualize some stuff')
   parser.add_argument('-json', type=str, help='generate json file')
   parser.add_argument('-dataset', '-d', type=str, help='2ng for Christianity vs Atheism, 3ng for Windows misc, IBM hardward and Windows X,', default='2ng')
-  parser.add_argument('-classifier', '-c', type=str, help='logistic for logistic regression', default='logistic')
+  parser.add_argument('-classifier', '-c', type=str, help='logistic for logistic regression, svm for svm', default='logistic')
   args = parser.parse_args()
   train_data, train_labels, test_data, test_labels, class_names = LoadDataset(args.dataset)
   vectorizer = CountVectorizer(lowercase=False)
   if args.classifier == 'logistic':
     classifier = linear_model.LogisticRegression(fit_intercept=True)
+  elif args.classifier == 'svm':
+    classifier = svm.SVC(probability=True)
   else:
     print 'ERROR: classifier must be logistic'
     quit()

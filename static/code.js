@@ -393,6 +393,9 @@ function ShowWeights(ex) {
     text(function (d) {return d.weight.toFixed(3);})
     .attr({'x':function(d) {return xscale(d.weight) + 5; },'y':function(d,i){ return yscale(i)+35; }})
   bartext.exit().transition().remove();
+  // Updating the textarea
+  current_text = _.map(ex.features, function(x) {return x.feature;}).join(" ")
+  d3.select("#textarea").node().value = current_text;
   UpdatePredictionBar(ex);
 
 }
