@@ -5,7 +5,7 @@ var class_names;
 var class_colors, class_colors_i;
 var current_object;
 
-d3.json("3ng.json",  function(error, json) {
+d3.json("r8.json",  function(error, json) {
   if (error) return console.warn(error);
   train_docs = json.train;
   test_docs = json.test;
@@ -139,7 +139,7 @@ var t_bar_yshift = 60;
 var t_bar_height = 80;
 var t_y = d3.scale.linear().range([t_bar_height,0 ])
 var num_bars;
-var max_bars = 8;
+var max_bars = 7;
 
 function FirstDrawPrediction() {
   num_bars = Math.min(class_names.length, max_bars);
@@ -249,7 +249,7 @@ var tooltip = d3.select(".hovercard")
 
 function FirstDrawTooltip() {
   tooltip_bars = Math.min(class_names.length, 5);
-  tooltip.style("height", 80 + bar_height * tooltip_bars);
+  tooltip.style("height", 90 + bar_height * tooltip_bars);
   var bar = tooltip.append("g");
   for (i = 0; i < tooltip_bars; i++) {
     rect = bar.append("rect");
@@ -335,7 +335,7 @@ function ShowWeights(ex) {
   var total_height = (bar_height + 10) * n_bars;
   var xscale = d3.scale.linear()
           .domain([0,1])
-          .range([0,500]);
+          .range([0,320]);
 
   var yscale = d3.scale.linear()
           .domain([0, n_bars])
@@ -355,10 +355,10 @@ function ShowWeights(ex) {
   if (div.select("svg").empty()) {
     canvas = div.append("svg").attr({'width':'100%','height': (total_height + 10) + "px"});
     chart = canvas.append('g')
-              .attr("transform", "translate(100,0)")
+              .attr("transform", "translate(80,0)")
               .attr('id','bars');
     y_xis = canvas.append('g')
-              .attr("transform", "translate(100, 0)")
+              .attr("transform", "translate(80, 0)")
               .attr('id','yaxis')
               .call(yAxis);
   }
@@ -520,8 +520,8 @@ function map_examples_to_pos(docs, n_bins, bin_width) {
     }
 }
 function ShowHistogramForClass(focus_class) {
-  var n_bins = 14;
-  var bin_width = 10;
+  var n_bins = 10;
+  var bin_width = 12;
   // Figure out which examples go in which bins
   map_examples_to_bin(test_docs, n_bins, focus_class);
   // Then map them to an actual x/y position within [0, 1]

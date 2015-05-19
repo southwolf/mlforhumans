@@ -70,6 +70,31 @@ def GenerateJSONs(class_names, train_data, train_labels, test_data, test_labels,
       output['feature_attributes'][word]['test_distribution'] = RoundAndListifyVector(output['feature_attributes'][word]['test_distribution'])
   json.dump(output, open(output_json, 'w'))
   
+def LoadTextDataset(path_train, path_test):
+  # Loads datasets from http://web.ist.utl.pt/acardoso/datasets/
+  current_class = 0
+  class_index = {}
+  class_names = []
+  train_data = []
+  train_labels = []
+  test_data = []
+  test_labels = []
+  for line in open(path_train):
+    class_, text = line.split('\t') 
+    if class_ not in class_index:
+      class_index[class_] = current_class
+      class_names.append(class_)
+      current_class += 1
+    train_data.append(text)
+    train_labels.append(class_index[class_])
+  for line in open(path_test):
+    class_, text = line.split('\t') 
+    test_data.append(text)
+    test_labels.append(class_index[class_])
+  return train_data, np.array(train_labels), test_data, np.array(test_labels), class_names
+    
+
+
 def LoadDataset(dataset_name):
   if dataset_name.endswith('ng'):
     if dataset_name == '2ng':
@@ -85,6 +110,16 @@ def LoadDataset(dataset_name):
     test_data = newsgroups_test.data
     test_labels = newsgroups_test.target
     return train_data, train_labels, test_data, test_labels, class_names
+  if dataset_name == 'r8':
+    return LoadTextDataset('/Users/marcotcr/phd/datasets/reuters/r8-train-all-terms.txt',
+                    '/Users/marcotcr/phd/datasets/reuters/r8-test-all-terms.txt')
+  if dataset_name == 'r52':
+    return LoadTextDataset('/Users/marcotcr/phd/datasets/reuters/r52-train-all-terms.txt',
+                    '/Users/marcotcr/phd/datasets/reuters/r52-test-all-terms.txt')
+  if dataset_name == 'webkb':
+    return LoadTextDataset('/Users/marcotcr/phd/datasets/webkb/webkb-train-stemmed.txt',
+                    '/Users/marcotcr/phd/datasets/webkb/webkb-test-stemmed.txt')
+
     
 # Right now, this is abs(P(Y) - P(Y | NOT x)). We probably want to normalize
 # this, since these become pretty insignificant as text gets longer.
