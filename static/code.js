@@ -12,6 +12,9 @@ d3.json("3ng.json",  function(error, json) {
   feature_attributes = json.feature_attributes;
   test_accuracy = json.test_accuracy;
   class_names = json.class_names;
+  class_names = _.map(class_names, function(i) {
+    return  i.length > 17 ? i.slice(0,14) + "..." : i;
+  });
   // TODO: this only works for at most 20 classes. I don't know if we should
   // worry about this though - if you have more than 20, color is not going to
   // work anyway
@@ -31,8 +34,9 @@ d3.json("3ng.json",  function(error, json) {
   min = 0;
   max = 1;
   size = d3.scale.linear().domain([min, max]).range([15, 40]);
-  FirstDraw();
+  FirstDrawPrediction();
   FirstDrawTooltip()
+  FirstDrawHistogram()
   current = 0;
   GetPredictionAndShowExample(test_docs[0].features, test_docs[0].true_class);
   //ShowExample(docs[0]);
@@ -137,7 +141,7 @@ var t_y = d3.scale.linear().range([t_bar_height,0 ])
 var num_bars;
 var max_bars = 8;
 
-function FirstDraw() {
+function FirstDrawPrediction() {
   num_bars = Math.min(class_names.length, max_bars);
   //bar_width = 30;
   d = 0
@@ -211,9 +215,6 @@ function UpdatePredictionBar(ex) {
   mapped = MapClassesToNameProbsAndColors(ex.predict_proba, max_bars)
   names = mapped[0];
   data = mapped[1];
-  names = _.map(names, function(i) {
-    return  i.length > 17 ? i.slice(0,14) + "..." : i;
-  });
   var pred = svg.selectAll(".prediction")
   bars = pred.selectAll(".pred_rect").data(data);
   bars.transition().duration(1000)
@@ -237,10 +238,6 @@ function UpdatePredictionBar(ex) {
 
 
 /* --------------------------*/
-
-
-
-
 // Tooltip
 var tooltip_bars;
 var tooltip_xshift = 10;
@@ -430,4 +427,280 @@ function ShowExample(ex) {
   d3.select("#textarea").node().value = current_text;
   UpdatePredictionBar(ex);
 }
+/* --------------------------*/
+// Histogram
+
+var selected_document = 0;
+var hist_margin = {top: 0, right: 0, bottom: 0, left: 0},
+    hist_width = 1100 - hist_margin.left - hist_margin.right,
+    hist_height = 400 - hist_margin.top - hist_margin.bottom;
+var svg_hist, hist_tooltip;
+var hist_data;
+
+var xValue = function(d) { return d.bin_x;}, // data -> value
+    xScale = d3.scale.linear().range([0, hist_width]), // value -> display
+    xMap = function(d) { return xScale(xValue(d));}, // data -> display
+    xAxis = d3.svg.axis().scale(xScale).orient("bottom");
+
+var yValue = function(d) { return d.bin_y;}, // data -> value
+    yScale = d3.scale.linear().range([hist_height, 0]), // value -> display
+    yMap = function(d) { return yScale(yValue(d));}, // data -> display
+    yAxis = d3.svg.axis().scale(yScale).orient("left");
+
+
+var refLineFunction = d3.svg.line()
+    .x(function (d) { return xMap(d); })
+    .y(function (d) { return yMap(d); })
+    .interpolate("linear");
+
+var on_click_document = function(d) {
+    selected_document = d.doc_id;
+    current = d.doc_id;
+    //sort_order = "document_order";
+    //d3.select("#sort_button").text("Sort words based on weights")
+    GetPredictionAndShowExample(d.features, d.true_class);
+}
+
+function set_doc_ids(docs) {
+    for (var i=0; i<docs.length; i++) {
+        docs[i].doc_id = i;
+    }
+}
+
+function map_examples_to_bin(docs, n_bins, focus_class) {
+    for (var i=0; i<docs.length; i++) {
+        var pred = docs[i].predict_proba[focus_class];
+        docs[i].pred_bin = Math.floor(pred*n_bins);
+        if (docs[i].pred_bin >= n_bins) {
+            docs[i].pred_bin -= 1;
+        }
+    }
+}
+
+function map_examples_to_pos(docs, n_bins, bin_width) {
+    var correct_bin_index = [];
+    var incorrect_bin_index = [];
+    for (var i=0; i<n_bins; i++) {
+        correct_bin_index[i] = 0;
+        incorrect_bin_index[i] = 0;
+    }
+
+
+    for (var i=0; i<docs.length; i++) {
+        var bin = docs[i].pred_bin;
+
+        var correct = false;
+        if (docs[i].prediction === docs[i].true_class) {
+            correct = true;
+        }
+        // Set the relative x position of the data point
+        var bin_x = 0.0;
+        if (correct) {
+            bin_x = (correct_bin_index[bin] % bin_width) * 1.0/(n_bins*bin_width+20) + bin/n_bins;
+        } else {
+            bin_x = (incorrect_bin_index[bin] % bin_width) * 1.0/(n_bins*bin_width+20) + bin/n_bins;
+        }
+
+        // Set the relative y position of the data point
+        var bin_y = 0.0;
+        if (correct) {
+            bin_y = (Math.floor(correct_bin_index[bin] / bin_width) + 1) * (1.0/n_bins)/bin_width;
+        } else {
+            bin_y = -(Math.floor(incorrect_bin_index[bin] / bin_width) + 1)* (1.0/n_bins)/bin_width;
+        }
+
+        docs[i].bin_x = bin_x;
+        docs[i].bin_y = bin_y;
+
+        if (correct) {
+            correct_bin_index[bin] += 1;
+        } else {
+            incorrect_bin_index[bin] += 1;
+        }
+    }
+}
+function ShowHistogramForClass(focus_class) {
+  var n_bins = 14;
+  var bin_width = 10;
+  // Figure out which examples go in which bins
+  map_examples_to_bin(test_docs, n_bins, focus_class);
+  // Then map them to an actual x/y position within [0, 1]
+  map_examples_to_pos(test_docs, n_bins, bin_width);
+  xScale.domain([d3.min(test_docs, xValue), d3.max(test_docs, xValue)]);
+  // don't want dots overlapping axis, so add in buffer to data domain
+  yScale.domain([d3.min(test_docs, yValue)-0.1, d3.max(test_docs, yValue)+0.1]);
+  var square_size = 6;
+  // draw dots
+  dots = svg_hist.selectAll(".hist_dot")
+      .data(test_docs)
+  dots.enter().append("rect")
+      .attr("class", "hist_dot")
+      .attr("width", square_size)
+      .attr("height", square_size)
+      .style("fill", function(d) { return class_colors_i(d.true_class);})
+      .style("opacity", function(d) { return d.doc_id === selected_document ? 1.0 : 0.4})
+
+  dots.on("mouseover", function(d) {
+          var xPosition = parseFloat(d3.select(this).attr("x"));
+          var yPosition = parseFloat(d3.select(this).attr("y"));
+
+          // Change the style of the square
+          d3.select(this)
+              .attr("height", square_size + 10)
+              .attr("width", square_size + 10)
+              .attr("x", xPosition-square_size)
+              .attr("y", yPosition-square_size)
+              .style("opacity", 1.0)
+
+          hist_tooltip.transition()
+              .duration(200)
+              .style("opacity", .9)
+              .attr("fill", "rgb(255, 255, 255)");
+
+          var s = "Document ID: " + d.doc_id + "<br />True class: ";
+          s += class_names[d.true_class];
+          s += "<br/>Prediction: ";
+          s += class_names[d.prediction];
+          s += "<br /> P(" + class_names[focus_class] + ") = ";
+          s += + d.predict_proba[focus_class].toFixed(2);
+          hist_tooltip.html(s)
+              //"Document ID: " + d.doc_id + "<br />True class: " + d.true_class + "<br/>Prediction: " + d.prediction)
+              .style("left", (d3.event.pageX + 5) + "px")
+              .style("top", (d3.event.pageY - 70) + "px");
+      })
+      .on("mouseout", function(d) {
+          var xPosition = parseFloat(d3.select(this).attr("x"));
+          var yPosition = parseFloat(d3.select(this).attr("y"));
+
+          d3.select(this)
+              .attr("height", square_size)
+              .attr("width", square_size)
+              .attr("dx", 0.1)
+              .attr("x", xPosition+square_size)
+              .attr("y", yPosition+square_size)
+              .style("opacity", function(d){return d.doc_id == selected_document ? 1.0 : 0.4});
+
+          hist_tooltip.transition()
+              .duration(500)
+              .style("opacity", 0);
+      })
+      .on("click", function(d) {
+          d3.selectAll(".hist_dot")
+              .style("opacity", 0.4);
+
+          d3.select(this)
+              .style("opacity", 1.0);
+
+          on_click_document(d);
+      });
+  dots.transition().duration(1000)
+      .attr("x", xMap)
+      .attr("y", yMap)
+  // TODO: This is still weird, I think it's kinda wrong.
+  svg_hist.select("#hist_xaxis")
+    .text("P(" + class_names[focus_class] + " | example), given by the model")
+  var refLineData = [ {"bin_x": 0.5, "bin_y":-0.03}, {"bin_x":0.5, "bin_y":0.3}];
+  svg_hist.select("#ymiddle")
+     .attr("d", refLineFunction(refLineData))
+  var refLineData = [ {"bin_x": 0, "bin_y":-0.005}, {"bin_x":0.988, "bin_y":-0.005}];
+  svg_hist.select("#xaxis")
+     .attr("d", refLineFunction(refLineData))
+
+}
+
+function FirstDrawHistogram() {
+  // add the graph canvas to the body of the webpage
+  svg_hist = d3.select("#histogram_div").append("svg")
+      .attr("width", hist_width + hist_margin.left + hist_margin.right)
+      .attr("height", hist_height + hist_margin.top + hist_margin.bottom)
+      .append("g")
+      .attr("transform", "translate(" + hist_margin.left + "," + hist_margin.top + ")");
+  
+  // add the hist_tooltip area to the webpage
+  hist_tooltip = d3.select("body").append("div")
+      .attr("class", "hist_tooltip")
+      .style("opacity", 0);
+  // Initialize the document IDs
+ set_doc_ids(test_docs);
+
+
+  // Draw title
+  svg_hist.append("text")
+      .attr("x", hist_width/2-200)
+      .attr("y", 50)
+      .style("font-size", "16px")
+      .style("font-weight", "bold")
+      .text("Overall Model Performance. Held-out accuracy: " + test_accuracy)
+
+  // Draw x-axis label
+  svg_hist.append("text")
+      .attr("x", hist_width/2-130)
+      .attr("y", hist_height-25)
+      .attr("id", "hist_xaxis")
+      .style("font-size", "14px")
+      .style("font-weight", "bold")
+      .text("P(" + class_names[1] + " | example), given by the model")
+  svg_hist.append("text")
+      .attr("x", hist_width/2-130)
+      .attr("y", hist_height-10)
+      .style("font-size", "14px")
+      .style("font-weight", "bold")
+      .text("Examples above the horizontal axis are classified correctly.")
+  svg_hist.append("text")
+      .attr("x", hist_width/2)
+      .attr("y", hist_height-45)
+      .style("font-size", "14px")
+      .text("0.5")
+  svg_hist.append("text")
+      .attr("x", 0)
+      .attr("y", hist_height-45)
+      .style("font-size", "14px")
+      .text("0.0")
+  svg_hist.append("text")
+      .attr("x", hist_width - 20)
+      .attr("y", hist_height-45)
+      .style("font-size", "14px")
+      .text("1.0")
+
+  // draw legend
+  // TODO: Make this legend expandable for when we have too many classes
+  var legend_x = 110;
+  var legend_y = 40;
+  legend = svg_hist.selectAll(".legend_stuff").data(class_names).enter()
+  legend.append("text")
+    .attr("x", legend_x + 25)
+    .attr("y", function(d, i) { return legend_y + 20 + i *15;})
+    .style("font-size", "14px")
+    .text(function(d) { return "True class: " + d;});
+  legend.append("rect")
+    .attr("x", legend_x + 10)
+    .attr("y", function(d, i) {return legend_y + 10 + i * 15; })
+    .attr("width", 10)
+    .attr("height", 10)
+    .style("fill", function(d) {return class_colors(d);})
+    .on("click", function(d) { ShowHistogramForClass(class_names.indexOf(d)); });
+  svg_hist.append("rect")
+      .attr("x", legend_x)
+      .attr("y", legend_y)
+      .attr("width", 185)
+      .attr("height", 15 * class_names.length + 15)
+      .style("stroke", "#86a36e")
+      .style("fill", "none");
+
+ // add a reference line
+ var refLine = svg_hist.append("path")
+     .attr("id", "ymiddle")
+     .attr("stroke", "black")
+     .attr("stroke-width", 0.8)
+     .attr("stroke-dasharray", "5,5")
+     .attr("fill", "none");
+ // add a zero line
+ var refLine = svg_hist.append("path")
+     .attr("id", "xaxis")
+     .attr("stroke", "black")
+     .attr("stroke-width", 0.8)
+     .attr("fill", "none");
+ ShowHistogramForClass(1);
+}
+
 
