@@ -15,8 +15,7 @@
 </div>
 <div id="weights_button_div", style="margin-top:10px">
     <!-- <button class="green_button" onclick="run();">Look at another example</button> -->
-    <button class="green_button" id ="sort_button" onclick="sort();">Show
-    feature contributions</button>
+    <button class="green_button" id ="sort_button" onclick="sort();">Sort words based on weights</button>
 </div>
 <!--Info button contents-->
 <div id="light" class="white_content">
@@ -43,8 +42,7 @@
 <svg class="hovercard"></svg>
 
 
-<br />
-
+    <br />
 <div id="side_by_side_text">
     <div id="textarea_div">
         <textarea id="textarea">
@@ -57,8 +55,8 @@
     </div>
     <div id="d3">
     </div>
+    <svg id="prediction_bar"></svg>
 </div>
-
 
 <script src="info_box.js"></script>
 
@@ -78,7 +76,6 @@
         <div id="histogram_div"></div>
     </div>
 	<div class="tab-content-2">
-        <svg id="prediction_bar"></svg>
         <div id="sorted_weights_div"><svg id="sorted_weights"/></div>
     </div>
 	<div class="tab-content-3">Feature-level visualizations go here.</div>
