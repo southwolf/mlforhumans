@@ -46,7 +46,7 @@ breaklinks=true,
   \alignauthor Brian Dolhansky\\
     \affaddr{Computer Science and Engineering}\\
     \affaddr{University of Washington}\\
-    \email{bdol@cas.washington.edu}
+    \email{bdol@cs.washington.edu}
 }
 
 \maketitle
@@ -82,7 +82,7 @@ where they found that a lot of time people get stuck in part of the process
 labeled data, or noise in the data). They also found that just looking at
 summary statistics in cross validation (CV) data is not enough for evaluation -
 all of the participants overestimated their models’ accuracy, when compared to a
-hidden test set, due do CV quirks. This led the authors to produce Gestalt
+hidden test set, due to CV quirks. This led the authors to produce Gestalt
 \cite{gestalt}, a system aimed at software developers that exposes the Machine
 Learning pipeline in steps. One can see a particular example all the way through
 the pipeline, implement his own visualization, click on a confusion table to see
@@ -117,28 +117,27 @@ for interactive visualization.
 
 More in line with our vision of machine learning as a loop,
 \cite{Stumpf:2009:IMM:1555003.1555106} did an experiment where the system
-explained itself to the user by showing rules, naive bayes ``weights'' or
+explained itself to the user by showing rules, Na\"{i}ve Bayes ``weights'' or
 similar examples to the one being classified. The users then provided free form
 feedback (on paper), which they later tried to incorporate retroactively. Both
 their explanations and some of their feedback are model-dependent, working only
-with Naive Bayes. In fact, in follow up work
+with Na\"{i}ve Bayes. In fact, in follow up work
 \cite{Kulesza:2011:WED:2030365.2030367} they develop an interactive system
-focused only on Naive Bayes, where the explanation is guided by user questions,
+focused only on Na\"{i}ve Bayes, where the explanation is guided by user questions,
 such as ``why is this example classified positive''. One drawback of their
 system is that feedback is very limited (just relabeling documents), and it's
-not clear how useful the it is - in fact it seems that usually it harms the
+not clear how useful it is - in fact it seems that it usually harms the
 system's performance. It is also not very interactive, which is a feature that
 most participants in their study really wanted - being able to change something
 and seeing the results right away. 
 
-Our main contributions are combining all of the following in one system:
-(1) treating the process as a loop, and allowing for feedback (this may be
-future work, as it is less related to visualization), (2) explaining individual
+Our main contributions are combining all of the following in one system: (1)
+treating the process as a loop and allowing for feedback (this may be future
+work, as it is less related to visualization), (2) explaining individual
 predictions - visually and interactively, (3) allowing for multiclass
-classification, (4) interactivity in both the individual prediction
-explanations and ``global'' model explanations, (5) handling larger
-datasets, (6) being model-agnostic - i.e. working with any machine learning
-classification model.
+classification, (4) interactivity in both the individual prediction explanations
+and ``global'' model explanations, (5) handling larger datasets, and (6) being
+model-agnostic - i.e. working with any machine learning classification model.
 \pagebreak
 
 % \section{Page Size and Columns}
