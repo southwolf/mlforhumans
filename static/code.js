@@ -5,7 +5,11 @@ var class_names;
 var class_colors, class_colors_i;
 var current_object;
 
-d3.json("r8.json",  function(error, json) {
+if (typeof json_file === 'undefined') {
+  json_file = "3ng"
+}
+
+d3.json(json_file,  function(error, json) {
   if (error) return console.warn(error);
   train_docs = json.train;
   test_docs = json.test;

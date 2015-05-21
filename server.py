@@ -1,5 +1,5 @@
 import bottle
-from bottle import route, run, hook, response, request, static_file
+from bottle import route, run, hook, response, request, static_file, template
 import collections
 
 import sys
@@ -153,6 +153,7 @@ def main():
   parser.add_argument('-classifier', '-c', type=str, help='logistic for logistic regression, svm for svm', default='logistic')
   args = parser.parse_args()
   train_data, train_labels, test_data, test_labels, class_names = LoadDataset(args.dataset)
+  dataset_json = {'2ng' : 'new.json', '3ng':'3ng.json', 'r8': 'r8.json', 'r52':'r52.json', 'webkb' : 'webkb.json'}
   vectorizer = CountVectorizer(lowercase=False)
   if args.classifier == 'logistic':
     classifier = linear_model.LogisticRegression(fit_intercept=True)
@@ -188,7 +189,7 @@ def main():
         return ret
     @route('/')
     def root_fun():
-        return server_static('index.html')
+        return template('template', json_file=dataset_json[args.dataset])
     @route('/<filename>')
     def server_static(filename):
         return static_file(filename, root='./static/')
