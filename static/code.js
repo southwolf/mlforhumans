@@ -287,13 +287,10 @@ function ShowFeatureTooltip(d) {
         var freq;
         var prob;
         if (typeof feature_attributes[d.feature] == 'undefined') {
-          freq = 0;
-          data = _.map(class_names, function () { return 0.0;});
+          return;
         }
-        else {
-          freq = feature_attributes[d.feature]['train_freq'];
-          data = feature_attributes[d.feature]['train_distribution'];
-        }
+        freq = feature_attributes[d.feature]['train_freq'];
+        data = feature_attributes[d.feature]['train_distribution'];
         tooltip.transition()
             .delay(1000)
             .duration(200)
