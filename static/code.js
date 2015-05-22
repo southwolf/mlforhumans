@@ -93,7 +93,8 @@ function change(current_text, sort) {
   if (current_text === null) {
     current_text = d3.select("#textarea").node().value;
   }
-  example_text_split = current_text.replace("\n", " \n ").split(" ");
+  //example_text_split = current_text.replace("\n", " \n ").split(" ");
+  example_text_split = current_text.replace(/\n/g, " \n ").match(/[^ ]+/g);
   GetPredictionAndShowExample(example_text_split, test_docs[current].true_class);
 }
 function change_to_selection() {
