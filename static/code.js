@@ -566,6 +566,7 @@ function ShowDatabinForClass(focus_class) {
   dots.transition().duration(1000)
       .attr("x", xMap)
       .attr("y", yMap)
+  d3.select("#selected_document").moveToFront();
   // TODO: This is still weird, I think it's kinda wrong.
   svg_hist.select("#hist_xaxis")
     .text("P(" + class_names[focus_class] + " | example), given by the model")
@@ -582,6 +583,7 @@ function BrushExamples(example_set) {
 }
 function FeatureBrushing(feature_list) {
   docs = [];
+  d3.select("#feature_brush").html("Features being brushed: <br />" + feature_list.join("<br />"))
   if (feature_list.length > 1) {
     docs = _.intersection.apply(this, _.map(feature_list, function (d) {return feature_attributes[d].test_docs;}));
   } else {
@@ -696,7 +698,8 @@ function FirstDrawDatabin() {
       .style("stroke-opacity", 1)
       .style("stroke-width", function(d) { return d.doc_id === selected_document ? 2.0 : 0})
       .style("fill", function(d) { return class_colors_i(d.true_class);})
-      .style("opacity", 0.4);
+      .style("opacity", 0.4)
+      .attr("id", function(d, i) {return d.doc_id === selected_document ? "selected_document" : "";});
 
   focus_class = 0;
   // Figure out which examples go in which bins
@@ -757,7 +760,8 @@ function FirstDrawDatabin() {
               .transition().delay(0.1)
               .style("stroke-width", 2)
               .style("stroke-alignment", "inner")
-              .style("stroke-opacity", 1);
+              .style("stroke-opacity", 1)
+              .attr("id", "selected_document");
           d3.select(this).moveToFront();
 
           on_click_document(d);

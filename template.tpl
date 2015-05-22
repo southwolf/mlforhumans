@@ -81,7 +81,7 @@
 	<div class="tab-content-2">
         <div id="sorted_weights_div"><svg id="sorted_weights"/></div>
     </div>
-	<div class="tab-content-3">Feature-level visualizations go here.</div>
+	<div class="tab-content-3"><div id="feature_brush"></div></div>
 </div>
 
 <script src="code.js"></script>
