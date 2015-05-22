@@ -4,6 +4,7 @@ var class_names;
 // class_colors_i is by index, class_colors is by name
 var class_colors, class_colors_i;
 var current_object;
+var selected_features = new Set()
 
 if (typeof json_file === 'undefined') {
   json_file = "3ng"
@@ -40,7 +41,7 @@ d3.json(json_file,  function(error, json) {
   size = d3.scale.linear().domain([min, max]).range([15, 40]);
   FirstDrawPrediction();
   FirstDrawTooltip()
-  FirstDrawHistogram()
+  FirstDrawDatabin()
   current = 0;
   GetPredictionAndShowExample(test_docs[0].features, test_docs[0].true_class);
   //ShowExample(docs[0]);
@@ -92,7 +93,8 @@ function change(current_text, sort) {
   if (current_text === null) {
     current_text = d3.select("#textarea").node().value;
   }
-  example_text_split = current_text.replace("\n", " \n ").split(" ");
+  //example_text_split = current_text.replace("\n", " \n ").split(" ");
+  example_text_split = current_text.replace(/\n/g, " \n ").match(/[^ ]+/g);
   GetPredictionAndShowExample(example_text_split, test_docs[current].true_class);
 }
 function change_to_selection() {
@@ -329,6 +331,20 @@ function CleanD3Div() {
   div.selectAll("span").remove();
   div.selectAll("svg").remove();
 }
+function ToggleFeatureBrush(w) {
+  // OOV words are ignored
+  if (typeof feature_attributes[w.feature] == 'undefined') {
+    return;
+  }
+  if (selected_features.has(w.feature)) {
+    selected_features.delete(w.feature);
+  } 
+  else {selected_features.add(w.feature);
+  }
+  sel_list = []
+  selected_features.forEach(function(d) {sel_list.push(d);})
+  FeatureBrushing(sel_list);
+}
 function ShowWeights(ex) {
   var data = ex.sorted_weights;
   var n_bars = data.length;
@@ -342,7 +358,7 @@ function ShowWeights(ex) {
           .domain([0, n_bars])
           .range([0,total_height]);
 
-  // TODO make this axis appropriate
+  // TODO make this axis appropriate (stop using axis), make it clickable
   var yAxis = d3.svg.axis();
       yAxis
         .orient('left')
@@ -381,6 +397,7 @@ function ShowWeights(ex) {
       .attr('width', 0)
       .style('fill',function(d,i){ return class_colors_i(d.class); })
       .on("mouseout", HideFeatureTooltip)
+      .on("click", ToggleFeatureBrush);
   bars.transition().duration(1000)
       .attr('width',function(d){ return xscale(d.weight); })
       .style('fill',function(d,i){ return class_colors_i(d.class); })
@@ -421,7 +438,8 @@ function ShowExample(ex) {
       })
       .style("font-size", function(d,i) {return size(Math.abs(d.weight))+"px";})
       .on("mouseover", ShowFeatureTooltip)
-      .on("mouseout", HideFeatureTooltip);
+      .on("mouseout", HideFeatureTooltip)
+      .on("click", ToggleFeatureBrush);
 
   // TODO:
   // do the remove first, then the add for smoothness
@@ -432,14 +450,25 @@ function ShowExample(ex) {
   UpdatePredictionBar(ex);
 }
 /* --------------------------*/
-// Histogram
+// Databin
 
+// Function to move stuff to front. This is for the selected document.
+d3.selection.prototype.moveToFront = function() {
+  return this.each(function(){
+    this.parentNode.appendChild(this);
+  });
+};
+
+
+var n_bins = 10;
+var bin_width = 12;
 var selected_document = 0;
 var hist_margin = {top: 0, right: 0, bottom: 0, left: 0},
     hist_width = 1100 - hist_margin.left - hist_margin.right,
     hist_height = 400 - hist_margin.top - hist_margin.bottom;
 var svg_hist, hist_tooltip;
 var hist_data;
+var dots;
 
 var xValue = function(d) { return d.bin_x;}, // data -> value
     xScale = d3.scale.linear().range([0, hist_width]), // value -> display
@@ -523,9 +552,7 @@ function map_examples_to_pos(docs, n_bins, bin_width) {
         }
     }
 }
-function ShowHistogramForClass(focus_class) {
-  var n_bins = 10;
-  var bin_width = 12;
+function ShowDatabinForClass(focus_class) {
   // Figure out which examples go in which bins
   map_examples_to_bin(test_docs, n_bins, focus_class);
   // Then map them to an actual x/y position within [0, 1]
@@ -533,73 +560,10 @@ function ShowHistogramForClass(focus_class) {
   xScale.domain([d3.min(test_docs, xValue), d3.max(test_docs, xValue)]);
   // don't want dots overlapping axis, so add in buffer to data domain
   yScale.domain([d3.min(test_docs, yValue)-0.1, d3.max(test_docs, yValue)+0.1]);
-  var square_size = 6;
-  // draw dots
-  dots = svg_hist.selectAll(".hist_dot")
-      .data(test_docs)
-  dots.enter().append("rect")
-      .attr("class", "hist_dot")
-      .attr("width", square_size)
-      .attr("height", square_size)
-      .style("fill", function(d) { return class_colors_i(d.true_class);})
-      .style("opacity", function(d) { return d.doc_id === selected_document ? 1.0 : 0.4})
-
-  dots.on("mouseover", function(d) {
-          var xPosition = parseFloat(d3.select(this).attr("x"));
-          var yPosition = parseFloat(d3.select(this).attr("y"));
-
-          // Change the style of the square
-          d3.select(this)
-              .attr("height", square_size + 10)
-              .attr("width", square_size + 10)
-              .attr("x", xPosition-square_size)
-              .attr("y", yPosition-square_size)
-              .style("opacity", 1.0)
-
-          hist_tooltip.transition()
-              .duration(200)
-              .style("opacity", .9)
-              .attr("fill", "rgb(255, 255, 255)");
-
-          var s = "Document ID: " + d.doc_id + "<br />True class: ";
-          s += class_names[d.true_class];
-          s += "<br/>Prediction: ";
-          s += class_names[d.prediction];
-          s += "<br /> P(" + class_names[focus_class] + ") = ";
-          s += + d.predict_proba[focus_class].toFixed(2);
-          hist_tooltip.html(s)
-              //"Document ID: " + d.doc_id + "<br />True class: " + d.true_class + "<br/>Prediction: " + d.prediction)
-              .style("left", (d3.event.pageX + 5) + "px")
-              .style("top", (d3.event.pageY - 70) + "px");
-      })
-      .on("mouseout", function(d) {
-          var xPosition = parseFloat(d3.select(this).attr("x"));
-          var yPosition = parseFloat(d3.select(this).attr("y"));
-
-          d3.select(this)
-              .attr("height", square_size)
-              .attr("width", square_size)
-              .attr("dx", 0.1)
-              .attr("x", xPosition+square_size)
-              .attr("y", yPosition+square_size)
-              .style("opacity", function(d){return d.doc_id == selected_document ? 1.0 : 0.4});
-
-          hist_tooltip.transition()
-              .duration(500)
-              .style("opacity", 0);
-      })
-      .on("click", function(d) {
-          d3.selectAll(".hist_dot")
-              .style("opacity", 0.4);
-
-          d3.select(this)
-              .style("opacity", 1.0);
-
-          on_click_document(d);
-      });
   dots.transition().duration(1000)
       .attr("x", xMap)
       .attr("y", yMap)
+  d3.select("#selected_document").moveToFront();
   // TODO: This is still weird, I think it's kinda wrong.
   svg_hist.select("#hist_xaxis")
     .text("P(" + class_names[focus_class] + " | example), given by the model")
@@ -609,10 +573,26 @@ function ShowHistogramForClass(focus_class) {
   var refLineData = [ {"bin_x": 0, "bin_y":-0.005}, {"bin_x":0.988, "bin_y":-0.005}];
   svg_hist.select("#xaxis")
      .attr("d", refLineFunction(refLineData))
-
+}
+function BrushExamples(example_set) {
+  dots.transition().style("opacity", function(d){
+    return docs.has(d.doc_id) ? 1 : 0.4;});
+}
+function FeatureBrushing(feature_list) {
+  docs = [];
+  d3.select("#feature_brush").html("Features being brushed: <br />" + feature_list.join("<br />"))
+  if (feature_list.length > 1) {
+    docs = _.intersection.apply(this, _.map(feature_list, function (d) {return feature_attributes[d].test_docs;}));
+  } else {
+    if (feature_list.length != 0) {
+      docs = feature_attributes[feature_list[0]].test_docs;
+    }
+  }
+  docs = new Set(_.map(docs, function(d) { return +d;}))
+  BrushExamples(docs);
 }
 
-function FirstDrawHistogram() {
+function FirstDrawDatabin() {
   // add the graph canvas to the body of the webpage
   svg_hist = d3.select("#histogram_div").append("svg")
       .attr("width", hist_width + hist_margin.left + hist_margin.right)
@@ -682,7 +662,7 @@ function FirstDrawHistogram() {
     .attr("width", 10)
     .attr("height", 10)
     .style("fill", function(d) {return class_colors(d);})
-    .on("click", function(d) { ShowHistogramForClass(class_names.indexOf(d)); });
+    .on("click", function(d) { ShowDatabinForClass(class_names.indexOf(d)); });
   svg_hist.append("rect")
       .attr("x", legend_x)
       .attr("y", legend_y)
@@ -704,7 +684,86 @@ function FirstDrawHistogram() {
      .attr("stroke", "black")
      .attr("stroke-width", 0.8)
      .attr("fill", "none");
- ShowHistogramForClass(1);
+  square_size = 6;
+  dots = svg_hist.selectAll(".hist_dot")
+      .data(test_docs)
+  dots.enter().append("rect")
+      .attr("class", "hist_dot")
+      .attr("width", square_size)
+      .attr("height", square_size)
+  dots.style("stroke", "black")
+      .style("stroke-opacity", 1)
+      .style("stroke-width", function(d) { return d.doc_id === selected_document ? 2.0 : 0})
+      .style("fill", function(d) { return class_colors_i(d.true_class);})
+      .style("opacity", 0.4)
+      .attr("id", function(d, i) {return d.doc_id === selected_document ? "selected_document" : "";});
+
+  focus_class = 0;
+  // Figure out which examples go in which bins
+  map_examples_to_bin(test_docs, n_bins, focus_class);
+  // Then map them to an actual x/y position within [0, 1]
+  map_examples_to_pos(test_docs, n_bins, bin_width);
+  xScale.domain([d3.min(test_docs, xValue), d3.max(test_docs, xValue)]);
+  // don't want dots overlapping axis, so add in buffer to data domain
+  yScale.domain([d3.min(test_docs, yValue)-0.1, d3.max(test_docs, yValue)+0.1]);
+  var square_size = 6;
+  dots.on("mouseover", function(d) {
+          var xPosition = parseFloat(d3.select(this).attr("x"));
+          var yPosition = parseFloat(d3.select(this).attr("y"));
+
+          // Change the style of the square
+          d3.select(this)
+              .attr("height", square_size + 10)
+              .attr("width", square_size + 10)
+              .attr("x", xPosition-square_size)
+              .attr("y", yPosition-square_size)
+              //.style("opacity", 1.0)
+
+          hist_tooltip.transition()
+              .duration(200)
+              .style("opacity", .9)
+              .attr("fill", "rgb(255, 255, 255)");
+
+          var s = "Document ID: " + d.doc_id + "<br />True class: ";
+          s += class_names[d.true_class];
+          s += "<br/>Prediction: ";
+          s += class_names[d.prediction];
+          s += "<br /> P(" + class_names[focus_class] + ") = ";
+          s += + d.predict_proba[focus_class].toFixed(2);
+          hist_tooltip.html(s)
+              //"Document ID: " + d.doc_id + "<br />True class: " + d.true_class + "<br/>Prediction: " + d.prediction)
+              .style("left", (d3.event.pageX + 5) + "px")
+              .style("top", (d3.event.pageY - 70) + "px");
+      })
+      .on("mouseout", function(d) {
+          var xPosition = parseFloat(d3.select(this).attr("x"));
+          var yPosition = parseFloat(d3.select(this).attr("y"));
+
+          d3.select(this)
+              .attr("height", square_size)
+              .attr("width", square_size)
+              .attr("dx", 0.1)
+              .attr("x", xPosition+square_size)
+              .attr("y", yPosition+square_size)
+              //.style("opacity", function(d){return d.doc_id == selected_document ? 1.0 : 0.4});
+
+          hist_tooltip.transition()
+              .duration(500)
+              .style("opacity", 0);
+      })
+      .on("click", function(d) {
+          dots.style("stroke-width", 0);
+          d3.select(this)
+              .transition().delay(0.1)
+              .style("stroke-width", 2)
+              .style("stroke-alignment", "inner")
+              .style("stroke-opacity", 1)
+              .attr("id", "selected_document");
+          d3.select(this).moveToFront();
+
+          on_click_document(d);
+      });
+ ShowDatabinForClass(focus_class);
 }
 
 
