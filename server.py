@@ -65,6 +65,7 @@ def GenerateJSONs(class_names, train_data, train_labels, test_data, test_labels,
       output['feature_attributes'][word]['train_distribution'] /= sum(output['feature_attributes'][word]['train_distribution'])
       output['feature_attributes'][word]['train_distribution'] = RoundAndListifyVector(output['feature_attributes'][word]['train_distribution'])
       output['feature_attributes'][word]['test_distribution'] = np.bincount(predictions[test_vectors.nonzero()[0][test_vectors.nonzero()[1] == i]], minlength=len(class_names)).astype('float')
+      output['feature_attributes'][word]['test_docs'] = list(test_vectors.nonzero()[0][test_vectors.nonzero()[1] == i].astype('str'))
       if test_count[i] > 0:
         output['feature_attributes'][word]['test_distribution'] /= sum(output['feature_attributes'][word]['test_distribution'])
       output['feature_attributes'][word]['test_distribution'] = RoundAndListifyVector(output['feature_attributes'][word]['test_distribution'])
