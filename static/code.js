@@ -338,8 +338,10 @@ function ToggleFeatureBrush(w) {
   }
   if (selected_features.has(w.feature)) {
     selected_features.delete(w.feature);
+    d3.select(this).style("text-decoration", "none")
   } 
   else {selected_features.add(w.feature);
+    d3.select(this).style("text-decoration", "underline")
   }
   sel_list = []
   selected_features.forEach(function(d) {sel_list.push(d);})
@@ -437,6 +439,7 @@ function ShowExample(ex) {
         }
       })
       .style("font-size", function(d,i) {return size(Math.abs(d.weight))+"px";})
+      .style("text-decoration", function(d,i) { return selected_features.has(d.feature) ? "underline" : "none";})
       .on("mouseover", ShowFeatureTooltip)
       .on("mouseout", HideFeatureTooltip)
       .on("click", ToggleFeatureBrush);
