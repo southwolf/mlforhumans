@@ -1,5 +1,6 @@
 var train_docs, test_docs, current, size, test_accuracy, previous_text, feature_attributes;
 var sort_order = "document_order";
+var explain_sentence = false;
 var class_names;
 // class_colors_i is by index, class_colors is by name
 var class_colors, class_colors_i;
@@ -66,6 +67,7 @@ function GetPredictionAndShowExample(example_text_split, true_class) {
 //xhr.send();
 xhr.send(JSON.stringify({
     features: example_text_split,
+    sentence_explanation: explain_sentence
 }));
 }
 
@@ -89,7 +91,7 @@ function GenerateObject(feature_array, true_class, prediction_object) {
   return ret;
 }
 
-function change(current_text, sort) {
+function change(current_text) {
   if (current_text === null) {
     current_text = d3.select("#textarea").node().value;
   }
@@ -120,6 +122,18 @@ function sort(){
     sort_order = "document_order";
     d3.select("#sort_button").text("Show feature contributions")
   }
+}
+
+function change_explanation() {
+  if (explain_sentence == false) {
+    explain_sentence = true;
+    d3.select("#explain_button").text("Change to word explanation")
+  }
+  else if (explain_sentence == true) {
+    explain_sentence = false;
+    d3.select("#explain_button").text("Change to sentence explanation")
+  }
+  change(null);
 }
 
 var div = d3.select("#d3");

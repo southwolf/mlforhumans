@@ -18,7 +18,8 @@
 </div>
 <div id="weights_button_div", style="margin-top:10px">
     <!-- <button class="green_button" onclick="run();">Look at another example</button> -->
-    <button class="green_button" id ="sort_button" onclick="sort();">Sort words based on weights</button>
+    <button class="green_button" id ="sort_button" onclick="sort();">Show feature contributions</button>
+    <button class="green_button" id ="explain_button" onclick="change_explanation();">Change to sentence explanation</button>
 </div>
 <!--Info button contents-->
 <div id="light" class="white_content">
