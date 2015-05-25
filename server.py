@@ -14,6 +14,7 @@ from sklearn.feature_extraction.text import CountVectorizer
 from sklearn import linear_model
 from sklearn import tree
 from sklearn import svm
+from sklearn.metrics import confusion_matrix
 import time
 import re
 import argparse
@@ -52,6 +53,15 @@ def GenerateJSONs(class_names, train_data, train_labels, test_data, test_labels,
   output['test'] = GetJsonExampleList(test_data, test_vectors, test_labels, classifier, tokenizer)
   output['feature_attributes'] = {}
   output['test_accuracy'] = round(accuracy_score(test_labels, classifier.predict(test_vectors)), 3)
+  output['statistics'] = {}
+  output['statistics']['train'] = {}
+  output['statistics']['test'] = {}
+  output['statistics']['train']['accuracy'] = round(accuracy_score(train_labels, classifier.predict(train_vectors)), 3)
+  output['statistics']['test']['accuracy'] = round(accuracy_score(test_labels, classifier.predict(test_vectors)), 3)
+  output['statistics']['train']['class_distribution'] = list(np.bincount(train_labels, minlength=len(class_names)).astype('float'))
+  output['statistics']['test']['class_distribution'] = list(np.bincount(test_labels, minlength=len(class_names)).astype('float'))
+  output['statistics']['test']['confusion_matrix'] = list(map(list,confusion_matrix(test_labels, classifier.predict(test_vectors))))
+  output['statistics']['train']['confusion_matrix'] = list(map(list,confusion_matrix(train_labels, classifier.predict(train_vectors))))
   predictions = classifier.predict(test_vectors)
   train_count = np.bincount(train_vectors.nonzero()[1])
   test_count = np.bincount(test_vectors.nonzero()[1], minlength=len(train_count))

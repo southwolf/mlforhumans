@@ -1,4 +1,5 @@
 var train_docs, test_docs, current, size, test_accuracy, previous_text, feature_attributes;
+var train_statistics, test_statistics;
 var sort_order = "document_order";
 var explain_sentence = false;
 var class_names;
@@ -6,6 +7,7 @@ var class_names;
 var class_colors, class_colors_i;
 var current_object;
 var selected_features = new Set()
+
 
 if (typeof json_file === 'undefined') {
   json_file = "3ng"
@@ -15,8 +17,10 @@ d3.json(json_file,  function(error, json) {
   if (error) return console.warn(error);
   train_docs = json.train;
   test_docs = json.test;
+  train_statistics = json.statistics.train;
+  test_statistics = json.statistics.test;
   feature_attributes = json.feature_attributes;
-  test_accuracy = json.test_accuracy;
+  test_accuracy = json.statistics.test.accuracy;
   class_names = json.class_names;
   class_names = _.map(class_names, function(i) {
     return  i.length > 17 ? i.slice(0,14) + "..." : i;
@@ -43,6 +47,18 @@ d3.json(json_file,  function(error, json) {
   FirstDrawPrediction();
   FirstDrawTooltip()
   FirstDrawDatabin()
+
+  // 17 is bar height, 5 is space
+  train_height = (17 + 5) * class_names.length + 80 + 20;
+  var train_svg = d3.select("#statistics_div").append("svg")
+  train_svg.attr("width", "255px").attr("height", train_height);
+  train_svg.style("float", "left").style("padding", "0 px 20 px 0 px 20px");
+  var test_svg = d3.select("#statistics_div").append("svg")
+  test_svg.attr("width", "255px").attr("height", train_height);
+  test_svg.style("float", "left").style("padding", "0 px 20 px 0 px 20px");
+  DrawStatistics("Train", train_svg, 17, 130, train_statistics)
+  DrawStatistics("Test", test_svg, 17, 130, test_statistics)
+
   current = 0;
   GetPredictionAndShowExample(test_docs[0].features, test_docs[0].true_class);
   //ShowExample(docs[0]);
@@ -592,11 +608,11 @@ function ShowDatabinForClass(focus_class) {
 }
 function BrushExamples(example_set) {
   dots.transition().style("opacity", function(d){
-    return docs.has(d.doc_id) ? 1 : 0.4;});
+    return example_set.has(d.doc_id) ? 1 : 0.4;});
 }
 function FeatureBrushing(feature_list) {
   docs = [];
-  d3.select("#feature_brush").html("Features being brushed: <br />" + feature_list.join("<br />"))
+  d3.select("#feature_brush_div").html("Features being brushed: <br />" + feature_list.join("<br />"))
   if (feature_list.length > 1) {
     docs = _.intersection.apply(this, _.map(feature_list, function (d) {return feature_attributes[d].test_docs;}));
   } else {
@@ -610,7 +626,7 @@ function FeatureBrushing(feature_list) {
 
 function FirstDrawDatabin() {
   // add the graph canvas to the body of the webpage
-  svg_hist = d3.select("#histogram_div").append("svg")
+  svg_hist = d3.select("#databin_div").append("svg")
       .attr("width", hist_width + hist_margin.left + hist_margin.right)
       .attr("height", hist_height + hist_margin.top + hist_margin.bottom)
       .append("g")
@@ -781,5 +797,71 @@ function FirstDrawDatabin() {
       });
  ShowDatabinForClass(focus_class);
 }
+
+/* --------------------------*/
+// Global Statistics
+function DrawStatistics(title, svg_object, b_height, b_width, data) {
+  total = d3.sum(data.class_distribution)
+  var s_bar_x_scale = d3.scale.linear().domain([0, total]).range([0, b_width]);
+  var s_bar_space = 5;
+  var s_bar_x = 110;
+  var s_bar_yshift = 80;
+  function SBarY(i) {
+    return (b_height + s_bar_space) * i + s_bar_yshift;
+  }
+  num_bars = class_names.length;
+
+  d = 0
+  var bar = svg_object.append("g")
+  bar.append("text").
+    attr("x", s_bar_x - 40)
+    .attr("y", 30)
+    .attr("fill", "black")
+    .style("font", "14px tahoma, sans-serif")
+    .text(title + " accuracy:" + data.accuracy);
+  bar.append("text").
+    attr("x", s_bar_x - 40)
+    .attr("y", 50)
+    .attr("fill", "black")
+    .style("font", "14px tahoma, sans-serif")
+    .text("Number of documents: " + total);
+  bar.append("text").
+    attr("x", s_bar_x - 40)
+    .attr("y", 70)
+    .attr("fill", "black")
+    .style("font", "14px tahoma, sans-serif")
+    .text("Class Distribution:");
+  for (i = 0; i < num_bars; i++) {
+    d = data.class_distribution[i];
+    rect = bar.append("rect");
+    //rect.classed("pred_rect", true);
+    rect.attr("x", s_bar_x)
+        .attr("y", SBarY(i))
+        .attr("height", b_height)
+        .attr("width", s_bar_x_scale(d))
+        .style("fill",class_colors_i(i));
+    text = bar.append("text");
+    text.attr("y", SBarY(i) + b_height - 3)
+        .attr("fill", "black")
+        .attr("x", s_bar_x + s_bar_x_scale(d) + 5)
+        .text(d.toFixed(0))
+        .style("font", "14px tahoma, sans-serif");
+    text = bar.append("text");
+    text.attr("x", s_bar_x - 10)
+        .attr("y", SBarY(i) + b_height - 3)
+        .attr("fill", "black")
+        .attr("text-anchor", "end")
+        .style("font", "14px tahoma, sans-serif")
+        .text(class_names[i]);
+
+    bar.append("rect").attr("x", s_bar_x)
+        .attr("y", SBarY(i))
+        .attr("height", b_height)
+        .attr("width", b_width - 1)
+        .attr("fill-opacity", 0)
+        .attr("stroke", "black");
+  }
+}
+
 
 

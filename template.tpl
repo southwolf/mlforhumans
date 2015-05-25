@@ -68,6 +68,7 @@
 <span id="tab-1" class="tab_span"></span>
 <span id="tab-2" class="tab_span"></span>
 <span id="tab-3" class="tab_span"></span>
+<span id="tab-4" class="tab_span"></span>
 
 <!-- The main markup -->
 <div id="tab">
@@ -75,14 +76,16 @@
 		<li><a href="#tab-1">Dataset</a></li>
 		<li><a href="#tab-2">Example</a></li>
 		<li><a href="#tab-3">Feature</a></li>
+		<li><a href="#tab-4">Statistics</a></li>
 	</ul>
 	<div class="tab-content-1">
-        <div id="histogram_div"></div>
+        <div id="databin_div"></div>
     </div>
 	<div class="tab-content-2">
         <div id="sorted_weights_div"><svg id="sorted_weights"/></div>
     </div>
-	<div class="tab-content-3"><div id="feature_brush"></div></div>
+	<div class="tab-content-3"><div id="feature_brush_div"></div></div>
+	<div class="tab-content-4"><div id="statistics_div"> </div></div>
 </div>
 
 <script src="code.js"></script>

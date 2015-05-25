@@ -213,7 +213,8 @@ span ~ #tab > div:first-of-type,
 /* Show a specific tab content based on the 'selected' target element */
 #tab-1:target ~ #tab > div.tab-content-1,
 #tab-2:target ~ #tab > div.tab-content-2,
-#tab-3:target ~ #tab > div.tab-content-3 {
+#tab-3:target ~ #tab > div.tab-content-3,
+#tab-4:target ~ #tab > div.tab-content-4 {
   visibility:visible;
   height:100%;
 }
@@ -223,7 +224,8 @@ span ~ #tab > ul li:first-child a,
 /* Set the current tab button color based on the 'selected' target element */
 #tab-1:target ~ #tab > ul li a[href$="#tab-1"],
 #tab-2:target ~ #tab > ul li a[href$="#tab-2"],
-#tab-3:target ~ #tab > ul li a[href$="#tab-3"] {
+#tab-3:target ~ #tab > ul li a[href$="#tab-3"],
+#tab-4:target ~ #tab > ul li a[href$="#tab-4"] {
   background-color:cadetblue;
   color:black;
 }
