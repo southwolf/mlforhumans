@@ -164,6 +164,20 @@ def MostImportantWord(classifier, v, class_):
   if max_change <= 0:
     return -1
   return max_index
+
+def ClassFlippers(classifier, v, class_):
+  flippers = []
+  orig = classifier.predict_proba(v)[0][class_]
+  for i in v.nonzero()[1]:
+    val = v[0,i]
+    v[0,i] = 0
+    pred = classifier.predict(v)[0]
+    if pred != class_:
+      pred = classifier.predict_proba(v)[0][class_]
+      change = orig - pred
+      flippers.append((i, change))
+    v[0,i] = val
+  return flippers
     
 def WordImportanceGreedy(classifier, example, vectorizer, inverse_vocabulary):
   v = vectorizer.transform([example])
@@ -171,6 +185,7 @@ def WordImportanceGreedy(classifier, example, vectorizer, inverse_vocabulary):
   new_class = class_
   imp = {}
   orig_weight = {}
+  flippers = []
   while new_class == class_ and v.nonzero()[0].shape[0] > 0:
     i = MostImportantWord(classifier, v, class_)
     if i == -1:
@@ -178,6 +193,15 @@ def WordImportanceGreedy(classifier, example, vectorizer, inverse_vocabulary):
     orig_weight[i] = v[0,i]
     v[0,i] = 0
     new_class = classifier.predict(v)[0]
+    if new_class != class_:
+      v[0,i] = orig_weight[i]
+      flippers = ClassFlippers(classifier, v, class_)
+      v[0,i] = 0
+  for i, change in flippers:
+    imp[inverse_vocabulary[i]] = {}
+    imp[inverse_vocabulary[i]]['weight'] = change
+    imp[inverse_vocabulary[i]]['class'] = class_
+
   orig = classifier.predict_proba(v)[0][class_]
   for i,o in orig_weight.iteritems():
     v[0,i] = o
