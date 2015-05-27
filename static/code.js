@@ -7,6 +7,7 @@ var class_names;
 var class_colors, class_colors_i;
 var current_object;
 var selected_features = new Set()
+var matrix;
 
 
 if (typeof json_file === 'undefined') {
@@ -23,7 +24,8 @@ d3.json(json_file,  function(error, json) {
   test_accuracy = json.statistics.test.accuracy;
   class_names = json.class_names;
   class_names = _.map(class_names, function(i) {
-    return  i.length > 17 ? i.slice(0,14) + "..." : i;
+    text = i.replace(".","-");
+    return  text.length > 17 ? text.slice(0,14) + "..." : text;
   });
   // TODO: this only works for at most 20 classes. I don't know if we should
   // worry about this though - if you have more than 20, color is not going to
@@ -58,6 +60,9 @@ d3.json(json_file,  function(error, json) {
   test_svg.style("float", "left").style("padding", "0 px 20 px 0 px 20px");
   DrawStatistics("Train", train_svg, 17, 130, train_statistics)
   DrawStatistics("Test", test_svg, 17, 130, test_statistics)
+  var cm_svg = d3.select("#statistics_div").append("svg")
+  matrix = new Matrix(cm_svg, test_statistics.confusion_matrix);
+  matrix.populateMatrix(test_statistics.confusion_matrix)
 
   current = 0;
   GetPredictionAndShowExample(test_docs[0].features, test_docs[0].true_class);
@@ -863,5 +868,347 @@ function DrawStatistics(title, svg_object, b_height, b_width, data) {
   }
 }
 
+/* Confusion Matrix */
 
+var current_brush = [-1, -1];
+function BrushOnMatrix(true_label, predicted_label) {
+  console.log("Brush " + true_label + " " + predicted_label);
+  docs = [];
+  if (true_label !== current_brush[0] || predicted_label !== current_brush[1]) {
+    docs = _.filter(test_docs, function (d) {return d.prediction === predicted_label && d.true_class === true_label; })
+    current_brush = [true_label, predicted_label];
+  }
+  else {
+    current_brush = [-1, -1];
+  }
+  docs = new Set(_.map(docs, function(d) {return d.doc_id;}));
+  BrushExamples(docs);
+}
 
+var LABEL_FONT_SIZE = 13;
+var MATRIX_LABEL_FONT_SIZE = 10;
+var MATRIX_FONT_SIZE = 10;
+var FONT_FAMILY = "Helvetica";
+var MOUSEOVER = 'rgb(150, 150, 150)';
+var FONT_COLOR = 'rgb(160, 160, 160)';
+var FILL = 'rgb(255, 255, 255)';
+var STROKE_SIZE = 1;
+var BUTTON_Y = 10;
+var BUTTON_SIZE = 15;
+function Matrix(svg_object, confusion_matrix) {
+  var defaultMouseover = MOUSEOVER;
+  var defaultRegular = FILL;
+  this.numClasses = class_names.length;
+  this.width = 250;
+  this.labelContainerSize = this.width / (this.numClasses * 3);
+  this.axisLabelContainerSize = this.width / (this.numClasses * 3);
+  this.strokeSize = STROKE_SIZE;
+  var size = this.width / this.numClasses;
+  this.footerContainerSize = this.width / 5;
+  this.cellSize = size;
+  this.id = "matrix";
+  //this.mouseoverColor = defaultMouseover;
+  //this.cellColor = defaultRegular;
+  this.svgContainerSize = (this.cellSize * this.numClasses) + this.strokeSize * 2 + this.labelContainerSize + this.axisLabelContainerSize;
+  this.svg = svg_object
+        .attr("class", "confusion_matrix")
+        .attr("width", this.svgContainerSize)
+        .attr("height", this.svgContainerSize + this.footerContainerSize)
+        .attr("id", this.id)
+        .attr("value", "modelname");
+
+  this.labelNames = class_names;
+  this.cells = new Array();
+  this.correspondingModel = "model";
+  this.round2 = d3.format(".2f");
+  this.bucketLists = [];
+  appendAxisLabels(this);
+
+  //  // append the positive, neutral, negative labels to the matrix
+  appendLabels(this, class_names);
+
+  var x = 0;
+  var y = 0;
+  var matrixPointer = this;
+  var count = 0;
+  this.ids = [];
+  mouseover = false;
+  for (var i = 0; i < class_names.length; i++) {
+    var x = 0;
+    var y = i * this.cellSize;
+    for (var j = 0; j < class_names.length; j++) {
+      var id = this.id + '-' + class_names[i] + '-' + class_names[j];
+      var z = [i, j];
+      this.ids.push(id);
+      var g = this.svg.append("g")
+            .attr("id", id)
+            .attr("width", size)
+            .attr("height", size)
+            //.attr("style", "stroke-width:" + this.strokeSize + "px")
+            .attr("class", "matrix-bucket")
+            .datum([i,j])
+            .on("click", function(d) {
+              BrushOnMatrix(d[0], d[1]);
+              //console.log(this.id);
+              //func(this.id, matrixPointer); 
+            })
+            .style("fill", FILL);
+
+      if (mouseover) {
+        g.on("mouseover", function() {
+            d3.select(this)
+              .style('fill', defaultMouseover);
+              //.style('stroke-width', this.strokeSize + "px");
+          })
+          .on("mouseout", function() {
+            d3.select(this)
+              .style('fill', defaultRegular);
+              //.style('stroke-width', this.strokeSize + "px");
+          })
+      }
+
+      var rect = g.append("rect")
+            .attr("x", x + this.strokeSize + this.labelContainerSize + this.axisLabelContainerSize)
+              .attr("y", y + this.strokeSize + this.labelContainerSize + this.axisLabelContainerSize)
+              .attr("id", this.id + '-' + class_names[i] + '-' + class_names[j] + "-cell")
+              .attr("class", "matrix-cell")
+              .attr("width", size - this.strokeSize)
+              .attr("height", size - this.strokeSize);              
+
+      var textElement = g.append("text")
+                .attr("id", this.id + '-' + class_names[i] + '-' + class_names[j] + "-text")
+                .attr("class", "matrix-text")
+                .attr("stroke-width", 0)
+                .attr("font-family", FONT_FAMILY)
+                .attr("font-size", MATRIX_FONT_SIZE + "pt");
+
+      var pixelLength = textElement[0][0].getComputedTextLength();
+      textElement.attr("y", this.cellSize / 2 + y)
+          .attr("x", x + this.cellSize / 2 - pixelLength / 2)
+          .style("fill", "rgb(97,97,97)");
+
+      this.cells[count] = g;
+      count++;
+      x += this.cellSize;
+    }
+  }
+  
+}
+function appendAxisLabels(matrix) {
+  // predicted label
+  var containerWidth = matrix.svgContainerSize;
+  var containSize = matrix.labelContainerSize;
+  matrix.svg.append("text")
+    .text("Predicted Label")
+    .attr("x", function () {
+      var pixelLength = this.getComputedTextLength();
+      return containSize * 2 + matrix.width / 2 - pixelLength / 2;
+    })
+        .attr("class", "axis_label")
+    .attr("y", 20)
+    .attr("id", matrix.id + '-' + 'horizontal-title')
+    .style("fill", FONT_COLOR)
+    .style("font-size", LABEL_FONT_SIZE);
+
+  matrix.svg.append("text")
+    .text("")
+    .attr("x", function () {
+      var pixelLength = this.getComputedTextLength();
+      return containSize * 2 + matrix.width / 2 - pixelLength / 2;
+    })
+    .attr("y", function() {
+      return matrix.width + containSize + matrix.footerContainerSize + matrix.axisLabelContainerSize;
+    })
+    .style("fill", FONT_COLOR)
+    .attr("id", matrix.id + '-' + 'footnote')
+    .style("font-size", LABEL_FONT_SIZE);
+
+  matrix.svg.append("text")
+    .text("Actual Label")
+    .attr("x", function() {
+      var pixelLength = this.getComputedTextLength();
+      return - containSize *2 - matrix.width / 2 - pixelLength / 2;
+    })
+    .attr("y", 15)
+    .attr("id", matrix.id + '-' + 'vertical-title')
+        .attr("class", "axis_label")
+    .style("fill", FONT_COLOR)
+    .style("font-size", LABEL_FONT_SIZE)
+    .attr("transform", "rotate(270)");
+}
+
+function appendLabels(matrix, labels) {
+  // create labels
+  var offset = 20;
+  var size = matrix.cellSize;
+  var axisLabelSize = matrix.axisLabelContainerSize;
+  var labelContainerSize = matrix.labelContainerSize;
+  for (var i = 0; i < labels.length; i++) {
+    matrix.svg.append("text")
+      .text(labels[i])
+      .attr("x", function () {
+        var pixelLength = this.getComputedTextLength();
+        return labelContainerSize + axisLabelSize + (size / 2) + (size * i) - (pixelLength / 2) + 10; 
+      })
+      .attr("y", offset + axisLabelSize)
+      .attr("id", matrix.id + '-' + labels[i] + '-predicted-label')
+      .style("fill", FONT_COLOR)
+      .style('font-size', MATRIX_LABEL_FONT_SIZE);
+
+    // create labels
+    matrix.svg.append("text")
+      .text(labels[i])
+      .attr("transform", "rotate(270)") 
+      .attr("x", function() {
+        var pixelLength = this.getComputedTextLength();
+        return -labelContainerSize - axisLabelSize - (size / 2) - (size * i) - pixelLength / 2 + 5;
+      })
+      .attr("y", offset + axisLabelSize)
+      .attr("id", matrix.id + '-' + labels[i] + "-actual-label")
+      .style('font-size', MATRIX_LABEL_FONT_SIZE)
+      .style("fill", FONT_COLOR);
+  }
+
+}
+Matrix.prototype.getMatrixIds = function() {
+  return this.ids;
+}
+Matrix.prototype.setTextForCell = function(text, id) {
+  var newText = d3.select("#" + id + "-text").text(text);
+  var cell = d3.select("#" + id + "-cell");
+
+  var pixelLength = newText[0][0].getComputedTextLength();
+  var currentX = parseInt(cell[0][0].attributes.x.value);
+  var currentY = parseInt(cell[0][0].attributes.y.value);
+  
+  newText.attr("y", this.cellSize / 2  + currentY)
+    .attr("x", currentX + this.cellSize / 2 - pixelLength / 2);
+}
+
+Matrix.prototype.setStrokeColor = function(r, g, b) {
+  var rgb = "rgb(" + r + ", " + g + ", " + b + ")";
+
+  var cells = this.cells;
+  for (var i = 0; i < cells.length; i++) {
+    cells[i].style("stroke", rgb);
+  }
+}
+
+Matrix.prototype.setCellMouseoverColor = function(r, g, b, id) {
+  var rgb = "rgb(" + r + ", " + g + ", " + b + ")";
+  
+  if (typeof(id) === 'undefined') {
+    this.mouseoverColor = rgb;
+    var cells = this.cells;
+    for (var i = 0; i < cells.length; i++) {
+      cells[i].on("mouseover", function() {
+          d3.select(this)
+            .style('fill', rgb)
+      });
+    }
+  } else {
+    d3.select("#" + id)
+      .on("mouseover", function() {
+          d3.select(this)
+            .style('fill', rgb)
+      });
+  }
+}
+
+Matrix.prototype.setCellFillColor = function(color, id) {
+  var rgb = color;
+  
+  if (typeof(id) === 'undefined') {
+    this.cellColor = rgb;
+    var cells = this.cells;
+    for (var i = 0; i < cells.length; i++) {
+      cells[i].style("fill", rgb)
+      .on("mouseout", function() {
+          d3.select(this)
+            .style('fill', rgb)
+      });
+    }
+  } else {
+    if (d3.rgb(color).hsl().l < .58) {
+                        //light text
+      this.setFontColor(230, 230, 230, id);
+    }
+                else this.setFontColor(97,97,97,id);
+    d3.select("#" + id)
+      .style("fill",rgb)
+      .on("mouseout", function() {
+          d3.select(this)
+            .style('fill', rgb)
+      });
+  }
+}
+
+Matrix.prototype.setContainerId = function(id) {
+  d3.select(this)
+    .attr("id", id);
+}
+Matrix.prototype.setFontFamily = function(family) {
+  d3.selectAll("text").style("font-family", family);
+}
+
+Matrix.prototype.setFontColor = function(r, g, b, id) {
+  var rgb = "rgb(" + r + ", " + g + ", " + b + ")";
+  if (typeof(id) === 'undefined') {
+    d3.selectAll("text").style("fill", rgb);
+  } else {
+    d3.select("#" + id + "-text")
+      .style('fill', rgb);
+  }
+}
+
+Matrix.prototype.setStrokeWidth = function(width) {
+  this.strokeSize = width;
+  this.svgContainerSize = (this.cellSize * 3) + this.strokeSize * 2;
+  this.svg.attr("width", this.svgContainerSize)
+      .attr("height", this.svgContainerSize);
+
+  var x = 0;
+  var y = 0;
+  var strokeSize = this.strokeSize;
+  for (var i = 0; i < this.cells.length; i++) {
+    var cell = this.cells[i];
+    cell.attr("style", "stroke-width:" + width + "px")
+      .attr("x", x + strokeSize)
+      .attr("y", y + strokeSize)
+      .style("stroke-width", strokeSize + "px");
+
+    x += this.cellSize;
+      if ((i + 1) % 3 == 0) {
+        x = 0;
+        y += this.cellSize;
+      }
+  }
+}
+
+Matrix.prototype.setFootnote = function(text) {
+  var containerSize, width;
+  containerSize = this.labelContainerSize;
+  width = this.width;
+  d3.select("#" + this.id + '-footnote')
+    .text(text)
+                .attr("class", ".footnote")
+    .attr("x", function() {
+      var pixelLength = this.getComputedTextLength();
+      return containerSize * 2 +  width / 2 - pixelLength / 2;
+    });
+}
+
+Matrix.prototype.populateMatrix = function(data) {
+    for (var i = 0; i < this.numClasses; i++) {
+      var row = data[i]
+      var rowsum = d3.sum(row);
+      var colorGreen = d3.scale.linear().domain([0, rowsum]).range(["#E3FAEA", "#0B7A52"]);
+      var colorRed = d3.scale.linear().domain([0, rowsum]).range(["#FAE3E3", "#7A0B0B"]);
+      for (var j = 0; j < this.numClasses; j++) {
+        var bucket = this.numClasses * i + j;
+                      var color = (i == j) ? colorGreen : colorRed;
+        this.setCellFillColor(color(row[j]), this.ids[bucket]); 
+        this.setTextForCell(row[j], this.ids[bucket]); 
+      }
+    }
+}
