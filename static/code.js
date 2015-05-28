@@ -546,6 +546,15 @@ function map_examples_to_bin(docs, n_bins, focus_class) {
         }
     }
 }
+function map_examples_to_true_class_bin(docs, n_bins) {
+    for (var i=0; i<docs.length; i++) {
+        var pred = docs[i].true_class / class_names.length;
+        docs[i].pred_bin = Math.floor(pred*n_bins);
+        if (docs[i].pred_bin >= n_bins) {
+            docs[i].pred_bin -= 1;
+        }
+    }
+}
 
 function map_examples_to_pos(docs, n_bins, bin_width) {
     var correct_bin_index = [];
