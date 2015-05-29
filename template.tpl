@@ -13,14 +13,14 @@
 <script type="text/javascript" src="colors.js"></script>
 
 <!--Info button-->
+<!--
 <div id="info_button">
     <button class="blue_button" onclick="show_info()">info</button>
 </div>
 <div id="weights_button_div", style="margin-top:10px">
-    <!-- <button class="green_button" onclick="run();">Look at another example</button> -->
     <button class="green_button" id ="sort_button" onclick="sort();">Show feature contributions</button>
     <button class="green_button" id ="explain_button" onclick="change_explanation();">Change to sentence explanation</button>
-</div>
+</div> -->
 <!--Info button contents-->
 <div id="light" class="white_content">
     Cross validation predictions for 20 newsgroups dataset. Positive (blue) class is Christianity, negative class is
@@ -43,50 +43,52 @@
 <div id="fade" class="black_overlay"></div>
 <!---->
 
-<svg class="hovercard"></svg>
+<div id="selections"> 
+<select id="explain-1" onChange="change_order(1);">
+  <option value="textarea">Edit text</option>
+  <option value="text">View text</option>
+  <option value="prediction">Prediction probabilities</option>
+  <option value="feature_contribution">Feature contributions</option>
+  <option value="brushed_features">Selected features</option>
+</select>
+<select id="explain-2" onChange="change_order(2);">
+  <option value="textarea">Edit text</option>
+  <option value="text" selected>View text</option>
+  <option value="prediction">Prediction probabilities</option>
+  <option value="feature_contribution">Feature contributions</option>
+  <option value="brushed_features">Selected features</option>
+</select>
+<select id="explain-3" onChange="change_order(3);">
+  <option value="textarea">Edit text</option>
+  <option value="text">View text</option>
+  <option value="prediction" selected>Prediction probabilities</option>
+  <option value="feature_contribution">Feature contributions</option>
+  <option value="brushed_features">Selected features</option>
+</select>
 
-
-    <br />
-<div id="side_by_side_text">
-    <div id="textarea_div">
-        <textarea id="textarea">
-        </textarea>
-    </div>
-    <div id="text_buttons_div">
-        <button class="green_button" title="Change example based on textarea." onclick="change(null);">--></button>
-        <br/>
-        <button class="green_button" title="Make textarea contain selected text." onclick="change_to_selection();"><--</button>
-    </div>
-    <div id="d3">
-    </div>
-    <svg id="prediction_bar"></svg>
 </div>
+<svg class="hovercard"></svg>
+    <br />
+    <div id="textarea_div" class="top_explain visible">
+        <textarea id="textarea" class="textarea_stuff">
+        </textarea>
+        <button class="textarea_stuff green_button" title="Change example based on textarea." onclick="change(null);">--></button>
+    </div>
+    <div id="explain_text_div" class="top_explain top_mid visible"> </div>
+    <div id="prediction_bar_div" class="top_explain top_right visible">
+      <svg id="prediction_bar"></svg>
+    </div>
+    <div id="explain_features_div" class="top_explain hidden"> </div>
+    <div id="feature_brush_div" class="top_explain hidden"> </div>
+	  <div id="statistics_div" class="hidden top_statistics"> </div>
+	  <div id="confusion_matrix_div" class="hidden top_statistics"> </div>
 
 <script src="info_box.js"></script>
 
-<!--Tabular layout-->
-<span id="tab-1" class="tab_span"></span>
-<span id="tab-2" class="tab_span"></span>
-<span id="tab-3" class="tab_span"></span>
-<span id="tab-4" class="tab_span"></span>
 
+<div id="legend_div" class="bottom_part">fsafjaldjfl fajsdlfj l</div>
+<div id="databin_div" class="bottom_part"></div>
 <!-- The main markup -->
-<div id="tab">
-	<ul>
-		<li><a href="#tab-1">Dataset</a></li>
-		<li><a href="#tab-2">Example</a></li>
-		<li><a href="#tab-3">Feature</a></li>
-		<li><a href="#tab-4">Statistics</a></li>
-	</ul>
-	<div class="tab-content-1">
-        <div id="databin_div"></div>
-    </div>
-	<div class="tab-content-2">
-        <div id="sorted_weights_div"><svg id="sorted_weights"/></div>
-    </div>
-	<div class="tab-content-3"><div id="feature_brush_div"></div></div>
-	<div class="tab-content-4"><div id="statistics_div"> </div></div>
-</div>
 
 <script src="code.js"></script>
 </body>

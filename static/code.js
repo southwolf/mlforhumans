@@ -157,7 +157,7 @@ function change_explanation() {
   change(null);
 }
 
-var div = d3.select("#d3");
+var div = d3.select("#explain_text_div");
 var height = "50%";
 
 
@@ -1220,4 +1220,37 @@ Matrix.prototype.populateMatrix = function(data) {
         this.setTextForCell(row[j], this.ids[bucket]); 
       }
     }
+}
+
+var top_divs_order = {"textarea" : 1, "text": 2, "prediction": 3, "feature_contribution": 4, "brushed_features" : 5};
+top_divs = d3.selectAll(".top_explain").data(["textarea", "text", "prediction", "feature_contribution", "brushed_features"]);
+var visible;
+/* Changing order of explain predictions */
+function change_order(changed_select) {
+  // Hide everything
+  d3.selectAll(".top_explain").filter(".visible").classed("visible", false).classed("hidden", true);
+  sel1 = d3.select("#explain-1").node().value
+  sel2 = d3.select("#explain-2").node().value
+  sel3 = d3.select("#explain-3").node().value
+  top_divs_order[sel3] = 3
+  top_divs_order[sel2] = 2
+  top_divs_order[sel1] = 1
+  var missing = []
+  if (sel2 === sel1) {
+    missing.push(2);
+  }
+  if (sel3 === sel1 || sel3 === sel2) {
+    missing.push(3);
+  }
+  visible = new Set([sel1, sel2, sel3])
+  while (missing.length > 0) {
+    n = missing.pop();
+    d = d3.selectAll(".hidden").filter(function(d, i) { return !visible.has(d);}).data()[0];
+    visible.add(d);
+    top_divs_order[d] = n;
+    d3.select("#explain-" + n).node().value = d;
+  }
+  d3.selectAll(".top_explain").filter(function(d,i) {return visible.has(d);}).classed("hidden", false).classed("visible", true);
+  top_divs.sort(function(a,b) { return top_divs_order[a] > top_divs_order[b];});
+  //alert("OI" + changed_select);
 }
