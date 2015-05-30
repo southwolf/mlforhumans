@@ -43,27 +43,36 @@
 <div id="fade" class="black_overlay"></div>
 <!---->
 
-<div id="selections"> 
+<select id="view-select" onChange="change_mode();">
+<option value="explain">Explain prediction</option>
+<option value="statistics">Global statistics</option>
+<option value="feedback">Feedback</option>
+</select>
+<select id="dataset-select" onChange="change_dataset();">
+<option value="test">Validation</option>
+<option value="train">Train</option>
+</select>
+<div id="explain_selections"> 
 <select id="explain-1" onChange="change_order(1);">
   <option value="textarea">Edit text</option>
-  <option value="text">View text</option>
+  <!--<option value="text">View text</option>
   <option value="prediction">Prediction probabilities</option>
-  <option value="feature_contribution">Feature contributions</option>
+  <option value="feature_contribution">Feature contributions</option> -->
   <option value="brushed_features">Selected features</option>
 </select>
-<select id="explain-2" onChange="change_order(2);">
-  <option value="textarea">Edit text</option>
+<!-- <select id="explain-2" onChange="change_order(2);">
   <option value="text" selected>View text</option>
+  <option value="textarea">Edit text</option>
   <option value="prediction">Prediction probabilities</option>
   <option value="feature_contribution">Feature contributions</option>
   <option value="brushed_features">Selected features</option>
-</select>
+</select> -->
 <select id="explain-3" onChange="change_order(3);">
-  <option value="textarea">Edit text</option>
-  <option value="text">View text</option>
+  <!--<option value="textarea">Edit text</option>
+  <option value="text">View text</option> -->
   <option value="prediction" selected>Prediction probabilities</option>
   <option value="feature_contribution">Feature contributions</option>
-  <option value="brushed_features">Selected features</option>
+  <!--<option value="brushed_features">Selected features</option> -->
 </select>
 
 </div>
@@ -86,7 +95,7 @@
 <script src="info_box.js"></script>
 
 
-<div id="legend_div" class="bottom_part">fsafjaldjfl fajsdlfj l</div>
+<div id="legend_div" class="bottom_part"></div>
 <div id="databin_div" class="bottom_part"></div>
 <!-- The main markup -->
 

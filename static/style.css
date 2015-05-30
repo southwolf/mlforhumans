@@ -97,6 +97,12 @@
   border-radius:5px;
   padding: 10px;
 }
+#explain_features_div {
+  /* 35 px for the arrows, 150 for the prediction bar*/
+  /*height:calc(100% - 22px);*/
+  margin: 0px 0px 0px 0px;
+  overflow: scroll;
+}
 .top_explain{
   width: calc(33% - 10px);
   height: 35%;
@@ -143,7 +149,13 @@
   moz-box-sizing: border-box;
 }
 #legend_div {
-  width: 50px;
+  width: 100%;
+  margin-top: 5px;
+  overflow-y: scroll;
+}
+#databin_div {
+  width: 100%;
+  margin-top: 5px;
 }
 #textarea_div{
   width: 33%;

@@ -19,21 +19,16 @@ import time
 import re
 import argparse
 
-def RoundAndListifyVector(v):
+def ListifyVector(v):
   # If the vector is all zeros, put a uniform on it.
-  temp = v.copy()
-  if sum(v) == 0:
-    temp = (v + 1) / v.shape[0]
-  out = [round(x,2) for x in temp]
-  out[-1] += round(1 - sum(out), 3)
-  return out
+  return [x for x in v]
 def GetJsonExampleList(data, data_vectors, labels, classifier, tokenizer):
   out = []
   for i, doc in enumerate(data):
     temp = {}
     temp['features'] = ' \n '.join(map(lambda x: ' '.join(tokenizer(x)), doc.split('\n'))).split(' ')
     temp['true_class'] = int(labels[i])
-    temp['predict_proba'] = RoundAndListifyVector(classifier.predict_proba(data_vectors[i])[0])
+    temp['predict_proba'] = ListifyVector(classifier.predict_proba(data_vectors[i])[0])
     temp['prediction'] = classifier.predict(data_vectors[i])[0]
     out.append(temp)
   return out
@@ -74,12 +69,12 @@ def GenerateJSONs(class_names, train_data, train_labels, test_data, test_labels,
       output['feature_attributes'][word]['test_freq'] = round(test_freq, 2)
       output['feature_attributes'][word]['train_distribution'] = np.bincount(train_labels[train_vectors.nonzero()[0][train_vectors.nonzero()[1] == i]], minlength=len(class_names)).astype('float')
       output['feature_attributes'][word]['train_distribution'] /= sum(output['feature_attributes'][word]['train_distribution'])
-      output['feature_attributes'][word]['train_distribution'] = RoundAndListifyVector(output['feature_attributes'][word]['train_distribution'])
+      output['feature_attributes'][word]['train_distribution'] = ListifyVector(output['feature_attributes'][word]['train_distribution'])
       output['feature_attributes'][word]['test_distribution'] = np.bincount(predictions[test_vectors.nonzero()[0][test_vectors.nonzero()[1] == i]], minlength=len(class_names)).astype('float')
       output['feature_attributes'][word]['test_docs'] = list(test_vectors.nonzero()[0][test_vectors.nonzero()[1] == i].astype('str'))
       if test_count[i] > 0:
         output['feature_attributes'][word]['test_distribution'] /= sum(output['feature_attributes'][word]['test_distribution'])
-      output['feature_attributes'][word]['test_distribution'] = RoundAndListifyVector(output['feature_attributes'][word]['test_distribution'])
+      output['feature_attributes'][word]['test_distribution'] = ListifyVector(output['feature_attributes'][word]['test_distribution'])
   json.dump(output, open(output_json, 'w'))
   
 def LoadTextDataset(path_train, path_test):
@@ -326,7 +321,8 @@ def main():
         #print 'Example:', ex
         #print 'Pred:'
         #print classifier.predict_proba(v)[0]
-        ret['predict_proba'] = RoundAndListifyVector(classifier.predict_proba(v)[0])
+        ret['predict_proba'] = ListifyVector(classifier.predict_proba(v)[0])
+        print ret['predict_proba']
         ret['prediction'] = classifier.predict(v)[0]
         #ret['feature_weights'] = WordImportance(classifier, v, inverse_vocabulary)
         if sentence_explanation:
