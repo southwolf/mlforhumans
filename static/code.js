@@ -7,7 +7,11 @@ var class_colors, class_colors_i;
 var current_object;
 var selected_features = new Set()
 var matrix;
+var top_part_height;
 var current_docs;
+var confusion_matrix;
+var current_train = false;
+var current_feature_brush = [];
 
 
 if (typeof json_file === 'undefined') {
@@ -47,25 +51,17 @@ d3.json(json_file,  function(error, json) {
   min = 0;
   max = 1;
   size = d3.scale.linear().domain([min, max]).range([15, 40]);
+  top_part_height = parseInt(d3.select("#explain_text_div").style("height"));
+  DrawLegend();
   SetupDatabin();
   FirstDrawPrediction();
   FirstDrawTooltip();
   FirstDrawDatabin();
-  DrawLegend();
 
-  // 17 is bar height, 5 is space
-  train_height = (17 + 5) * class_names.length + 80 + 20;
-  var train_svg = d3.select("#statistics_div").append("svg")
-  train_svg.attr("width", "255px").attr("height", train_height);
-  train_svg.style("float", "left").style("padding", "0 px 20 px 0 px 20px");
-  var test_svg = d3.select("#statistics_div").append("svg")
-  test_svg.attr("width", "255px").attr("height", train_height);
-  test_svg.style("float", "left").style("padding", "0 px 20 px 0 px 20px");
-  DrawStatistics("Train", train_svg, 17, 130, train_statistics)
-  DrawStatistics("Test", test_svg, 17, 130, test_statistics)
-  var cm_svg = d3.select("#statistics_div").append("svg")
-  matrix = new Matrix(cm_svg, test_statistics.confusion_matrix);
-  matrix.populateMatrix(test_statistics.confusion_matrix)
+  SetupStatistics();
+  //DrawStatistics("Train", train_svg, 17, 130, train_statistics)
+  DrawStatistics("Validation", test_statistics)
+  confusion_matrix.populateMatrix(test_statistics.confusion_matrix)
 
   current = 0;
   GetPredictionAndShowExample(current_docs[0].features, current_docs[0].true_class);
@@ -358,7 +354,7 @@ function ToggleFeatureBrush(w) {
   }
   sel_list = []
   selected_features.forEach(function(d) {sel_list.push(d);})
-  FeatureBrushing(sel_list);
+  FeatureBrushing(sel_list, false);
 }
 function ShowWeights(ex) {
   var data = ex.sorted_weights;
@@ -489,8 +485,7 @@ var dots;
 var xValue, xScale, xMap, xAxis, yValue, yScale, yMap, yAxis;
 var refLineFunction;
 function SetupDatabin() {
-  databin_height = parseInt(d3.select("body").style("height")) - parseInt(d3.select(".top_explain").style("height") + legend_height + 5 + 5);
-  databin_height = databin_height;
+  databin_height = parseInt(d3.select("body").style("height")) - (top_part_height + legend_height + 5 + 5);
   n_bins = 4;
   bin_width = 12;
   square_size = 6;
@@ -592,13 +587,20 @@ function change_dataset() {
   dataset = d3.select("#dataset-select").node().value
   console.log(dataset);
   if(dataset === "train") {
+    current_train = true;
     current_docs = train_docs;
+    DrawStatistics("Train", train_statistics)
+    confusion_matrix.populateMatrix(train_statistics.confusion_matrix)
   }
   else {
+    current_train = false;
     current_docs = test_docs;
+    DrawStatistics("Validation", test_statistics)
+    confusion_matrix.populateMatrix(test_statistics.confusion_matrix)
   }
   AssignDots(svg_hist, current_docs);
   GetPredictionAndShowExample(current_docs[0].features, current_docs[0].true_class);
+  FeatureBrushing(current_feature_brush, true);
   ShowDatabinForClass(-1);
 }
 function change_mode() {
@@ -716,8 +718,8 @@ function FirstDrawDatabin() {
       .attr("class", "hist_tooltip")
       .style("opacity", 0);
   // Initialize the document IDs
- set_doc_ids(current_docs);
- set_doc_ids(current_docs);
+ set_doc_ids(train_docs);
+ set_doc_ids(test_docs);
 
   // Draw title
   svg_hist.append("text")
@@ -811,18 +813,28 @@ function BrushExamples(example_set) {
   dots.transition().style("opacity", function(d){
     return example_set.has(d.doc_id) ? 1 : 0.4;});
 }
-function FeatureBrushing(feature_list) {
+function InstantBrushExamples(example_set) {
+  dots.style("opacity", function(d){
+    return example_set.has(d.doc_id) ? 1 : 0.4;});
+}
+function FeatureBrushing(feature_list, instant) {
+  current_feature_brush = feature_list;
   docs = [];
   d3.select("#feature_brush_div").html("Features being brushed: <br />" + feature_list.join("<br />"))
   if (feature_list.length > 1) {
-    docs = _.intersection.apply(this, _.map(feature_list, function (d) {return feature_attributes[d].current_docs;}));
+    docs = _.intersection.apply(this, _.map(feature_list, function (d) {return current_train ? feature_attributes[d].train_docs : feature_attributes[d].test_docs;}));
   } else {
     if (feature_list.length != 0) {
-      docs = feature_attributes[feature_list[0]].current_docs;
+      docs = current_train ? feature_attributes[feature_list[0]].train_docs : feature_attributes[feature_list[0]].test_docs;
     }
   }
   docs = new Set(_.map(docs, function(d) { return +d;}))
-  BrushExamples(docs);
+  if (instant) {
+    InstantBrushExamples(docs);
+  }
+  else {
+    BrushExamples(docs);
+  }
 }
 
 var legend_height;
@@ -877,52 +889,59 @@ function DrawLegend() {
 
 /* --------------------------*/
 // Global Statistics
-function DrawStatistics(title, svg_object, b_height, b_width, data) {
-  total = d3.sum(data.class_distribution)
-  var s_bar_x_scale = d3.scale.linear().domain([0, total]).range([0, b_width]);
-  var s_bar_space = 5;
-  var s_bar_x = 110;
-  var s_bar_yshift = 80;
-  function SBarY(i) {
-    return (b_height + s_bar_space) * i + s_bar_yshift;
-  }
-  num_bars = class_names.length;
+
+var s_bar_space, s_bar_x, s_bar_yshift, b_height, b_width;
+function SetupStatistics() {
+  b_height = 17;
+  b_width = 130;
+  // 17 is bar height, 5 is space
+  train_height = (b_height + 5) * class_names.length + 80 + 20;
+  var stats_svg = d3.select("#statistics_div").append("svg")
+  stats_svg.attr("width", "255px").attr("height", train_height);
+  stats_svg.style("float", "left").style("padding", "0 px 20 px 0 px 20px");
+  stats_svg.attr("id", "stats_svg")
+
+  s_bar_space = 5;
+  s_bar_x = 110;
+  s_bar_yshift = 80;
 
   d = 0
-  var bar = svg_object.append("g")
-  bar.append("text").
-    attr("x", s_bar_x - 40)
+  var bar = stats_svg.append("g")
+  bar.append("text")
+    .attr("x", s_bar_x - 40)
+    .attr("id", "statistics_title")
     .attr("y", 30)
     .attr("fill", "black")
     .style("font", "14px tahoma, sans-serif")
-    .text(title + " accuracy:" + data.accuracy);
   bar.append("text").
     attr("x", s_bar_x - 40)
     .attr("y", 50)
     .attr("fill", "black")
     .style("font", "14px tahoma, sans-serif")
-    .text("Number of documents: " + total);
+    .attr("id", "statistics_total");
   bar.append("text").
     attr("x", s_bar_x - 40)
     .attr("y", 70)
     .attr("fill", "black")
     .style("font", "14px tahoma, sans-serif")
     .text("Class Distribution:");
+  function SBarY(i) {
+    return (b_height + s_bar_space) * i + s_bar_yshift;
+  }
+  num_bars = class_names.length;
   for (i = 0; i < num_bars; i++) {
-    d = data.class_distribution[i];
     rect = bar.append("rect");
     //rect.classed("pred_rect", true);
     rect.attr("x", s_bar_x)
         .attr("y", SBarY(i))
         .attr("height", b_height)
-        .attr("width", s_bar_x_scale(d))
-        .style("fill",class_colors_i(i));
+        .style("fill",class_colors_i(i))
+        .classed("statistics_rects", true);
     text = bar.append("text");
     text.attr("y", SBarY(i) + b_height - 3)
         .attr("fill", "black")
-        .attr("x", s_bar_x + s_bar_x_scale(d) + 5)
-        .text(d.toFixed(0))
-        .style("font", "14px tahoma, sans-serif");
+        .style("font", "14px tahoma, sans-serif")
+        .classed("statistics_texts", true);
     text = bar.append("text");
     text.attr("x", s_bar_x - 10)
         .attr("y", SBarY(i) + b_height - 3)
@@ -930,7 +949,6 @@ function DrawStatistics(title, svg_object, b_height, b_width, data) {
         .attr("text-anchor", "end")
         .style("font", "14px tahoma, sans-serif")
         .text(class_names[i]);
-
     bar.append("rect").attr("x", s_bar_x)
         .attr("y", SBarY(i))
         .attr("height", b_height)
@@ -938,6 +956,24 @@ function DrawStatistics(title, svg_object, b_height, b_width, data) {
         .attr("fill-opacity", 0)
         .attr("stroke", "black");
   }
+  var cm_svg = d3.select("#statistics_div").append("svg")
+  cm_svg.style("height", top_part_height);
+  confusion_matrix = new Matrix(cm_svg, top_part_height);
+}
+function DrawStatistics(title, data) {
+  total = d3.sum(data.class_distribution)
+  var s_bar_x_scale = d3.scale.linear().domain([0, total]).range([0, b_width]);
+
+  d3.select("#statistics_title")
+    .text(title + " accuracy:" + data.accuracy);
+  d3.select("#statistics_total")
+    .text("Number of documents: " + total);
+
+  rect = d3.selectAll(".statistics_rects").data(data.class_distribution)
+  rect.attr("width", function(d) {return s_bar_x_scale(d);});
+  text = d3.selectAll(".statistics_texts").data(data.class_distribution)
+  text.attr("x", function(d) { return s_bar_x + s_bar_x_scale(d) + 5; })
+       .text(function(d) { return d.toFixed(0); })
 }
 
 /* Confusion Matrix */
@@ -948,6 +984,7 @@ function BrushOnMatrix(true_label, predicted_label) {
   docs = [];
   if (true_label !== current_brush[0] || predicted_label !== current_brush[1]) {
     docs = _.filter(current_docs, function (d) {return d.prediction === predicted_label && d.true_class === true_label; })
+    console.log(docs);
     current_brush = [true_label, predicted_label];
   }
   else {
@@ -967,14 +1004,15 @@ var FILL = 'rgb(255, 255, 255)';
 var STROKE_SIZE = 1;
 var BUTTON_Y = 10;
 var BUTTON_SIZE = 15;
-function Matrix(svg_object, confusion_matrix) {
+function Matrix(svg_object, height) {
   var defaultMouseover = MOUSEOVER;
   var defaultRegular = FILL;
   this.numClasses = class_names.length;
-  this.width = 250;
+  //this.width = 350;
+  this.strokeSize = STROKE_SIZE;
+  this.width = (height - this.strokeSize * 2) / (1.2 + 2/(3 * this.numClasses));
   this.labelContainerSize = this.width / (this.numClasses * 3);
   this.axisLabelContainerSize = this.width / (this.numClasses * 3);
-  this.strokeSize = STROKE_SIZE;
   var size = this.width / this.numClasses;
   this.footerContainerSize = this.width / 5;
   this.cellSize = size;
@@ -982,6 +1020,7 @@ function Matrix(svg_object, confusion_matrix) {
   //this.mouseoverColor = defaultMouseover;
   //this.cellColor = defaultRegular;
   this.svgContainerSize = (this.cellSize * this.numClasses) + this.strokeSize * 2 + this.labelContainerSize + this.axisLabelContainerSize;
+  console.log("Height: " + height + " new: " + (this.svgContainerSize + this.footerContainerSize));
   this.svg = svg_object
         .attr("class", "confusion_matrix")
         .attr("width", this.svgContainerSize)

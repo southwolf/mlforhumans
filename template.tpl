@@ -90,7 +90,6 @@
     <div id="explain_features_div" class="top_explain hidden"> </div>
     <div id="feature_brush_div" class="top_explain hidden"> </div>
 	  <div id="statistics_div" class="hidden top_statistics"> </div>
-	  <div id="confusion_matrix_div" class="hidden top_statistics"> </div>
 
 <script src="info_box.js"></script>
 

@@ -97,11 +97,15 @@
   border-radius:5px;
   padding: 10px;
 }
+#statistics_div {
+  overflow: scroll;
+  width: 100%;
+}
 #explain_features_div {
   /* 35 px for the arrows, 150 for the prediction bar*/
   /*height:calc(100% - 22px);*/
   margin: 0px 0px 0px 0px;
-  overflow: scroll;
+  overflow-y: scroll;
 }
 .top_explain{
   width: calc(33% - 10px);
