@@ -15,13 +15,13 @@ var current_feature_brush = [];
 var current_regex = {};
 var saved_regex = []
 
-
-if (typeof json_file === 'undefined') {
-  json_file = "3ng"
-}
-
-d3.json(json_file,  function(error, json) {
-  if (error) return console.warn(error);
+function LoadJson() {
+  var xhr = new XMLHttpRequest();
+  xhr.open('POST', 'http://localhost:8870/get_json');
+  xhr.setRequestHeader('Content-Type', 'application/json');
+  xhr.onload = function() {
+      if (xhr.status === 200) {
+          var json = JSON.parse(xhr.responseText);
   train_docs = json.train;
   test_docs = json.test;
   current_docs = test_docs;
@@ -68,8 +68,12 @@ d3.json(json_file,  function(error, json) {
   current = 0;
   GetPredictionAndShowExample(current_docs[selected_document].features, current_docs[selected_document].true_class);
   ShowFeedbackExample(current_docs[0]);
-  //ShowExample(docs[0]);
-})
+      }
+  };
+xhr.send();
+}
+
+LoadJson()
 
 function GetPredictionAndShowExample(example_text_split, true_class) {
   var xhr = new XMLHttpRequest();
@@ -159,10 +163,10 @@ function RunRegex() {
   xhr.onload = function() {
       if (xhr.status === 200) {
           json = JSON.parse(xhr.responseText);
+          console.log("1")
           BrushRegex();
           ShowFeedbackExample(current_docs[selected_document]);
-          console.log("Got regex results");
-
+          console.log("2")
           train_docs = json.train;
           test_docs = json.test;
           current_docs = test_docs;
@@ -170,17 +174,26 @@ function RunRegex() {
           test_statistics = json.statistics.test;
           feature_attributes = json.feature_attributes;
           test_accuracy = json.statistics.test.accuracy;
+          console.log("3")
           DrawStatistics("Validation", test_statistics)
+          d3.select("#dataset-select").node().value = 'test'
+          console.log("4")
           confusion_matrix.populateMatrix(test_statistics.confusion_matrix)
           current_train = false;
           current_feature_brush = [];
           current_regex = {};
-          saved_regex = []
-          update_saved_regex()
-          update_brushed_features()
+          // saved_regex = []
+          // update_saved_regex()
+          FeatureBrushing(current_feature_brush, true)
           current = 0;
+          console.log("5")
+          confusion_matrix.populateMatrix(test_statistics.confusion_matrix)
+          set_doc_ids(train_docs);
+          set_doc_ids(test_docs);
+          // TODO: tirar os numeros, e nao ta assigning doc_id de nada.
           AssignDots(svg_hist, current_docs);
-          GetPredictionAndShowExample(current_docs[0].features, current_docs[0].true_class);
+          console.log("6")
+          GetPredictionAndShowExample(current_docs[selected_document].features, current_docs[selected_document].true_class);
           ShowFeedbackExample(current_docs[selected_document]);
           ShowDatabinForClass(-1);
       }
@@ -541,7 +554,6 @@ function ShowWeights(ex) {
   // Updating the textarea
   current_text = _.map(ex.features, function(x) {return x.feature;}).join(" ")
   d3.select("#textarea_explain").node().value = current_text;
-  UpdatePredictionBar(ex);
 
 }
 function ShowFeedbackExample(ex) {
@@ -867,12 +879,12 @@ function FirstDrawDatabin() {
  set_doc_ids(test_docs);
 
   // Draw title
-  svg_hist.append("text")
-      .attr("x", hist_width/2-200)
-      .attr("y", 50)
-      .style("font-size", "16px")
-      .style("font-weight", "bold")
-      .text("Overall Model Performance. Held-out accuracy: " + test_accuracy)
+  //svg_hist.append("text")
+  //    .attr("x", hist_width/2-200)
+  //    .attr("y", 50)
+  //    .style("font-size", "16px")
+  //    .style("font-weight", "bold")
+  //    .text("Overall Model Performance. Held-out accuracy: " + test_accuracy)
 
   // Draw x-axis label
   svg_hist.append("text")

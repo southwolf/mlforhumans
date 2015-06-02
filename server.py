@@ -40,21 +40,32 @@ def GetParsedDocuments(data, tokenizer):
     out.append(temp)
   return out
   
-def GenerateJSONs(class_names, train_data, train_labels, test_data, test_labels, classifier, vectorizer):
+def GenerateJSON(class_names, train_data, train_vectors, train_labels, test_data, test_vectors, test_labels, classifier, vectorizer):
   # class_names is a list
   # train_data and test_data are assumed to be lists of strings
   # train_labels and test_labels are lists of ints
   # classifier is assumed to be a trained classifier
   # We will fit the vectorizer to the training data
-  train_vectors = vectorizer.fit_transform(train_data)
-  test_vectors = vectorizer.transform(test_data)
   tokenizer = vectorizer.build_tokenizer()
   output = {}
   output['class_names'] = class_names
+  output['feature_attributes'] = {}
+  #predictions = classifier.predict(test_vectors)
+  GeneralStatistics(class_names, train_data, train_vectors, train_labels, test_data, test_vectors, test_labels, classifier, tokenizer, output)
+  FeatureStatistics(vectorizer.vocabulary_.keys(), class_names, train_vectors, train_labels, test_vectors, test_labels, vectorizer, output)
+  return output
+
+def UpdateJSON(json_map, words_to_consider, class_names, train_data, train_vectors, train_labels, test_data, test_vectors, test_labels, classifier, vectorizer):
+  tokenizer = vectorizer.build_tokenizer()
+  json_map['class_names'] = class_names
+  GeneralStatistics(class_names, train_data, train_vectors, train_labels, test_data, test_vectors, test_labels, classifier, tokenizer, json_map)
+  FeatureStatistics(words_to_consider, class_names, train_vectors, train_labels, test_vectors, test_labels, vectorizer, json_map)
+  
+
+def GeneralStatistics(class_names, train_data, train_vectors, train_labels, test_data, test_vectors, test_labels, classifier, tokenizer, output):
+  # modifies output
   output['train'] = GetJsonExampleList(train_data, train_vectors, train_labels, classifier, tokenizer)
   output['test'] = GetJsonExampleList(test_data, test_vectors, test_labels, classifier, tokenizer)
-  output['feature_attributes'] = {}
-  output['test_accuracy'] = round(accuracy_score(test_labels, classifier.predict(test_vectors)), 3)
   output['statistics'] = {}
   output['statistics']['train'] = {}
   output['statistics']['test'] = {}
@@ -64,26 +75,35 @@ def GenerateJSONs(class_names, train_data, train_labels, test_data, test_labels,
   output['statistics']['test']['class_distribution'] = list(np.bincount(test_labels, minlength=len(class_names)).astype('float'))
   output['statistics']['test']['confusion_matrix'] = list(map(list,confusion_matrix(test_labels, classifier.predict(test_vectors))))
   output['statistics']['train']['confusion_matrix'] = list(map(list,confusion_matrix(train_labels, classifier.predict(train_vectors))))
-  predictions = classifier.predict(test_vectors)
+def FeatureStatistics(word_list, class_names, train_vectors, train_labels, test_vectors, test_labels, vectorizer, output):
   train_count = np.bincount(train_vectors.nonzero()[1])
   test_count = np.bincount(test_vectors.nonzero()[1], minlength=len(train_count))
-  for word, i in vectorizer.vocabulary_.iteritems():
+  for word in word_list:
+    if word in output['feature_attributes']:
+      del output['feature_attributes'][word]
+    if word not in vectorizer.vocabulary_:
+      continue
+    i = vectorizer.vocabulary_[word]
     prob = float(train_count[i]) / train_labels.shape[0]
     test_freq = float(test_count[i]) / test_labels.shape[0]
     if prob > .01:
+      train_nonzero = train_vectors.nonzero()[0][train_vectors.nonzero()[1] == i]
+      test_nonzero = test_vectors.nonzero()[0][test_vectors.nonzero()[1] == i]
       output['feature_attributes'][word] = {}
       output['feature_attributes'][word]['train_freq'] = round(prob, 2)
       output['feature_attributes'][word]['test_freq'] = round(test_freq, 2)
-      output['feature_attributes'][word]['train_distribution'] = np.bincount(train_labels[train_vectors.nonzero()[0][train_vectors.nonzero()[1] == i]], minlength=len(class_names)).astype('float')
+      output['feature_attributes'][word]['train_distribution'] = np.bincount(train_labels[train_nonzero], minlength=len(class_names)).astype('float')
       output['feature_attributes'][word]['train_distribution'] /= sum(output['feature_attributes'][word]['train_distribution'])
       output['feature_attributes'][word]['train_distribution'] = ListifyVector(output['feature_attributes'][word]['train_distribution'])
-      output['feature_attributes'][word]['test_distribution'] = np.bincount(predictions[test_vectors.nonzero()[0][test_vectors.nonzero()[1] == i]], minlength=len(class_names)).astype('float')
-      output['feature_attributes'][word]['test_docs'] = list(test_vectors.nonzero()[0][test_vectors.nonzero()[1] == i].astype('str'))
-      output['feature_attributes'][word]['train_docs'] = list(train_vectors.nonzero()[0][train_vectors.nonzero()[1] == i].astype('str'))
-      if test_count[i] > 0:
-        output['feature_attributes'][word]['test_distribution'] /= sum(output['feature_attributes'][word]['test_distribution'])
-      output['feature_attributes'][word]['test_distribution'] = ListifyVector(output['feature_attributes'][word]['test_distribution'])
-  return output
+      # not using this for now
+      #output['feature_attributes'][word]['test_distribution'] = np.bincount(predictions[test_nonzero], minlength=len(class_names)).astype('float')
+      #if test_count[i] > 0:
+      #  output['feature_attributes'][word]['test_distribution'] /= sum(output['feature_attributes'][word]['test_distribution'])
+      #output['feature_attributes'][word]['test_distribution'] = ListifyVector(output['feature_attributes'][word]['test_distribution'])
+      output['feature_attributes'][word]['test_docs'] = list(test_nonzero.astype('str'))
+      output['feature_attributes'][word]['train_docs'] = list(train_nonzero.astype('str'))
+
+
   
 def LoadTextDataset(path_train, path_test):
   # Loads datasets from http://web.ist.utl.pt/acardoso/datasets/
@@ -293,11 +313,12 @@ def enable_cors(fn):
     return _enable_cors
 def main():
   parser = argparse.ArgumentParser(description='Visualize some stuff')
-  parser.add_argument('-json', type=str, help='generate json file')
+  parser.add_argument('-json', '-j', type=str, help='generate json file')
+  parser.add_argument('-loadjson', '-l', type=str, help='load json file')
   parser.add_argument('-dataset', '-d', type=str, help='2ng for Christianity vs Atheism, 3ng for Windows misc, IBM hardward and Windows X,', default='2ng')
   parser.add_argument('-classifier', '-c', type=str, help='logistic for logistic regression, svm for svm', default='logistic')
   args = parser.parse_args()
-  global train_vectors, classifier, tokenizer, parsed_train, parsed_test
+  global train_vectors, train_labels, test_vectors, test_labels, classifier, tokenizer, parsed_train, parsed_test, json_map, class_names, inverse_vocabulary
   train_data, train_labels, test_data, test_labels, class_names = LoadDataset(args.dataset)
   dataset_json = {'2ng' : '2ng.json', '3ng':'3ng.json', 'r8': 'r8.json', 'r52':'r52.json', 'webkb' : 'webkb.json'}
   vectorizer = CountVectorizer(lowercase=False)
@@ -308,22 +329,39 @@ def main():
   else:
     print 'ERROR: classifier must be logistic'
     quit()
-
+  print 'Starting... done'
   train_vectors = vectorizer.fit_transform(train_data)
+  test_vectors = vectorizer.transform(test_data)
+  print 'Fitting classifier...',
   classifier.fit(train_vectors, train_labels)
+  print 'done'
   terms = np.array(list(vectorizer.vocabulary_.keys()))
   indices = np.array(list(vectorizer.vocabulary_.values()))
   inverse_vocabulary = terms[np.argsort(indices)]
   tokenizer = vectorizer.build_tokenizer()
+  print 'parsing train, test...',
   parsed_train = GetParsedDocuments(train_data, tokenizer)
   parsed_test = GetParsedDocuments(test_data, tokenizer)
+  print 'done'
+  print 'generating (or loading) json...',
+  json_map = {}
+  if args.loadjson:
+    json_map = json.load(open(args.loadjson))
+  else:  
+    json_map = GenerateJSON(class_names, train_data, train_vectors, train_labels, test_data, test_vectors, test_labels, classifier, vectorizer)
+  print 'done'
   if args.json:
-    output = GenerateJSONs(class_names, train_data, train_labels, test_data, test_labels, classifier, vectorizer)
-    json.dump(output, open(args.json, 'w'))
+    json.dump(json_map, open(args.json, 'w'))
   else:
+    @route('/get_json', method=['OPTIONS', 'POST', 'GET'])
+    @enable_cors
+    def json_fun():
+      global json_map
+      return json_map
     @route('/predict', method=['OPTIONS', 'POST', 'GET'])
     @enable_cors
     def predict_fun():
+        global train_vectors, train_labels, test_vectors, test_labels, classifier, tokenizer, parsed_train, parsed_test, json_map, class_names, inverse_vocabulary
         #print request.json
         ret = {}
         ex = ''
@@ -348,6 +386,7 @@ def main():
     @route('/regex', method=['OPTIONS', 'POST', 'GET'])
     @enable_cors
     def regex_fun():
+        global train_vectors, train_labels, test_vectors, test_labels, classifier, tokenizer, parsed_train, parsed_test, json_map, class_names, inverse_vocabulary
         ret = {}
         ex = ''
         print request.json
@@ -373,42 +412,66 @@ def main():
     @route('/run_regex', method=['OPTIONS', 'POST', 'GET'])
     @enable_cors
     def regex_run():
-        global train_vectors, classifier, tokenizer, parsed_train, parsed_test
+        global train_vectors, train_labels, test_vectors, test_labels, classifier, tokenizer, parsed_train, parsed_test, json_map, class_names, inverse_vocabulary
         ex = ''
         print request.json
+        regex_terms = set()
         if request.json['regex']:
           regexes = [(re.compile(re.sub(r'\\\\', r'\\', x.split('/')[1]), re.DOTALL | re.MULTILINE), x.split('/')[2]) for x in request.json['regex']]
+        else:
+          return json_map
         temp = []
         print 'Applying to train'
-        for i, doc in enumerate(parsed_train):
+        for doc in parsed_train:
           d = doc
           for reg in regexes:
+            instances = reg[0].findall(d)
+            for instance in instances:
+              map(lambda x: regex_terms.add(x), tokenizer(instance))
             d = re.sub(reg[0], reg[1], d)
-          temp.append(d)
+          temp.append(d.strip(' '))
         parsed_train = temp
         temp = []
         print 'Applying to test'
         for doc in parsed_test:
           d = doc
           for reg in regexes:
+            instances = reg[0].findall(d)
+            for instance in instances:
+              map(lambda x: regex_terms.add(x), tokenizer(instance))
             d = re.sub(reg[0], reg[1],d)
-          temp.append(d)
+          temp.append(d.strip(' '))
         parsed_test = temp
+        if len(regex_terms) > 100:
+          regex_terms = vectorizer.vocabulary_.keys()
+        # TODO: this could be much more efficient if I use a trie
+        else:
+          to_add = set()
+          for w, i in vectorizer.vocabulary_.iteritems():
+            for z in regex_terms:
+              if w.startswith(z) or w.endswith(z):
+                to_add.add(w)
+          regex_terms = regex_terms.union(to_add)
+
         train_vectors = vectorizer.fit_transform(parsed_train)
-        test_vectors = vectorizer.fit_transform(parsed_test)
+        test_vectors = vectorizer.transform(parsed_test)
         classifier.fit(train_vectors, train_labels)
         terms = np.array(list(vectorizer.vocabulary_.keys()))
         indices = np.array(list(vectorizer.vocabulary_.values()))
         inverse_vocabulary = terms[np.argsort(indices)]
         # TODO: redoing some work here
         tokenizer = vectorizer.build_tokenizer()
-        print 'Generating Json'
-        output = GenerateJSONs(class_names, parsed_train, train_labels, parsed_test, test_labels, classifier, vectorizer)
+        if request.json['regex']:
+          for r in request.json['regex']:
+            map(lambda x: regex_terms.add(x), tokenizer(r.split('/')[2]))
+        print regex_terms
+        print 'Updating Json'
+        UpdateJSON(json_map, regex_terms, class_names, parsed_train, train_vectors, train_labels, parsed_test, test_vectors, test_labels, classifier, vectorizer)
         print 'Returning'
-        return output
+        return json_map
     @route('/')
     def root_fun():
-        return template('template', json_file=dataset_json[args.dataset])
+        return template('template')
     @route('/<filename>')
     def server_static(filename):
         return static_file(filename, root='./static/')

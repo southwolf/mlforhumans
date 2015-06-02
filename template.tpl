@@ -3,9 +3,6 @@
 <head>
     <script type="text/javascript" src="d3.min.js"></script>
     <script type="text/javascript" src="lodash.js"></script>
-    <script type="text/javascript">
-      var json_file = "{{json_file}}";
-    </script>
     <link rel="stylesheet" type="text/css" href="style.css">
 </head>
 
@@ -78,19 +75,19 @@
 </div>
 <svg class="hovercard"></svg>
     <br />
-    <div id="textarea_div" class="top_explain hidden">
+    <div id="textarea_div" class="top_explain visible">
         <textarea id="textarea_explain">
         </textarea>
         <button class="green_button" title="Change example based on textarea." onclick="change(null);">--></button>
     </div>
-    <div id="explain_text_div" class="top_explain top_mid hidden"> </div>
-    <div id="prediction_bar_div" class="top_explain top_right hidden">
+    <div id="explain_text_div" class="top_explain top_mid visible"> </div>
+    <div id="prediction_bar_div" class="top_explain top_right visible">
       <svg id="prediction_bar"></svg>
     </div>
     <div id="explain_features_div" class="top_explain hidden"> </div>
     <div id="feature_brush_div" class="top_explain hidden"> Active features: <br /></div>
 	  <div id="statistics_div" class="hidden top_statistics"> </div>
-	  <div id="feedback_textarea_div" class="visible top_feedback">
+	  <div id="feedback_textarea_div" class="hidden top_feedback">
         Search: <br />
         <textarea id="feedback_from" class="feedback_textarea"></textarea>
         Replace by: <br />
@@ -99,8 +96,8 @@
         <button class="green_button" title="Save regex" onclick="save_regex();"
         style="bottom:0;">Save</button>
     </div>
-    <div id="feedback_text_div" class="visible top_feedback"> </div>
-    <div id="feedback_active_div" class="visible top_feedback">
+    <div id="feedback_text_div" class="hidden top_feedback"> </div>
+    <div id="feedback_active_div" class="hidden top_feedback">
       Active regexes:
       <button class="green_button" title="Apply" onclick="RunRegex();"
       style="bottom:0;left:50;">Apply</button>
