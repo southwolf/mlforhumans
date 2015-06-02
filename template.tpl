@@ -78,18 +78,35 @@
 </div>
 <svg class="hovercard"></svg>
     <br />
-    <div id="textarea_div" class="top_explain visible">
-        <textarea id="textarea" class="textarea_stuff">
+    <div id="textarea_div" class="top_explain hidden">
+        <textarea id="textarea_explain">
         </textarea>
-        <button class="textarea_stuff green_button" title="Change example based on textarea." onclick="change(null);">--></button>
+        <button class="green_button" title="Change example based on textarea." onclick="change(null);">--></button>
     </div>
-    <div id="explain_text_div" class="top_explain top_mid visible"> </div>
-    <div id="prediction_bar_div" class="top_explain top_right visible">
+    <div id="explain_text_div" class="top_explain top_mid hidden"> </div>
+    <div id="prediction_bar_div" class="top_explain top_right hidden">
       <svg id="prediction_bar"></svg>
     </div>
     <div id="explain_features_div" class="top_explain hidden"> </div>
-    <div id="feature_brush_div" class="top_explain hidden"> </div>
+    <div id="feature_brush_div" class="top_explain hidden"> Active features: <br /></div>
 	  <div id="statistics_div" class="hidden top_statistics"> </div>
+	  <div id="feedback_textarea_div" class="visible top_feedback">
+        Search: <br />
+        <textarea id="feedback_from" class="feedback_textarea"></textarea>
+        Replace by: <br />
+        <textarea id="feedback_to" class="feedback_textarea"></textarea>
+        <button class="green_button" title="View regex" onclick="apply_regex();">--></button>
+        <button class="green_button" title="Save regex" onclick="save_regex();"
+        style="bottom:0;">Save</button>
+    </div>
+    <div id="feedback_text_div" class="visible top_feedback"> </div>
+    <div id="feedback_active_div" class="visible top_feedback">
+      Active regexes:
+      <button class="green_button" title="Apply" onclick="RunRegex();"
+      style="bottom:0;left:50;">Apply</button>
+      <br />
+      </div>
+
 
 <script src="info_box.js"></script>
 

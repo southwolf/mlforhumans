@@ -12,6 +12,8 @@ var current_docs;
 var confusion_matrix;
 var current_train = false;
 var current_feature_brush = [];
+var current_regex = {};
+var saved_regex = []
 
 
 if (typeof json_file === 'undefined') {
@@ -64,7 +66,8 @@ d3.json(json_file,  function(error, json) {
   confusion_matrix.populateMatrix(test_statistics.confusion_matrix)
 
   current = 0;
-  GetPredictionAndShowExample(current_docs[0].features, current_docs[0].true_class);
+  GetPredictionAndShowExample(current_docs[selected_document].features, current_docs[selected_document].true_class);
+  ShowFeedbackExample(current_docs[0]);
   //ShowExample(docs[0]);
 })
 
@@ -85,6 +88,119 @@ xhr.send(JSON.stringify({
     features: example_text_split,
     sentence_explanation: explain_sentence
 }));
+}
+
+function apply_regex() {
+  regex = d3.select("#feedback_from").node().value;
+  if (regex !== '') {
+    GetRegexResults(regex);
+  }
+}
+function update_saved_regex() {
+  d3.select("#feedback_active_div").selectAll(".active_regexes").remove();
+  saved = d3.select("#feedback_active_div").selectAll(".active_regexes").data(saved_regex)
+  zs = saved.enter().append("span")
+  zs.classed("active_regexes", true);
+  ps = zs.append("span");
+  ps.classed('active_text', true)
+    .html(function(d,i) { return '&nbsp;&nbsp;' +  d + '&nbsp;&nbsp;'})
+    .on("click", function(d, i) {
+      temp = d.split('/');
+      d3.select("#feedback_from").node().value = temp[1] ;
+      d3.select("#feedback_to").node().value = temp[2] ;
+      });
+
+  xs = zs
+       .append("span")
+       .html("&#10799;<br />")
+       .on("click", function(d,i) {
+        saved_regex.splice(i, 1);
+        update_saved_regex();
+        });
+        //d3.selectAll(".active_text").filter(function(d,a) { return a === i;}).remove();
+        //this.remove()});
+  xs.style("color", "red");
+  saved.exit().remove();
+}
+function save_regex() {
+  regex_from = d3.select("#feedback_from").node().value;
+  regex_to = d3.select("#feedback_to").node().value;
+  saved_regex.push('s/' + regex_from + '/'+ regex_to + '/g')
+  //d3.select("#feedback_active_div").html("Saved regexes :<br />" + saved_regex.join("   &#10799;<br />"))
+  update_saved_regex()
+}
+// Retorna o resultado da regex:
+// dois mapas:
+// train[documento] = [(start, end), (start,end)...]
+// test[document] = ...
+// no final chama ShowFeedbackExample
+function GetRegexResults(regex) {
+  var xhr = new XMLHttpRequest();
+  xhr.open('POST', 'http://localhost:8870/regex');
+  xhr.setRequestHeader('Content-Type', 'application/json');
+  xhr.onload = function() {
+      if (xhr.status === 200) {
+          current_regex = JSON.parse(xhr.responseText);
+          BrushRegex();
+          ShowFeedbackExample(current_docs[selected_document]);
+          console.log("Got regex results");
+      }
+  };
+//xhr.send();
+xhr.send(JSON.stringify({
+    regex: regex
+}));
+}
+
+function RunRegex() {
+  var xhr = new XMLHttpRequest();
+  xhr.open('POST', 'http://localhost:8870/run_regex');
+  xhr.setRequestHeader('Content-Type', 'application/json');
+  xhr.onload = function() {
+      if (xhr.status === 200) {
+          json = JSON.parse(xhr.responseText);
+          BrushRegex();
+          ShowFeedbackExample(current_docs[selected_document]);
+          console.log("Got regex results");
+
+          train_docs = json.train;
+          test_docs = json.test;
+          current_docs = test_docs;
+          train_statistics = json.statistics.train;
+          test_statistics = json.statistics.test;
+          feature_attributes = json.feature_attributes;
+          test_accuracy = json.statistics.test.accuracy;
+          DrawStatistics("Validation", test_statistics)
+          confusion_matrix.populateMatrix(test_statistics.confusion_matrix)
+          current_train = false;
+          current_feature_brush = [];
+          current_regex = {};
+          saved_regex = []
+          update_saved_regex()
+          update_brushed_features()
+          current = 0;
+          AssignDots(svg_hist, current_docs);
+          GetPredictionAndShowExample(current_docs[0].features, current_docs[0].true_class);
+          ShowFeedbackExample(current_docs[selected_document]);
+          ShowDatabinForClass(-1);
+      }
+  };
+//xhr.send();
+xhr.send(JSON.stringify({
+    regex: saved_regex
+}));
+}
+
+
+function BrushRegex(instant) {
+  reg = current_train ? current_regex.train : current_regex.test;
+  exs = new Set(_.map(_.keys(reg), Number));
+  if (instant) {
+    InstantBrushExamples(exs);
+  }
+  else {
+    BrushExamples(exs);
+  }
 }
 
 // Takes in a word array and the object returned by the python server, outputs
@@ -109,7 +225,7 @@ function GenerateObject(feature_array, true_class, prediction_object) {
 
 function change(current_text) {
   if (current_text === null) {
-    current_text = d3.select("#textarea").node().value;
+    current_text = d3.select("#textarea_explain").node().value;
   }
   //example_text_split = current_text.replace("\n", " \n ").split(" ");
   example_text_split = current_text.replace(/\n/g, " \n ").match(/[^ ]+/g);
@@ -424,9 +540,29 @@ function ShowWeights(ex) {
   bartext.exit().transition().remove();
   // Updating the textarea
   current_text = _.map(ex.features, function(x) {return x.feature;}).join(" ")
-  d3.select("#textarea").node().value = current_text;
+  d3.select("#textarea_explain").node().value = current_text;
   UpdatePredictionBar(ex);
 
+}
+function ShowFeedbackExample(ex) {
+  from_regex = d3.select("#feedback_from").node().value;
+  text = ex.features.join(" ");
+  text = text.replace(/ \n /g, "\n")
+  id = ex.doc_id;
+  to_insert_before = '<span class="regex_apply">'
+  to_insert_after = '</span>'
+  len_insertion = to_insert_before.length + to_insert_after.length
+  regex = current_train ? current_regex['train'] : current_regex['test'];
+  if (_.has(regex, id)) {
+    console.log("Change");
+    for (i = 0; i < regex[id].length; ++i) {
+      start = regex[id][i][0] + i * len_insertion;
+      end = regex[id][i][1] + i * len_insertion;
+      text = text.slice(0,start) + to_insert_before + text.slice(start, end) + to_insert_after + text.slice(end);
+    }
+  }
+  text = text.replace(/\n/g, "<br />")
+  d3.select("#feedback_text_div").html(text);
 }
 // Takes in an object that has the following attributes:
 // features -> a list of (feature,weight) pairs.
@@ -458,7 +594,7 @@ function ShowExample(ex) {
   //text.exit().transition().duration(1000).style("opacity", 0).remove();
   text.exit().remove();
   current_text = _.map(ex.features, function(x) {return x.feature;}).join(" ")
-  d3.select("#textarea").node().value = current_text;
+  d3.select("#textarea_explain").node().value = current_text;
   UpdatePredictionBar(ex);
 }
 /* --------------------------*/
@@ -514,6 +650,7 @@ var on_click_document = function(d) {
     selected_document = d.doc_id;
     current = d.doc_id;
     GetPredictionAndShowExample(d.features, d.true_class);
+    ShowFeedbackExample(current_docs[selected_document]);
 }
 
 function set_doc_ids(docs) {
@@ -600,8 +737,14 @@ function change_dataset() {
   }
   AssignDots(svg_hist, current_docs);
   GetPredictionAndShowExample(current_docs[0].features, current_docs[0].true_class);
-  FeatureBrushing(current_feature_brush, true);
+  ShowFeedbackExample(current_docs[selected_document]);
   ShowDatabinForClass(-1);
+  if (mode === 'explain') {
+    FeatureBrushing(current_feature_brush, true);
+  }
+  else if (mode === 'feedback') {
+    BrushRegex(true);
+  }
 }
 function change_mode() {
   mode = d3.select("#view-select").node().value
@@ -610,6 +753,7 @@ function change_mode() {
     d3.selectAll(".top_feedback").classed("visible", false).classed("hidden", true);
     d3.select("#explain_selections").classed("visible", true).classed("hidden", false);
     change_order(1);
+    GetPredictionAndShowExample(current_docs[selected_document].features, current_docs[selected_document].true_class);
   }
   else if (mode === "statistics") {
     d3.selectAll(".top_explain").classed("visible", false).classed("hidden", true);
@@ -622,6 +766,7 @@ function change_mode() {
     d3.selectAll(".top_statistics").classed("visible", false).classed("hidden", true);
     d3.selectAll(".top_feedback").classed("visible", true).classed("hidden", false);
     d3.select("#explain_selections").classed("visible", false).classed("hidden", true);
+    ShowFeedbackExample(current_docs[selected_document]);
   }
 }
 
@@ -817,10 +962,35 @@ function InstantBrushExamples(example_set) {
   dots.style("opacity", function(d){
     return example_set.has(d.doc_id) ? 1 : 0.4;});
 }
+
+function update_brushed_features(feature_list) {
+  d3.select("#feature_brush_div").selectAll(".active_features").remove();
+  console.log(feature_list);
+  saved = d3.select("#feature_brush_div").selectAll(".active_features").data(feature_list)
+  zs = saved.enter().append("span")
+  zs.classed("active_features", true);
+  ps = zs.append("span");
+  ps.classed('active_text', true)
+    .html(function(d,i) { return '&nbsp;&nbsp;' +  d + '&nbsp;&nbsp;'})
+  xs = zs
+       .append("span")
+       .html("&#10799;<br />")
+       .on("click", function(d,i) {
+          feature = current_feature_brush.splice(i, 1)[0];
+          selected_features.delete(feature);
+          FeatureBrushing(current_feature_brush, false);
+          // Necessary to remove underlining.
+          ShowExample(current_object);
+        });
+  xs.style("color", "red");
+  saved.exit().remove();
+}
+
 function FeatureBrushing(feature_list, instant) {
   current_feature_brush = feature_list;
   docs = [];
-  d3.select("#feature_brush_div").html("Features being brushed: <br />" + feature_list.join("<br />"))
+  //d3.select("#feature_brush_div").html("Features being brushed: <br />" + feature_list.join("<br />"))
+  update_brushed_features(feature_list);
   if (feature_list.length > 1) {
     docs = _.intersection.apply(this, _.map(feature_list, function (d) {return current_train ? feature_attributes[d].train_docs : feature_attributes[d].test_docs;}));
   } else {

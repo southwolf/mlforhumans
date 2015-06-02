@@ -87,6 +87,9 @@
     -webkit-border-radius: 2px;
     -webkit-box-shadow: 0 0 0 1px rgba(0, 0, 0, .1), 0 1px 10px rgba(0, 0, 0, .35);
 }
+.regex_apply {
+  background-color: yellow;
+}
 #explain_text_div {
   /* 35 px for the arrows, 150 for the prediction bar*/
   /*height:calc(100% - 22px);*/
@@ -108,6 +111,16 @@
   overflow-y: scroll;
 }
 .top_explain{
+  width: calc(33% - 10px);
+  height: 35%;
+  min-height:225px;
+  float:left;
+  box-sizing: border-box;
+  ms-box-sizing: border-box;
+  webkit-box-sizing: border-box;
+  moz-box-sizing: border-box;
+}
+.top_feedback{
   width: calc(33% - 10px);
   height: 35%;
   min-height:225px;
@@ -164,15 +177,39 @@
 #textarea_div{
   width: 33%;
 }
-#textarea {
+#textarea_explain {
   width:calc(100% - 50px);
   height: 100%;
   left:0px;
   position:inherit;
   resize: none;
 }
+.feedback_textarea {
+  width:calc(100% - 50px);
+  height: 30%;
+  left:0px;
+  position:inherit;
+  resize: none;
+}
 #prediction_bar {
   padding: 0px 20px 0px 20px;
+}
+#feedback_text_div {
+  overflow-y: scroll;
+  font-size:15;
+}
+#feedback_active_div {
+  overflow-y: scroll;
+}
+.active_text {
+  display: inline-table;
+  clear: right;
+  margin: 2px 2px 2px 2px;
+  border-radius: 10px; 
+  -moz-border-radius: 10px; 
+  -webkit-border-radius: 10px; 
+  padding:2px;
+  border: 2px solid #808080;
 }
 #weights_buttons_div {
   //position:relative;

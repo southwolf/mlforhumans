@@ -33,7 +33,14 @@ def GetJsonExampleList(data, data_vectors, labels, classifier, tokenizer):
     out.append(temp)
   return out
 
-def GenerateJSONs(class_names, train_data, train_labels, test_data, test_labels, classifier, vectorizer, output_json):
+def GetParsedDocuments(data, tokenizer):
+  out = []
+  for i, doc in enumerate(data):
+    temp = '\n'.join(map(lambda x: ' '.join(tokenizer(x)), doc.split('\n')))
+    out.append(temp)
+  return out
+  
+def GenerateJSONs(class_names, train_data, train_labels, test_data, test_labels, classifier, vectorizer):
   # class_names is a list
   # train_data and test_data are assumed to be lists of strings
   # train_labels and test_labels are lists of ints
@@ -76,7 +83,7 @@ def GenerateJSONs(class_names, train_data, train_labels, test_data, test_labels,
       if test_count[i] > 0:
         output['feature_attributes'][word]['test_distribution'] /= sum(output['feature_attributes'][word]['test_distribution'])
       output['feature_attributes'][word]['test_distribution'] = ListifyVector(output['feature_attributes'][word]['test_distribution'])
-  json.dump(output, open(output_json, 'w'))
+  return output
   
 def LoadTextDataset(path_train, path_test):
   # Loads datasets from http://web.ist.utl.pt/acardoso/datasets/
@@ -290,6 +297,7 @@ def main():
   parser.add_argument('-dataset', '-d', type=str, help='2ng for Christianity vs Atheism, 3ng for Windows misc, IBM hardward and Windows X,', default='2ng')
   parser.add_argument('-classifier', '-c', type=str, help='logistic for logistic regression, svm for svm', default='logistic')
   args = parser.parse_args()
+  global train_vectors, classifier, tokenizer, parsed_train, parsed_test
   train_data, train_labels, test_data, test_labels, class_names = LoadDataset(args.dataset)
   dataset_json = {'2ng' : '2ng.json', '3ng':'3ng.json', 'r8': 'r8.json', 'r52':'r52.json', 'webkb' : 'webkb.json'}
   vectorizer = CountVectorizer(lowercase=False)
@@ -306,8 +314,12 @@ def main():
   terms = np.array(list(vectorizer.vocabulary_.keys()))
   indices = np.array(list(vectorizer.vocabulary_.values()))
   inverse_vocabulary = terms[np.argsort(indices)]
+  tokenizer = vectorizer.build_tokenizer()
+  parsed_train = GetParsedDocuments(train_data, tokenizer)
+  parsed_test = GetParsedDocuments(test_data, tokenizer)
   if args.json:
-    GenerateJSONs(class_names, train_data, train_labels, test_data, test_labels, classifier, vectorizer, args.json)
+    output = GenerateJSONs(class_names, train_data, train_labels, test_data, test_labels, classifier, vectorizer)
+    json.dump(output, open(args.json, 'w'))
   else:
     @route('/predict', method=['OPTIONS', 'POST', 'GET'])
     @enable_cors
@@ -333,6 +345,67 @@ def main():
         make_map = lambda x:{'feature':x[0], 'weight' : x[1]['weight'], 'class': x[1]['class']}
         ret['sorted_weights'] = map(make_map, sorted(ret['feature_weights'].iteritems(), key=lambda x:x[1]['weight'], reverse=True))
         return ret
+    @route('/regex', method=['OPTIONS', 'POST', 'GET'])
+    @enable_cors
+    def regex_fun():
+        ret = {}
+        ex = ''
+        print request.json
+        if request.json['regex']:
+          regex = re.sub(r'\\\\', r'\\', request.json['regex'])
+        reg = re.compile(regex, re.DOTALL | re.MULTILINE)
+        ret['train'] = {}
+        for i, doc in enumerate(parsed_train):
+          iterator = reg.finditer(doc)
+          for m in iterator:
+            if i not in ret['train']:
+              ret['train'][i] = []
+            ret['train'][i].append(m.span())
+        ret['test'] = {}
+        for i, doc in enumerate(parsed_test):
+          iterator = reg.finditer(doc)
+          for m in iterator:
+            if i not in ret['test']:
+              ret['test'][i] = []
+            ret['test'][i].append(m.span())
+        print 'Regex', regex
+        return ret
+    @route('/run_regex', method=['OPTIONS', 'POST', 'GET'])
+    @enable_cors
+    def regex_run():
+        global train_vectors, classifier, tokenizer, parsed_train, parsed_test
+        ex = ''
+        print request.json
+        if request.json['regex']:
+          regexes = [(re.compile(re.sub(r'\\\\', r'\\', x.split('/')[1]), re.DOTALL | re.MULTILINE), x.split('/')[2]) for x in request.json['regex']]
+        temp = []
+        print 'Applying to train'
+        for i, doc in enumerate(parsed_train):
+          d = doc
+          for reg in regexes:
+            d = re.sub(reg[0], reg[1], d)
+          temp.append(d)
+        parsed_train = temp
+        temp = []
+        print 'Applying to test'
+        for doc in parsed_test:
+          d = doc
+          for reg in regexes:
+            d = re.sub(reg[0], reg[1],d)
+          temp.append(d)
+        parsed_test = temp
+        train_vectors = vectorizer.fit_transform(parsed_train)
+        test_vectors = vectorizer.fit_transform(parsed_test)
+        classifier.fit(train_vectors, train_labels)
+        terms = np.array(list(vectorizer.vocabulary_.keys()))
+        indices = np.array(list(vectorizer.vocabulary_.values()))
+        inverse_vocabulary = terms[np.argsort(indices)]
+        # TODO: redoing some work here
+        tokenizer = vectorizer.build_tokenizer()
+        print 'Generating Json'
+        output = GenerateJSONs(class_names, parsed_train, train_labels, parsed_test, test_labels, classifier, vectorizer)
+        print 'Returning'
+        return output
     @route('/')
     def root_fun():
         return template('template', json_file=dataset_json[args.dataset])
