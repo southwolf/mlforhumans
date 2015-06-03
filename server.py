@@ -443,7 +443,7 @@ def main():
           temp.append(d.strip(' '))
         parsed_test = temp
         if len(regex_terms) > 100:
-          regex_terms = vectorizer.vocabulary_.keys()
+          regex_terms = set(vectorizer.vocabulary_.keys())
         # TODO: this could be much more efficient if I use a trie
         else:
           to_add = set()
