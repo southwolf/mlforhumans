@@ -860,7 +860,7 @@ function AssignDots(svg_obj, docs) {
           s += + d.predict_proba[focus_class].toFixed(2);
           hist_tooltip.html(s)
               //"Document ID: " + d.doc_id + "<br />True class: " + d.true_class + "<br/>Prediction: " + d.prediction)
-              .style("left", (d3.event.pageX + 5) + "px")
+              .style("left", d3.event.pageX + 205 < d3.select("body").node().getBoundingClientRect().width ? (d3.event.pageX + 5) + "px" : d3.event.pageX - 205)
               .style("top", (d3.event.pageY - 70) + "px");
       })
       .on("mouseout", function(d) {
