@@ -8,6 +8,7 @@ var current_object;
 var selected_features = new Set()
 var matrix;
 var top_part_height;
+var top_divs_width;
 var current_docs;
 var confusion_matrix;
 var current_train = false;
@@ -54,6 +55,7 @@ function LoadJson() {
   max = 1;
   size = d3.scale.linear().domain([min, max]).range([15, 40]);
   top_part_height = parseInt(d3.select("#explain_text_div").style("height"));
+  top_divs_width = parseInt(d3.select("#explain_text_div").style("width"));
   DrawLegend();
   SetupDatabin();
   FirstDrawPrediction();
@@ -485,59 +487,87 @@ function ToggleFeatureBrush(w) {
   selected_features.forEach(function(d) {sel_list.push(d);})
   FeatureBrushing(sel_list, false);
 }
+function ToggleFeatureBrushAndRedraw(ex, word) {
+  ToggleFeatureBrush(word);
+  ShowExample(ex);
+  explain_text_div.selectAll("span")
+      .style("text-decoration", function(d,i) { return selected_features.has(d.feature) ? "underline" : "none";})
+  explain_features_div.select("svg")
+    .selectAll(".labels")
+    .style("text-decoration", function(d) { return selected_features.has(d.feature) ? "underline" : "none";});
+  
+}
+
 function ShowWeights(ex) {
   var data = ex.sorted_weights;
   var n_bars = data.length;
   var bar_height = 19;
   var total_height = (bar_height + 10) * n_bars;
+  var x_offset = 80;
+  var right_x_offset = 40;
   var xscale = d3.scale.linear()
           .domain([0,1])
-          .range([0,270]);
+          .range([0,top_divs_width-x_offset - right_x_offset]);
 
   var yscale = d3.scale.linear()
           .domain([0, n_bars])
           .range([0,total_height]);
 
   // TODO make this axis appropriate (stop using axis), make it clickable
-  var yAxis = d3.svg.axis();
-      yAxis
-        .orient('left')
-        .scale(yscale)
-        .tickSize(2)
-        .tickFormat(function(d,i){ return i == 0 ? "" :  data[i - 1].feature })
-        .tickValues(d3.range(0,n_bars + 1));
+  // var yAxis = d3.svg.axis();
+  //     yAxis
+  //       .orient('left')
+  //       .scale(yscale)
+  //       .tickSize(2)
+  //       .tickFormat(function(d,i){ return i == 0 ? "" :  data[i - 1].feature })
+  //       .tickValues(d3.range(0,n_bars + 1));
   var canvas;
   var chart;
   var y_xis;
+  var line;
   if (explain_features_div.select("svg").empty()) {
     canvas = explain_features_div.append("svg").attr({'width':'100%','height': (total_height + 10) + "px"});
     chart = canvas.append('g')
-              .attr("transform", "translate(80,0)")
+              .attr("transform", "translate(" + x_offset+ ",0)")
               .attr('id','bars');
-    y_xis = canvas.append('g')
-              .attr("transform", "translate(80, 0)")
-              .attr('id','yaxis')
-              .call(yAxis);
+    line = canvas.append("line").attr("x1", x_offset).attr("x2", x_offset).attr("y1", bar_height).style("stroke-width",2).style("stroke", "black");
+    // y_xis = canvas.append('g')
+    //           .attr("transform", "translate(80, 0)")
+    //           .attr('id','yaxis')
+    //           .call(yAxis);
   }
   else {
   // This is a transition
-    canvas = explain_features_div.select("svg");
+    canvas = explain_features_div.select("svg").attr('height', total_height + 10);
     chart = canvas.select('#bars');
-    canvas.select("#yaxis").transition().duration(1000).call(yAxis);
+    line = canvas.select("line");
+    // canvas.select("#yaxis").transition().duration(1000).call(yAxis);
     //canvas.transition().delay(1000).each("end", function (){canvas.select("#yaxis").transition().duration(1000).call(yAxis)});
     //return;
     //y_xis = canvas.select("#yaxis").transition().delay(3000).call(yAxis);
   }
+  line.transition().duration(1000).attr("y2", Math.max(bar_height, total_height - 10 + bar_height));
+  //line.transition().
+  labels = canvas.selectAll(".labels").data(data)
+  labels.enter().append('text')
+  labels.attr('x', x_offset - 2)
+        .attr('y', function(d, i) { return yscale(i) + bar_height + 14})
+        .attr('text-anchor', 'end')
+        .classed("labels", true)
+        .on("mouseover", ShowFeatureTooltip)
+        .on("mouseout", HideFeatureTooltip)
+        .on("click", function(d) {ToggleFeatureBrushAndRedraw(ex, d)})
+        .text(function(d) {return d.feature;});
+  labels.exit().remove();
   bars = chart.selectAll('rect').data(data)
-  bars.enter()
-      .append('rect')
-      .on("mouseover", ShowFeatureTooltip)
+  bars.enter().append('rect')
+  bars.on("mouseover", ShowFeatureTooltip)
       .attr('height',bar_height)
       .attr({'x':0,'y':function(d,i){ return yscale(i)+bar_height; }})
       .attr('width', 0)
       .style('fill',function(d,i){ return class_colors_i(d.class); })
       .on("mouseout", HideFeatureTooltip)
-      .on("click", ToggleFeatureBrush);
+      .on("click", function(d) {ToggleFeatureBrushAndRedraw(ex, d)});
   bars.transition().duration(1000)
       .attr('width',function(d){ return xscale(d.weight); })
       .style('fill',function(d,i){ return class_colors_i(d.class); })
@@ -599,7 +629,7 @@ function ShowExample(ex) {
       .style("text-decoration", function(d,i) { return selected_features.has(d.feature) ? "underline" : "none";})
       .on("mouseover", ShowFeatureTooltip)
       .on("mouseout", HideFeatureTooltip)
-      .on("click", function(d) {ToggleFeatureBrush(d);ShowExample(ex);});
+      .on("click", function(d) {ToggleFeatureBrushAndRedraw(ex, d)});
 
   // TODO:
   // do the remove first, then the add for smoothness
@@ -977,7 +1007,6 @@ function InstantBrushExamples(example_set) {
 
 function update_brushed_features(feature_list) {
   d3.select("#feature_brush_div").selectAll(".active_features").remove();
-  console.log(feature_list);
   saved = d3.select("#feature_brush_div").selectAll(".active_features").data(feature_list)
   zs = saved.enter().append("span")
   zs.classed("active_features", true);
@@ -988,11 +1017,9 @@ function update_brushed_features(feature_list) {
        .append("span")
        .html("&#10799;<br />")
        .on("click", function(d,i) {
-          feature = current_feature_brush.splice(i, 1)[0];
-          selected_features.delete(feature);
-          FeatureBrushing(current_feature_brush, false);
-          // Necessary to remove underlining.
-          ShowExample(current_object);
+          var feature = Object()
+          feature.feature = current_feature_brush.splice(i, 1)[0];
+          ToggleFeatureBrushAndRedraw(current_object, feature);
         });
   xs.style("color", "red");
   saved.exit().remove();
