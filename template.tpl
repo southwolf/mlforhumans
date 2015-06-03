@@ -38,6 +38,8 @@
 
     <a href = "javascript:void(0)" onclick = "hide_info()">Close</a></div>
 <div id="fade" class="black_overlay"></div>
+
+<div id="loading" class="hidden">Loading&#8230;</div>
 <!---->
 
 <select id="view-select" onChange="change_mode();">

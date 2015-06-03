@@ -9,6 +9,7 @@ var selected_features = new Set()
 var matrix;
 var top_part_height;
 var top_divs_width;
+var is_loading = true;
 var current_docs;
 var confusion_matrix;
 var current_train = false;
@@ -20,56 +21,58 @@ function LoadJson() {
   var xhr = new XMLHttpRequest();
   xhr.open('POST', 'http://localhost:8870/get_json');
   xhr.setRequestHeader('Content-Type', 'application/json');
+  StartLoading(0);
   xhr.onload = function() {
       if (xhr.status === 200) {
-          var json = JSON.parse(xhr.responseText);
-  train_docs = json.train;
-  test_docs = json.test;
-  current_docs = test_docs;
-  train_statistics = json.statistics.train;
-  test_statistics = json.statistics.test;
-  feature_attributes = json.feature_attributes;
-  test_accuracy = json.statistics.test.accuracy;
-  class_names = json.class_names;
-  class_names = _.map(class_names, function(i) {
-    text = i.replace(".","-");
-    return  text.length > 17 ? text.slice(0,14) + "..." : text;
-  });
-  // TODO: this only works for at most 20 classes. I don't know if we should
-  // worry about this though - if you have more than 20, color is not going to
-  // work anyway
-  if (class_names.length <= 10) {
-    class_colors = d3.scale.category10().domain(class_names);
-    class_colors_i = d3.scale.category10().domain(_.range(class_names.length));
-  }
-  else {
-    class_colors = d3.scale.category20().domain(class_names);
-    class_colors_i = d3.scale.category20().domain(_.range(class_names.length));
-  }
+        var json = JSON.parse(xhr.responseText);
+        train_docs = json.train;
+        test_docs = json.test;
+        current_docs = test_docs;
+        train_statistics = json.statistics.train;
+        test_statistics = json.statistics.test;
+        feature_attributes = json.feature_attributes;
+        test_accuracy = json.statistics.test.accuracy;
+        class_names = json.class_names;
+        class_names = _.map(class_names, function(i) {
+          text = i.replace(".","-");
+          return  text.length > 17 ? text.slice(0,14) + "..." : text;
+        });
+        // TODO: this only works for at most 20 classes. I don't know if we should
+        // worry about this though - if you have more than 20, color is not going to
+        // work anyway
+        if (class_names.length <= 10) {
+          class_colors = d3.scale.category10().domain(class_names);
+          class_colors_i = d3.scale.category10().domain(_.range(class_names.length));
+        }
+        else {
+          class_colors = d3.scale.category20().domain(class_names);
+          class_colors_i = d3.scale.category20().domain(_.range(class_names.length));
+        }
 
-  //class_colors = ["rgba(" + neg_color + ",1)", "rgba(" + pos_color + ",1)", "yellow"];
-  //docs[0].text = GenerateWeights(docs[0].text);
-  // var max = d3.max(_.map(_.values(weights), Math.abs));
-  // var min = d3.min(_.map(_.values(weights), Math.abs));
-  min = 0;
-  max = 1;
-  size = d3.scale.linear().domain([min, max]).range([15, 40]);
-  top_part_height = parseInt(d3.select("#explain_text_div").style("height"));
-  top_divs_width = parseInt(d3.select("#explain_text_div").style("width"));
-  DrawLegend();
-  SetupDatabin();
-  FirstDrawPrediction();
-  FirstDrawTooltip();
-  FirstDrawDatabin();
+        //class_colors = ["rgba(" + neg_color + ",1)", "rgba(" + pos_color + ",1)", "yellow"];
+        //docs[0].text = GenerateWeights(docs[0].text);
+        // var max = d3.max(_.map(_.values(weights), Math.abs));
+        // var min = d3.min(_.map(_.values(weights), Math.abs));
+        min = 0;
+        max = 1;
+        size = d3.scale.linear().domain([min, max]).range([15, 40]);
+        top_part_height = parseInt(d3.select("#explain_text_div").style("height"));
+        top_divs_width = parseInt(d3.select("#explain_text_div").style("width"));
+        DrawLegend();
+        SetupDatabin();
+        FirstDrawPrediction();
+        FirstDrawTooltip();
+        FirstDrawDatabin();
 
-  SetupStatistics();
-  //DrawStatistics("Train", train_svg, 17, 130, train_statistics)
-  DrawStatistics("Validation", test_statistics)
-  confusion_matrix.populateMatrix(test_statistics.confusion_matrix)
+        SetupStatistics();
+        //DrawStatistics("Train", train_svg, 17, 130, train_statistics)
+        DrawStatistics("Validation", test_statistics)
+        confusion_matrix.populateMatrix(test_statistics.confusion_matrix)
 
-  current = 0;
-  GetPredictionAndShowExample(current_docs[selected_document].features, current_docs[selected_document].true_class);
-  ShowFeedbackExample(current_docs[0]);
+        current = 0;
+        GetPredictionAndShowExample(current_docs[selected_document].features, current_docs[selected_document].true_class);
+        ShowFeedbackExample(current_docs[0]);
+        StopLoading();
       }
   };
 xhr.send();
@@ -88,8 +91,27 @@ function FeatureColor(feature) {
   }
 }
 
+function StartLoading(ms) {
+  is_loading = true;
+  setTimeout(function() {
+    if (is_loading) {
+      ChangeVisibility(d3.select("#loading"), true);
+    }
+  }, ms);
+}
+function StopLoading() {
+  is_loading = false;
+  ChangeVisibility(d3.select("#loading"), false)
+}
+function ChangeVisibility(selection, visible) {
+  // visible is true or false
+  selection.classed("hidden", !visible).classed("visible", visible);
+}
+
 function GetPredictionAndShowExample(example_text_split, true_class) {
+  StartLoading(800);
   var xhr = new XMLHttpRequest();
+  //ChangeVisibility(d3.select("#loading"), true);
   xhr.open('POST', 'http://localhost:8870/predict');
   xhr.setRequestHeader('Content-Type', 'application/json');
   xhr.onload = function() {
@@ -98,6 +120,8 @@ function GetPredictionAndShowExample(example_text_split, true_class) {
           current_object = GenerateObject(example_text_split, true_class, prediction_object);
           ShowExample(current_object);
           ShowWeights(current_object);
+          StopLoading();
+          //ChangeVisibility(d3.select("#loading"), false);
       }
   };
 //xhr.send();
@@ -152,6 +176,7 @@ function save_regex() {
 // test[document] = ...
 // no final chama ShowFeedbackExample
 function GetRegexResults(regex) {
+  StartLoading(500);
   var xhr = new XMLHttpRequest();
   xhr.open('POST', 'http://localhost:8870/regex');
   xhr.setRequestHeader('Content-Type', 'application/json');
@@ -161,6 +186,7 @@ function GetRegexResults(regex) {
           BrushRegex();
           ShowFeedbackExample(current_docs[selected_document]);
           console.log("Got regex results");
+          StopLoading();
       }
   };
 //xhr.send();
@@ -170,6 +196,7 @@ xhr.send(JSON.stringify({
 }
 
 function RunRegex() {
+  StartLoading(200);
   var xhr = new XMLHttpRequest();
   xhr.open('POST', 'http://localhost:8870/run_regex');
   xhr.setRequestHeader('Content-Type', 'application/json');
@@ -209,6 +236,7 @@ function RunRegex() {
           GetPredictionAndShowExample(current_docs[selected_document].features, current_docs[selected_document].true_class);
           ShowFeedbackExample(current_docs[selected_document]);
           ShowDatabinForClass(-1);
+          StopLoading();
       }
   };
 //xhr.send();
@@ -450,10 +478,11 @@ function ShowFeatureTooltip(d) {
         var undef = false;
         if (typeof feature_attributes[d.feature] == 'undefined') {
           undef = true;
-          tooltip.select(".tooltip_bottom").classed("hidden", true);
+          ChangeVisibility(tooltip.select(".tooltip_bottom"), false)
         }
         else {
-          tooltip.select(".tooltip_bottom").classed("hidden", false);
+          ChangeVisibility(tooltip.select(".tooltip_bottom"), true)
+
           freq = feature_attributes[d.feature]['train_freq'];
           data = feature_attributes[d.feature]['train_distribution'];
         }
@@ -822,23 +851,23 @@ function change_dataset() {
 function change_mode() {
   mode = d3.select("#view-select").node().value
   if (mode === "explain") {
-    d3.selectAll(".top_statistics").classed("visible", false).classed("hidden", true);
-    d3.selectAll(".top_feedback").classed("visible", false).classed("hidden", true);
-    d3.select("#explain_selections").classed("visible", true).classed("hidden", false);
+    ChangeVisibility(d3.selectAll(".top_statistics"), false);
+    ChangeVisibility(d3.selectAll(".top_feedback"), false);
+    ChangeVisibility(d3.select("#explain_selections"), true);
     change_order(1);
     GetPredictionAndShowExample(current_docs[selected_document].features, current_docs[selected_document].true_class);
   }
   else if (mode === "statistics") {
-    d3.selectAll(".top_explain").classed("visible", false).classed("hidden", true);
-    d3.selectAll(".top_feedback").classed("visible", false).classed("hidden", true);
-    d3.selectAll(".top_statistics").classed("visible", true).classed("hidden", false);
-    d3.select("#explain_selections").classed("visible", false).classed("hidden", true);
+    ChangeVisibility(d3.selectAll(".top_explain"), false);
+    ChangeVisibility(d3.selectAll(".top_feedback"), false);
+    ChangeVisibility(d3.selectAll(".top_statistics"), true);
+    ChangeVisibility(d3.select("#explain_selections"), false);
   }
   else if (mode === "feedback"){ 
-    d3.selectAll(".top_explain").classed("visible", false).classed("hidden", true);
-    d3.selectAll(".top_statistics").classed("visible", false).classed("hidden", true);
-    d3.selectAll(".top_feedback").classed("visible", true).classed("hidden", false);
-    d3.select("#explain_selections").classed("visible", false).classed("hidden", true);
+    ChangeVisibility(d3.selectAll(".top_explain"), false);
+    ChangeVisibility(d3.selectAll(".top_statistics"), false);
+    ChangeVisibility(d3.selectAll(".top_feedback"), true);
+    ChangeVisibility(d3.select("#explain_selections"), false);
     ShowFeedbackExample(current_docs[selected_document]);
   }
 }
@@ -1570,7 +1599,7 @@ var visible;
 /* Changing order of explain predictions */
 function change_order(changed_select) {
   // Hide everything
-  d3.selectAll(".top_explain").filter(".visible").classed("visible", false).classed("hidden", true);
+  ChangeVisibility(d3.selectAll(".top_explain").filter(".visible"), false)
   sel1 = d3.select("#explain-1").node().value
   //sel2 = d3.select("#explain-2").node().value
   sel2 = "text";
@@ -1593,7 +1622,7 @@ function change_order(changed_select) {
   //  top_divs_order[d] = n;
   //  d3.select("#explain-" + n).node().value = d;
   //}
-  d3.selectAll(".top_explain").filter(function(d,i) {return visible.has(d);}).classed("hidden", false).classed("visible", true);
+  ChangeVisibility(d3.selectAll(".top_explain").filter(function(d,i) {return visible.has(d);}), true);
   top_divs.sort(function(a,b) { return top_divs_order[a] > top_divs_order[b];});
   //alert("OI" + changed_select);
 }

@@ -395,6 +395,7 @@ def main():
         reg = re.compile(regex, re.DOTALL | re.MULTILINE)
         ret['train'] = {}
         for i, doc in enumerate(parsed_train):
+          print i
           iterator = reg.finditer(doc)
           for m in iterator:
             if i not in ret['train']:
@@ -402,6 +403,7 @@ def main():
             ret['train'][i].append(m.span())
         ret['test'] = {}
         for i, doc in enumerate(parsed_test):
+          print i
           iterator = reg.finditer(doc)
           for m in iterator:
             if i not in ret['test']:
@@ -475,7 +477,7 @@ def main():
     @route('/<filename>')
     def server_static(filename):
         return static_file(filename, root='./static/')
-    run(host='localhost', port=8870, debug=True)
+    run(host='localhost', port=8870, debug=False)
   
 
 
