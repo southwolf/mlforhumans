@@ -5,6 +5,7 @@ var class_names;
 // class_colors_i is by index, class_colors is by name
 var class_colors, class_colors_i;
 var current_object;
+var max_docs;
 var selected_features = new Set()
 var matrix;
 var top_part_height;
@@ -27,6 +28,7 @@ function LoadJson() {
         var json = JSON.parse(xhr.responseText);
         train_docs = json.train;
         test_docs = json.test;
+        max_docs = Math.max(train_docs.length, test_docs.length)
         current_docs = test_docs;
         train_statistics = json.statistics.train;
         test_statistics = json.statistics.test;
@@ -72,6 +74,8 @@ function LoadJson() {
         current = 0;
         GetPredictionAndShowExample(current_docs[selected_document].features, current_docs[selected_document].true_class);
         ShowFeedbackExample(current_docs[0]);
+        //d3.select("#view-select").node().value = "explain";
+        change_mode();
         StopLoading();
       }
   };
@@ -203,10 +207,8 @@ function RunRegex() {
   xhr.onload = function() {
       if (xhr.status === 200) {
           json = JSON.parse(xhr.responseText);
-          console.log("1")
           BrushRegex();
           ShowFeedbackExample(current_docs[selected_document]);
-          console.log("2")
           train_docs = json.train;
           test_docs = json.test;
           current_docs = test_docs;
@@ -214,10 +216,8 @@ function RunRegex() {
           test_statistics = json.statistics.test;
           feature_attributes = json.feature_attributes;
           test_accuracy = json.statistics.test.accuracy;
-          console.log("3")
           DrawStatistics("Validation", test_statistics)
           d3.select("#dataset-select").node().value = 'test'
-          console.log("4")
           confusion_matrix.populateMatrix(test_statistics.confusion_matrix)
           current_train = false;
           current_feature_brush = [];
@@ -226,13 +226,11 @@ function RunRegex() {
           // update_saved_regex()
           FeatureBrushing(current_feature_brush, true)
           current = 0;
-          console.log("5")
           confusion_matrix.populateMatrix(test_statistics.confusion_matrix)
           set_doc_ids(train_docs);
           set_doc_ids(test_docs);
           // TODO: tirar os numeros, e nao ta assigning doc_id de nada.
           AssignDots(svg_hist, current_docs);
-          console.log("6")
           GetPredictionAndShowExample(current_docs[selected_document].features, current_docs[selected_document].true_class);
           ShowFeedbackExample(current_docs[selected_document]);
           ShowDatabinForClass(-1);
@@ -656,7 +654,6 @@ function ShowFeedbackExample(ex) {
   len_insertion = to_insert_before.length + to_insert_after.length
   regex = current_train ? current_regex['train'] : current_regex['test'];
   if (_.has(regex, id)) {
-    console.log("Change");
     for (i = 0; i < regex[id].length; ++i) {
       start = regex[id][i][0] + i * len_insertion;
       end = regex[id][i][1] + i * len_insertion;
@@ -824,7 +821,6 @@ function map_examples_to_pos(docs, n_bins, bin_width) {
 }
 function change_dataset() {
   dataset = d3.select("#dataset-select").node().value
-  console.log(dataset);
   if(dataset === "train") {
     current_train = true;
     current_docs = train_docs;
@@ -1226,7 +1222,6 @@ function SetupStatistics() {
         .attr("stroke", "black");
   }
   var cm_svg = d3.select("#statistics_div").append("svg")
-  cm_svg.style("height", top_part_height);
   confusion_matrix = new Matrix(cm_svg, top_part_height);
 }
 function DrawStatistics(title, data) {
@@ -1249,11 +1244,9 @@ function DrawStatistics(title, data) {
 
 var current_brush = [-1, -1];
 function BrushOnMatrix(true_label, predicted_label) {
-  console.log("Brush " + true_label + " " + predicted_label);
   docs = [];
   if (true_label !== current_brush[0] || predicted_label !== current_brush[1]) {
     docs = _.filter(current_docs, function (d) {return d.prediction === predicted_label && d.true_class === true_label; })
-    console.log(docs);
     current_brush = [true_label, predicted_label];
   }
   else {
@@ -1279,9 +1272,15 @@ function Matrix(svg_object, height) {
   this.numClasses = class_names.length;
   //this.width = 350;
   this.strokeSize = STROKE_SIZE;
+  this.tickSize = 10;
   this.width = (height - this.strokeSize * 2) / (1.2 + 2/(3 * this.numClasses));
-  this.labelContainerSize = this.width / (this.numClasses * 3);
-  this.axisLabelContainerSize = this.width / (this.numClasses * 3);
+  temp = svg_object.append("text").classed("matrix-text", true).text(max_docs)
+  min_class_width = temp.node().getComputedTextLength() + 5;
+  temp.classed("axis_label", true).classed("matrix-text", false).text("Actual label");
+  this.axisLabelContainerSize = temp.node().getBBox().height
+  this.labelContainerSize = this.tickSize;
+  this.width = Math.max(min_class_width * this.numClasses, this.width);
+  temp.remove();
   var size = this.width / this.numClasses;
   this.footerContainerSize = this.width / 5;
   this.cellSize = size;
@@ -1303,7 +1302,6 @@ function Matrix(svg_object, height) {
   this.round2 = d3.format(".2f");
   this.bucketLists = [];
   appendAxisLabels(this);
-
   //  // append the positive, neutral, negative labels to the matrix
   appendLabels(this, class_names);
 
@@ -1329,8 +1327,6 @@ function Matrix(svg_object, height) {
             .datum([i,j])
             .on("click", function(d) {
               BrushOnMatrix(d[0], d[1]);
-              //console.log(this.id);
-              //func(this.id, matrixPointer); 
             })
             .style("fill", FILL);
 
@@ -1376,40 +1372,28 @@ function Matrix(svg_object, height) {
 }
 function appendAxisLabels(matrix) {
   // predicted label
-  var containerWidth = matrix.svgContainerSize;
-  var containSize = matrix.labelContainerSize;
+  var axisLabelSize = matrix.axisLabelContainerSize;
+  var labelContainerSize = matrix.labelContainerSize;
   matrix.svg.append("text")
     .text("Predicted Label")
     .attr("x", function () {
-      var pixelLength = this.getComputedTextLength();
-      return containSize * 2 + matrix.width / 2 - pixelLength / 2;
+      var pixelLength = this.getComputedTextLength()
+      // +10 is for the yshift 10.
+      return axisLabelSize + labelContainerSize + matrix.width / 2 - pixelLength / 2 + 10;
     })
-        .attr("class", "axis_label")
-    .attr("y", 20)
+    .attr("class", "axis_label")
+    .attr("y", 10)
     .attr("id", matrix.id + '-' + 'horizontal-title')
     .style("fill", FONT_COLOR)
-    .style("font-size", LABEL_FONT_SIZE);
-
-  matrix.svg.append("text")
-    .text("")
-    .attr("x", function () {
-      var pixelLength = this.getComputedTextLength();
-      return containSize * 2 + matrix.width / 2 - pixelLength / 2;
-    })
-    .attr("y", function() {
-      return matrix.width + containSize + matrix.footerContainerSize + matrix.axisLabelContainerSize;
-    })
-    .style("fill", FONT_COLOR)
-    .attr("id", matrix.id + '-' + 'footnote')
     .style("font-size", LABEL_FONT_SIZE);
 
   matrix.svg.append("text")
     .text("Actual Label")
     .attr("x", function() {
       var pixelLength = this.getComputedTextLength();
-      return - containSize *2 - matrix.width / 2 - pixelLength / 2;
+      return - axisLabelSize - labelContainerSize - matrix.width / 2 - pixelLength / 2 + 10;
     })
-    .attr("y", 15)
+    .attr("y", 10)
     .attr("id", matrix.id + '-' + 'vertical-title')
         .attr("class", "axis_label")
     .style("fill", FONT_COLOR)
@@ -1419,34 +1403,33 @@ function appendAxisLabels(matrix) {
 
 function appendLabels(matrix, labels) {
   // create labels
-  var offset = 20;
+  var offset = 0;
   var size = matrix.cellSize;
   var axisLabelSize = matrix.axisLabelContainerSize;
   var labelContainerSize = matrix.labelContainerSize;
+  var tickSize = matrix.tickSize;
   for (var i = 0; i < labels.length; i++) {
-    matrix.svg.append("text")
-      .text(labels[i])
+    matrix.svg.append("rect")
       .attr("x", function () {
-        var pixelLength = this.getComputedTextLength();
-        return labelContainerSize + axisLabelSize + (size / 2) + (size * i) - (pixelLength / 2) + 10; 
+        return labelContainerSize + axisLabelSize + (size / 2) + (size * i) - tickSize / 2; 
       })
       .attr("y", offset + axisLabelSize)
+      .attr("width", tickSize)
+      .attr("height", tickSize)
       .attr("id", matrix.id + '-' + labels[i] + '-predicted-label')
-      .style("fill", FONT_COLOR)
-      .style('font-size', MATRIX_LABEL_FONT_SIZE);
+      .style("fill", class_colors_i(i))
 
     // create labels
-    matrix.svg.append("text")
-      .text(labels[i])
+    matrix.svg.append("rect")
       .attr("transform", "rotate(270)") 
       .attr("x", function() {
-        var pixelLength = this.getComputedTextLength();
-        return -labelContainerSize - axisLabelSize - (size / 2) - (size * i) - pixelLength / 2 + 5;
+        return -labelContainerSize - axisLabelSize - (size / 2) - (size * i) - tickSize / 2;
       })
       .attr("y", offset + axisLabelSize)
       .attr("id", matrix.id + '-' + labels[i] + "-actual-label")
-      .style('font-size', MATRIX_LABEL_FONT_SIZE)
-      .style("fill", FONT_COLOR);
+      .attr("width", tickSize)
+      .attr("height", tickSize)
+      .style("fill", class_colors_i(i));
   }
 
 }
@@ -1457,11 +1440,13 @@ Matrix.prototype.setTextForCell = function(text, id) {
   var newText = d3.select("#" + id + "-text").text(text);
   var cell = d3.select("#" + id + "-cell");
 
-  var pixelLength = newText[0][0].getComputedTextLength();
+  var pixelHeight = newText.node().getBBox().height;
+  var pixelLength = newText.node().getBBox().width;
+
   var currentX = parseInt(cell[0][0].attributes.x.value);
   var currentY = parseInt(cell[0][0].attributes.y.value);
   
-  newText.attr("y", this.cellSize / 2  + currentY)
+  newText.attr("y", this.cellSize / 2  + currentY + pixelHeight / 4)
     .attr("x", currentX + this.cellSize / 2 - pixelLength / 2);
 }
 

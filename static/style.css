@@ -101,7 +101,7 @@
   padding: 10px;
 }
 #statistics_div {
-  overflow: scroll;
+  overflow-y: scroll;
   width: 100%;
 }
 #explain_features_div {
@@ -139,8 +139,10 @@
   webkit-box-sizing: border-box;
   moz-box-sizing: border-box;
 }
-#confusion_matrix_div {
-  clear:left;
+.confusion_matrix {
+  clear:right;
+  float:left;
+  margin-left:30;
 }
 .hidden {
   display: none;
