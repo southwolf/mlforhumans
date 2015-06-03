@@ -76,6 +76,17 @@ xhr.send();
 }
 
 LoadJson()
+function NotInTrain(feature) {
+  return typeof feature_attributes[feature] == 'undefined';
+}
+function FeatureColor(feature) {
+  if (NotInTrain(feature)) {
+    return "rgba(0, 0, 0, 0.35)";
+  }
+  else {
+    return "rgba(0, 0, 0, 0.85)";
+  }
+}
 
 function GetPredictionAndShowExample(example_text_split, true_class) {
   var xhr = new XMLHttpRequest();
@@ -403,7 +414,8 @@ var tooltip = d3.select(".hovercard")
 function FirstDrawTooltip() {
   tooltip_bars = Math.min(class_names.length, 5);
   tooltip.style("height", 90 + bar_height * tooltip_bars);
-  var bar = tooltip.append("g");
+  var top_text = tooltip.append("g");
+  var bar = tooltip.append("g").classed("tooltip_bottom", true);
   for (i = 0; i < tooltip_bars; i++) {
     rect = bar.append("rect");
     rect.classed("pred_rect", true);
@@ -426,8 +438,8 @@ function FirstDrawTooltip() {
     text.attr("x", bar_x - 10 + tooltip_xshift).attr("y", BarY(i) + bar_height - 3).attr("fill", "black").attr("text-anchor", "end").style("font", "14px tahoma, sans-serif");
   }
   // This is the word
-  bar.append("text").attr("id", "focus_feature").attr("x", 10).attr("y",  20).attr("fill", "black").text("Word:");
-  bar.append("text").attr("id", "frequency").attr("x", 10).attr("y",  35).attr("fill", "black").text("Frequency in train:");
+  top_text.append("text").attr("id", "focus_feature").attr("x", 10).attr("y",  20).attr("fill", "black").text("Word:");
+  top_text.append("text").attr("id", "frequency").attr("x", 10).attr("y",  35).attr("fill", "black").text("Frequency in train:");
   bar.append("text").attr("x", 10).attr("y",  50).attr("fill", "black").text("Conditional distribution (train):");
 }
 
@@ -435,11 +447,16 @@ function ShowFeatureTooltip(d) {
   // Assumes d has d.feature
         var freq;
         var prob;
+        var undef = false;
         if (typeof feature_attributes[d.feature] == 'undefined') {
-          return;
+          undef = true;
+          tooltip.select(".tooltip_bottom").classed("hidden", true);
         }
-        freq = feature_attributes[d.feature]['train_freq'];
-        data = feature_attributes[d.feature]['train_distribution'];
+        else {
+          tooltip.select(".tooltip_bottom").classed("hidden", false);
+          freq = feature_attributes[d.feature]['train_freq'];
+          data = feature_attributes[d.feature]['train_distribution'];
+        }
         tooltip.transition()
             .delay(1000)
             .duration(200)
@@ -449,19 +466,32 @@ function ShowFeatureTooltip(d) {
         var word = tooltip.select("#focus_feature")
         word.text("Word: "+ d.feature);
         var word = tooltip.select("#frequency")
-        word.text("Frequency in train: "+ freq.toFixed(2));
-        mapped = MapClassesToNameProbsAndColors(data, tooltip_bars)
-        names = mapped[0];
-        data = mapped[1];
-        bars = tooltip.selectAll(".pred_rect").data(data);
-        bars.attr("width", function(d) { return bar_x_scale(d)})
-            .style("fill", function(d, i) {return class_colors(names[i]);});
-        bar_text = tooltip.selectAll(".prob-text").data(data);
-        bar_text.attr("x", function(d) { return bar_x + bar_x_scale(d) + 5 + tooltip_xshift;})
-            .attr("fill", "black")
-            .text(function(d) { return d.toFixed(2)});
-        name_object = tooltip.selectAll(".class-name").data(names)
-        name_object.text(function(d) {return d;});
+        bars = tooltip.selectAll(".pred_rect")
+        bar_text = tooltip.selectAll(".prob-text")
+        name_object = tooltip.selectAll(".class-name")
+        if (undef) {
+          word.text("< 1% in train or not a feature");
+          bars.attr("width", 0)
+          bar_text.attr("x", function(d) { return bar_x +  5 + tooltip_xshift;})
+              .attr("fill", "black")
+              .text("0");
+          name_object.data(class_names.slice(0, tooltip_bars));
+        }
+        else {
+          word.text("Frequency in train: "+ freq.toFixed(2));
+          mapped = MapClassesToNameProbsAndColors(data, tooltip_bars)
+          names = mapped[0];
+          data = mapped[1];
+          bars.data(data);
+          bars.attr("width", function(d) { return bar_x_scale(d)})
+              .style("fill", function(d, i) {return class_colors(names[i]);});
+          bar_text.data(data);
+          bar_text.attr("x", function(d) { return bar_x + bar_x_scale(d) + 5 + tooltip_xshift;})
+              .attr("fill", "black")
+              .text(function(d) { return d.toFixed(2)});
+          name_object.data(names)
+       }
+       name_object.text(function(d) {return d;});
 }
 function HideFeatureTooltip(){
   tooltip.transition()
@@ -553,6 +583,7 @@ function ShowWeights(ex) {
   labels.attr('x', x_offset - 2)
         .attr('y', function(d, i) { return yscale(i) + bar_height + 14})
         .attr('text-anchor', 'end')
+        .style("fill", function(d) {return FeatureColor(d.feature);})
         .classed("labels", true)
         .on("mouseover", ShowFeatureTooltip)
         .on("mouseout", HideFeatureTooltip)
@@ -622,7 +653,7 @@ function ShowExample(ex) {
           return color;
         }
         else {
-          return "rgba(0, 0, 0, 0.35)";
+          return FeatureColor(d.feature);
         }
       })
       .style("font-size", function(d,i) {return size(Math.abs(d.weight))+"px";})
