@@ -42,6 +42,7 @@
 <div id="loading" class="hidden">Loading&#8230;</div>
 <!---->
 
+<div id ="top_part_options_div">
 <select id="view-select" onChange="change_mode();">
 <option value="explain">Explain prediction</option>
 <option value="statistics">Global statistics</option>
@@ -73,10 +74,10 @@
   <option value="feature_contribution">Feature contributions</option>
   <!--<option value="brushed_features">Selected features</option> -->
 </select>
-
+</div>
+<br />
 </div>
 <svg class="hovercard"></svg>
-    <br />
     <div id="textarea_div" class="top_explain visible">
         <textarea id="textarea_explain">
         </textarea>

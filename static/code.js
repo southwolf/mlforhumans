@@ -11,6 +11,7 @@ var matrix;
 var top_part_height;
 var top_divs_width;
 var is_loading = true;
+var current_focus_class = 0;
 var current_docs;
 var confusion_matrix;
 var current_train = false;
@@ -64,7 +65,7 @@ function LoadJson() {
         SetupDatabin();
         FirstDrawPrediction();
         FirstDrawTooltip();
-        FirstDrawDatabin();
+        ReSetupDatabin();
 
         SetupStatistics();
         //DrawStatistics("Train", train_svg, 17, 130, train_statistics)
@@ -708,8 +709,10 @@ d3.selection.prototype.moveToFront = function() {
 
 
 var databin_height;
-var n_bins;
+var databin_n_bins;
 var square_size;
+var initial_square_size = 6;
+var real_square_size;
 var bin_width;
 var selected_document;
 var databin_width;
@@ -717,31 +720,122 @@ var hist_margin, hist_width, hist_height;
 var svg_hist, hist_tooltip;
 var hist_data;
 var dots;
-var xValue, xScale, xMap, xAxis, yValue, yScale, yMap, yAxis;
+var xValue, databin_x_scale, xMap, xAxis, yValue, yScale, yMap, yAxis;
 var refLineFunction;
+var databin_y_divisor;
+var max_neg_bin;
+var max_pos_bin;
+var space_below;
+var space_above;
+var bin_width_per_nbins = Object();
+var max_top_per_nbins = Object();
+var max_bottom_per_nbins = Object();
+var max_top_with_40;
+var max_bottom_with_40;
+var bin_width_sort_by_class;
+function DatabinMaxMinAndDivisor() {
+
+ max_neg_bin = Math.ceil(Math.max((1 - train_statistics.accuracy) * train_docs.length, (1 - test_statistics.accuracy) * test_docs.length));
+ //var max_pos_bin = Math.ceil(Math.max(train_statistics.accuracy * train_docs.length, test_statistics.accuracy * test_docs.length));
+ //var max_in_a_bin = max_neg_bin + max_pos_bin;
+ var squares_in_height = Math.floor(hist_height / real_square_size);
+ // - 2 accounts for incomplete lines
+ //var bin_square_width = Math.ceil(max_in_a_bin/ (squares_in_height - 2));
+ var space_between_bins = 2;
+ var bin_square_width = Math.min(Math.floor((hist_width / class_names.length) / real_square_size) - space_between_bins, 40);
+ console.log(bin_square_width);
+ //bin_width = 20;
+ bin_width_sort_by_class = bin_square_width;
+ rows_below = Math.max(7, Math.ceil(max_neg_bin / bin_square_width))
+ console.log("Below" + rows_below);
+ databin_y_divisor = hist_height - rows_below * real_square_size;
+ space_below = rows_below * real_square_size;
+ space_above = hist_height - space_below - 1;
+ for (var i = 1; i <= 12; i++) {
+   bin_width_per_nbins[i] = Math.floor((hist_width / i) / real_square_size) - space_between_bins
+   max_bottom_per_nbins[i] = (space_below / real_square_size) * bin_width_per_nbins[i];
+   max_top_per_nbins[i] = (space_above / real_square_size - 1) * bin_width_per_nbins[i];
+ }
+ max_top_with_40 = (space_above / real_square_size) * 40;
+ max_bottom_with_40 = (space_below / real_square_size) * 40;
+
+ // TODO: think about this a little better
+ databin_n_bins = Math.floor(hist_width / ((bin_square_width + space_between_bins) * real_square_size))
+ databin_n_bins = databin_n_bins - databin_n_bins % 2;
+ if (svg_hist.select("#xaxis").empty()) {
+   svg_hist.append("line").attr("id", "xaxis")
+ }
+ var refLine = svg_hist.select("#xaxis")
+     .attr("stroke", "black")
+     .attr("stroke-width", 1)
+     .attr("x1", 0)
+     .attr("x2", hist_width)
+     .attr("y1", databin_y_divisor - 0.5)
+     .attr("y2", databin_y_divisor - 0.5);
+
+}
+
 function SetupDatabin() {
-  databin_height = parseInt(d3.select("body").style("height")) - (top_part_height + legend_height + 5 + 5);
+  top_options_height = parseInt(d3.select("#top_part_options_div").style("height"))
+  div_height = parseInt(d3.select("body").style("height")) - (top_part_height + legend_height + 5 + 5 + top_options_height);
+  div_width = parseInt(d3.select("#databin_div").style("width"));
   n_bins = 4;
   bin_width = 12;
   square_size = 6;
+  real_square_size = square_size + 1;
   selected_document = 0;
-  databin_width = parseInt(d3.select("#databin_div").style("width"));
-  hist_margin = {top: 0, right: 10, bottom: 0, left: 10};
-  hist_width = databin_width - hist_margin.left - hist_margin.right;
-  hist_height = databin_height - hist_margin.top - hist_margin.bottom;
-  xValue = function(d) { return d.bin_x;}; // data -> value
-  xScale = d3.scale.linear().range([0, hist_width]); // value -> display
-  xMap = function(d) { return xScale(xValue(d));}; // data -> display
-  xAxis = d3.svg.axis().scale(xScale).orient("bottom");
-
-  yValue = function(d) { return d.bin_y;}; // data -> value
-  yScale = d3.scale.linear().range([hist_height, 0]); // value -> display
-  yMap = function(d) { return yScale(yValue(d));}; // data -> display
-  yAxis = d3.svg.axis().scale(yScale).orient("left");
-  refLineFunction = d3.svg.line()
-    .x(function (d) { return xMap(d); })
-    .y(function (d) { return yMap(d); })
-    .interpolate("linear");
+  hist_margin = {top: 0, right: 10, bottom: 20, left: 10};
+  hist_width = div_width - hist_margin.left - hist_margin.right;
+  hist_height = div_height - hist_margin.top - hist_margin.bottom;
+  databin_x_scale = d3.scale.linear().range([0, hist_width]); // value -> display
+  svg_hist = d3.select("#databin_div").append("svg")
+      .attr("width", div_width)
+      .attr("height", div_height)
+      .append("g")
+      .attr("transform", "translate(" + hist_margin.left + "," + hist_margin.top + ")");
+  // add the hist_tooltip area to the webpage
+  hist_tooltip = d3.select("body").append("div")
+      .attr("class", "hist_tooltip")
+      .style("opacity", 0);
+  // Draw x-axis label
+  svg_hist.append("text")
+      .text("P(" + class_names[1] + " | example), given by the model")
+      .attr("x", function (d) {return hist_width / 2 - this.getComputedTextLength() / 2;})
+      .attr("y", div_height -25)
+      .attr("id", "hist_xaxis")
+      .style("font-size", "14px")
+      .style("font-weight", "bold")
+  svg_hist.append("text")
+      .text("Examples above the horizontal axis are classified correctly.")
+      .attr("x", function (d) {return hist_width / 2 - this.getComputedTextLength() / 2;})
+      .attr("y", div_height-10)
+      .style("font-size", "14px")
+      .style("font-weight", "bold")
+  svg_hist.append("text")
+      .text("0.5")
+      .attr("id", "databin-mid")
+      .attr("x", function (d) {return hist_width / 2 - this.getComputedTextLength() / 2;})
+      .attr("y", div_height-40)
+      .style("font-size", "14px")
+      .style("opacity", 0.8)
+  //svg_hist.append("text")
+  //    .attr("x", 0)
+  //    .attr("y", hist_height-45)
+  //    .style("font-size", "14px")
+  //    .text("0.0")
+  //svg_hist.append("text")
+  //    .text("1.0")
+  //    .attr("x", function (d) {return hist_width - this.getComputedTextLength() / 2;})
+  //    .attr("y", hist_height-45)
+  //    .style("font-size", "14px")
+ // add a reference line
+ // var refLine = svg_hist.append("path")
+ //     .attr("id", "ymiddle")
+ //     .attr("stroke", "black")
+ //     .attr("stroke-width", 0.8)
+ //     .attr("stroke-dasharray", "5,5")
+ //     .attr("fill", "none");
+ // add a zero line
 }
 
 
@@ -757,68 +851,113 @@ function set_doc_ids(docs) {
         docs[i].doc_id = i;
     }
 }
-
-function map_examples_to_bin(docs, n_bins, focus_class) {
-    for (var i=0; i<docs.length; i++) {
-        var pred = docs[i].predict_proba[focus_class];
-        docs[i].pred_bin = Math.floor(pred*n_bins);
-        if (docs[i].pred_bin >= n_bins) {
-            docs[i].pred_bin -= 1;
+function binaryIndexOf(searchElement) {
+    'use strict';
+ 
+    var minIndex = 0;
+    var maxIndex = this.length - 1;
+    var currentIndex;
+    var currentElement;
+    while (minIndex <= maxIndex) {
+        currentIndex = (minIndex + maxIndex) / 2 | 0;
+        currentElement = this[currentIndex];
+ 
+        if (currentElement < searchElement) {
+            minIndex = currentIndex + 1;
+        }
+        else if (currentElement > searchElement) {
+            maxIndex = currentIndex - 1;
+        }
+        else {
+            return currentIndex;
         }
     }
+    return currentIndex;
 }
-function map_examples_to_true_class_bin(docs, n_bins) {
-    for (var i=0; i<docs.length; i++) {
-        var pred = docs[i].true_class / class_names.length;
-        docs[i].pred_bin = Math.floor(pred*n_bins);
-        if (docs[i].pred_bin >= n_bins) {
-            docs[i].pred_bin -= 1;
+
+function map_examples_to_bin(docs, focus_class) {
+  var n_bins;
+  var sorted_correct, sorted_wrong;
+  if (focus_class === -1) {
+    databin_n_bins = class_names.length;
+    n_bins = databin_n_bins;
+    bin_width = bin_width_sort_by_class;
+    sorted_correct = _.map(_.filter(docs, function(d) {return d.true_class === d.prediction;}), function(d) { return d.true_class / n_bins;}).sort();
+    sorted_wrong = _.map(_.filter(docs, function(d) {return d.true_class !== d.prediction;}), function(d) { return d.true_class / n_bins;}).sort();
+  }
+  else {
+    n_bins = 12;
+    sorted_correct = _.map(_.filter(docs, function(d) {return d.true_class === d.prediction;}), function(d) { return d.predict_proba[focus_class];}).sort();
+    sorted_wrong = _.map(_.filter(docs, function(d) {return d.true_class !== d.prediction;}), function(d) { return d.predict_proba[focus_class];}).sort();
+  }
+  if (square_size < initial_square_size) {
+    square_size = initial_square_size;
+    real_square_size = square_size + 1;
+    dots.attr("width", square_size).attr("height", square_size);
+    DatabinMaxMinAndDivisor();
+
+  }
+  reduce_nbins = true;
+  bin_size_40 = true;
+  while (reduce_nbins) {
+    reduce_nbins = false;
+    previous_correct_index = 0;
+    previous_wrong_index = 0;
+    console.log("Bin size " + n_bins);
+    for (var i = 1; i <= n_bins; ++i) {
+      correct_in_bin = binaryIndexOf.call(sorted_correct, i / n_bins - 0.000000000001) - previous_correct_index + 1;
+      wrong_in_bin = binaryIndexOf.call(sorted_wrong, i / n_bins - 0.000000000001) - previous_wrong_index + 1;
+      previous_correct_index += correct_in_bin - 1
+      previous_wrong_index += wrong_in_bin - 1
+      if (correct_in_bin > max_top_per_nbins[n_bins] || wrong_in_bin > max_bottom_per_nbins[n_bins]) {
+        bin_size_40 = true;
+        reduce_nbins = true;
+        n_bins -= 2;
+        if (n_bins === 0 || focus_class === -1) {
+          square_size -= 1;
+          real_square_size = square_size + 1;
+          dots.attr("width", square_size).attr("height", square_size);
+          n_bins = focus_class === -1 ? class_names.length : 12;
+          DatabinMaxMinAndDivisor();
         }
+        break;
+      }
+      if (correct_in_bin > max_top_with_40|| wrong_in_bin > max_bottom_with_40) {
+        bin_size_40 = false;
+      }
     }
+  }
+  bin_width = bin_size_40 ? Math.min(40, bin_width_per_nbins[n_bins]) : bin_width_per_nbins[n_bins];
+  databin_n_bins = n_bins;
+  var correct_bin_index = [];
+  var incorrect_bin_index = [];
+  for (var i=0; i<n_bins; i++) {
+      correct_bin_index[i] = 0;
+      incorrect_bin_index[i] = 0;
+  }
+  for (var i=0; i<docs.length; i++) {
+    var pred = focus_class === -1 ? docs[i].true_class / n_bins : docs[i].predict_proba[focus_class];
+    docs[i].pred_bin = Math.floor(pred* n_bins);
+    if (docs[i].pred_bin >= n_bins) {
+        docs[i].pred_bin -= 1;
+    }
+    var bin = docs[i].pred_bin;
+    var correct = docs[i].prediction === docs[i].true_class;
+    if (correct) {
+      docs[i].bin_x = correct_bin_index[bin] % bin_width;
+      docs[i].bin_y = Math.floor(correct_bin_index[bin] / bin_width);
+      correct_bin_index[bin] += 1;
+      docs[i].mistake = false;
+    }
+    else {
+      docs[i].mistake = true;
+      docs[i].bin_x = incorrect_bin_index[bin] % bin_width;
+      docs[i].bin_y = Math.floor(incorrect_bin_index[bin] / bin_width) + 1;
+      incorrect_bin_index[bin] += 1;
+    }
+  }
 }
 
-function map_examples_to_pos(docs, n_bins, bin_width) {
-    var correct_bin_index = [];
-    var incorrect_bin_index = [];
-    for (var i=0; i<n_bins; i++) {
-        correct_bin_index[i] = 0;
-        incorrect_bin_index[i] = 0;
-    }
-
-
-    for (var i=0; i<docs.length; i++) {
-        var bin = docs[i].pred_bin;
-
-        var correct = false;
-        if (docs[i].prediction === docs[i].true_class) {
-            correct = true;
-        }
-        // Set the relative x position of the data point
-        var bin_x = 0.0;
-        if (correct) {
-            bin_x = (correct_bin_index[bin] % bin_width) * 1.0/(n_bins*bin_width+20) + bin/n_bins;
-        } else {
-            bin_x = (incorrect_bin_index[bin] % bin_width) * 1.0/(n_bins*bin_width+20) + bin/n_bins;
-        }
-
-        // Set the relative y position of the data point
-        var bin_y = 0.0;
-        if (correct) {
-            bin_y = (Math.floor(correct_bin_index[bin] / bin_width) + 1) * (1.0/n_bins)/bin_width;
-        } else {
-            bin_y = -(Math.floor(incorrect_bin_index[bin] / bin_width) + 1)* (1.0/n_bins)/bin_width;
-        }
-
-        docs[i].bin_x = bin_x;
-        docs[i].bin_y = bin_y;
-
-        if (correct) {
-            correct_bin_index[bin] += 1;
-        } else {
-            incorrect_bin_index[bin] += 1;
-        }
-    }
-}
 function change_dataset() {
   dataset = d3.select("#dataset-select").node().value
   if(dataset === "train") {
@@ -883,14 +1022,64 @@ function AssignDots(svg_obj, docs) {
       .style("opacity", 0.4)
       .attr("id", function(d, i) {return d.doc_id === selected_document ? "selected_document" : "";});
 
-  focus_class = 0;
+  // focus_class = current_focus_class;
+  // n_bins = focus_class === -1 ? class_names.length : databin_n_bins;
+  // // Figure out which examples go in which bins
+  // map_examples_to_bin(docs, focus_class);
+}
+function ReSetupDatabin() {
+  
+  // Initialize the document IDs
+ set_doc_ids(train_docs);
+ set_doc_ids(test_docs);
+ DatabinMaxMinAndDivisor();
+  // Draw title
+  //svg_hist.append("text")
+  //    .attr("x", hist_width/2-200)
+  //    .attr("y", 50)
+  //    .style("font-size", "16px")
+  //    .style("font-weight", "bold")
+  //    .text("Overall Model Performance. Held-out accuracy: " + test_accuracy)
+
+
+ AssignDots(svg_hist, current_docs);
+ ShowDatabinForClass(current_focus_class);
+}
+
+
+
+function ShowDatabinForClass(focus_class) {
   // Figure out which examples go in which bins
-  map_examples_to_bin(docs, n_bins, focus_class);
+  if (focus_class === -1) {
+    svg_hist.select("#hist_xaxis")
+    .text("Documents grouped by true class.")
+    svg_hist.select("#databin-mid").style("opacity", 0);
+    n_bins = class_names.length;
+  }
+  else {
+    svg_hist.select("#hist_xaxis")
+    .text("P(" + class_names[focus_class] + " | example), given by the model")
+    svg_hist.select("#databin-mid").style("opacity", 0.8);
+    n_bins = databin_n_bins;
+  }
+  map_examples_to_bin(current_docs, focus_class);
+  n_bins = databin_n_bins;
   // Then map them to an actual x/y position within [0, 1]
-  map_examples_to_pos(docs, n_bins, bin_width);
-  xScale.domain([d3.min(docs, xValue), d3.max(docs, xValue)]);
-  // don't want dots overlapping axis, so add in buffer to data domain
-  yScale.domain([d3.min(docs, yValue)-0.1, d3.max(docs, yValue)+0.1]);
+  databin_x_scale.domain([0, n_bins]);
+  var baseline = databin_y_divisor;
+  console.log("REAL " + real_square_size);
+  dots.transition().duration(1000)
+       .attr("x", function(d) {
+         return databin_x_scale(d.pred_bin) + (real_square_size) * d.bin_x;
+       })
+       .attr("y", function(d) {
+         mult = d.mistake ? 1 : -1;
+         return baseline + mult * (d.bin_y * real_square_size + 1) - real_square_size;
+       })
+
+  svg_hist.select("#xaxis").transition().duration(1000).attr("x2", databin_x_scale(n_bins-1) + bin_width * real_square_size);
+  d3.select("#selected_document").moveToFront();
+
   dots.on("mouseover", function(d) {
           var xPosition = parseFloat(d3.select(this).attr("x"));
           var yPosition = parseFloat(d3.select(this).attr("y"));
@@ -912,8 +1101,10 @@ function AssignDots(svg_obj, docs) {
           s += class_names[d.true_class];
           s += "<br/>Prediction: ";
           s += class_names[d.prediction];
-          s += "<br /> P(" + class_names[focus_class] + ") = ";
-          s += + d.predict_proba[focus_class].toFixed(2);
+          if (focus_class !== -1) {
+            s += "<br /> P(" + class_names[focus_class] + ") = ";
+            s += + d.predict_proba[focus_class].toFixed(2);
+          }
           hist_tooltip.html(s)
               //"Document ID: " + d.doc_id + "<br />True class: " + d.true_class + "<br/>Prediction: " + d.prediction)
               .style("left", d3.event.pageX + 205 < d3.select("body").node().getBoundingClientRect().width ? (d3.event.pageX + 5) + "px" : d3.event.pageX - 205)
@@ -947,110 +1138,15 @@ function AssignDots(svg_obj, docs) {
 
           on_click_document(d);
       });
-}
-function FirstDrawDatabin() {
-  // add the graph canvas to the body of the webpage
-  svg_hist = d3.select("#databin_div").append("svg")
-      .attr("width", hist_width + hist_margin.left + hist_margin.right)
-      .attr("height", hist_height + hist_margin.top + hist_margin.bottom)
-      .append("g")
-      .attr("transform", "translate(" + hist_margin.left + "," + hist_margin.top + ")");
-  
-  // add the hist_tooltip area to the webpage
-  hist_tooltip = d3.select("body").append("div")
-      .attr("class", "hist_tooltip")
-      .style("opacity", 0);
-  // Initialize the document IDs
- set_doc_ids(train_docs);
- set_doc_ids(test_docs);
-
-  // Draw title
-  //svg_hist.append("text")
-  //    .attr("x", hist_width/2-200)
-  //    .attr("y", 50)
-  //    .style("font-size", "16px")
-  //    .style("font-weight", "bold")
-  //    .text("Overall Model Performance. Held-out accuracy: " + test_accuracy)
-
-  // Draw x-axis label
-  svg_hist.append("text")
-      .attr("x", hist_width/2-130)
-      .attr("y", hist_height-25)
-      .attr("id", "hist_xaxis")
-      .style("font-size", "14px")
-      .style("font-weight", "bold")
-      .text("P(" + class_names[1] + " | example), given by the model")
-  svg_hist.append("text")
-      .attr("x", hist_width/2-130)
-      .attr("y", hist_height-10)
-      .style("font-size", "14px")
-      .style("font-weight", "bold")
-      .text("Examples above the horizontal axis are classified correctly.")
-  svg_hist.append("text")
-      .attr("x", hist_width/2)
-      .attr("y", hist_height-45)
-      .style("font-size", "14px")
-      .text("0.5")
-  svg_hist.append("text")
-      .attr("x", 0)
-      .attr("y", hist_height-45)
-      .style("font-size", "14px")
-      .text("0.0")
-  svg_hist.append("text")
-      .attr("x", hist_width - 20)
-      .attr("y", hist_height-45)
-      .style("font-size", "14px")
-      .text("1.0")
-
- // add a reference line
- var refLine = svg_hist.append("path")
-     .attr("id", "ymiddle")
-     .attr("stroke", "black")
-     .attr("stroke-width", 0.8)
-     .attr("stroke-dasharray", "5,5")
-     .attr("fill", "none");
- // add a zero line
- var refLine = svg_hist.append("path")
-     .attr("id", "xaxis")
-     .attr("stroke", "black")
-     .attr("stroke-width", 0.8)
-     .attr("fill", "none");
- AssignDots(svg_hist, current_docs);
- ShowDatabinForClass(focus_class);
-}
 
 
-
-function ShowDatabinForClass(focus_class) {
-  // Figure out which examples go in which bins
-  if (focus_class === -1) {
-    n_bins = class_names.length;
-    bin_width = 20;
-    map_examples_to_true_class_bin(current_docs, n_bins);
-    svg_hist.select("#hist_xaxis")
-    .text("Documents grouped by true class.")
-  }
-  else {
-    map_examples_to_bin(current_docs, n_bins, focus_class);
-    svg_hist.select("#hist_xaxis")
-    .text("P(" + class_names[focus_class] + " | example), given by the model")
-  }
-  // Then map them to an actual x/y position within [0, 1]
-  map_examples_to_pos(current_docs, n_bins, bin_width);
-  xScale.domain([d3.min(current_docs, xValue), d3.max(current_docs, xValue)]);
-  // don't want dots overlapping axis, so add in buffer to data domain
-  yScale.domain([d3.min(current_docs, yValue)-0.1, d3.max(current_docs, yValue)+0.1]);
-  dots.transition().duration(1000)
-      .attr("x", xMap)
-      .attr("y", yMap)
-  d3.select("#selected_document").moveToFront();
   // TODO: This is still weird, I think it's kinda wrong.
   //var refLineData = [ {"bin_x": 0.5, "bin_y":-0.03}, {"bin_x":0.5, "bin_y":0.3}];
   //svg_hist.select("#ymiddle")
   //   .attr("d", refLineFunction(refLineData))
-  var refLineData = [ {"bin_x": 0, "bin_y":-0.005}, {"bin_x":0.988, "bin_y":-0.005}];
-  svg_hist.select("#xaxis")
-     .attr("d", refLineFunction(refLineData))
+  // var refLineData = [ {"bin_x": 0, "bin_y":-0.005}, {"bin_x":0.988, "bin_y":-0.005}];
+  // svg_hist.select("#xaxis")
+  //    .attr("d", refLineFunction(refLineData))
 }
 function BrushExamples(example_set) {
   dots.transition().style("opacity", function(d){
