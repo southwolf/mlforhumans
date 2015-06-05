@@ -69,8 +69,7 @@ function LoadJson() {
 
         SetupStatistics();
         //DrawStatistics("Train", train_svg, 17, 130, train_statistics)
-        DrawStatistics("Validation", test_statistics)
-        confusion_matrix.populateMatrix(test_statistics.confusion_matrix)
+        DrawStatistics("Validation", test_statistics, test_statistics.confusion_matrix)
 
         current = 0;
         GetPredictionAndShowExample(current_docs[selected_document].features, current_docs[selected_document].true_class);
@@ -217,9 +216,8 @@ function RunRegex() {
           test_statistics = json.statistics.test;
           feature_attributes = json.feature_attributes;
           test_accuracy = json.statistics.test.accuracy;
-          DrawStatistics("Validation", test_statistics)
+          DrawStatistics("Validation", test_statistics, test_statistics.confusion_matrix)
           d3.select("#dataset-select").node().value = 'test'
-          confusion_matrix.populateMatrix(test_statistics.confusion_matrix)
           current_train = false;
           current_feature_brush = [];
           current_regex = {};
@@ -963,14 +961,12 @@ function change_dataset() {
   if(dataset === "train") {
     current_train = true;
     current_docs = train_docs;
-    DrawStatistics("Train", train_statistics)
-    confusion_matrix.populateMatrix(train_statistics.confusion_matrix)
+    DrawStatistics("Train", train_statistics, train_statistics.confusion_matrix)
   }
   else {
     current_train = false;
     current_docs = test_docs;
-    DrawStatistics("Validation", test_statistics)
-    confusion_matrix.populateMatrix(test_statistics.confusion_matrix)
+    DrawStatistics("Validation", test_statistics, test_statistics.confusion_matrix)
   }
   AssignDots(svg_hist, current_docs);
   GetPredictionAndShowExample(current_docs[0].features, current_docs[0].true_class);
@@ -1320,7 +1316,9 @@ function SetupStatistics() {
   var cm_svg = d3.select("#statistics_div").append("svg")
   confusion_matrix = new Matrix(cm_svg, top_part_height);
 }
-function DrawStatistics(title, data) {
+function DrawStatistics(title, data, c_matrix) {
+  visible = d3.selectAll(".top_statistics").classed("visible")
+  ChangeVisibility(d3.selectAll(".top_statistics"), true);
   total = d3.sum(data.class_distribution)
   var s_bar_x_scale = d3.scale.linear().domain([0, total]).range([0, b_width]);
 
@@ -1334,6 +1332,9 @@ function DrawStatistics(title, data) {
   text = d3.selectAll(".statistics_texts").data(data.class_distribution)
   text.attr("x", function(d) { return s_bar_x + s_bar_x_scale(d) + 5; })
        .text(function(d) { return d.toFixed(0); })
+
+  confusion_matrix.populateMatrix(c_matrix)
+  ChangeVisibility(d3.selectAll(".top_statistics"), visible);
 }
 
 /* Confusion Matrix */
