@@ -55,35 +55,43 @@
 <option value="feedback">Feedback</option>
 </select> -->
 
+<div class="onoffswitch" style="float:right;">
+    <input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox" id="myonoffswitch" onchange="swap_dataset()" checked>
+    <label class="onoffswitch-label" for="myonoffswitch">
+        <span class="onoffswitch-inner"></span>
+        <span class="onoffswitch-switch"></span>
+    </label>
+</div>
 
-<button id="swap_dataset_button" class="red_button" onclick="swap_dataset()" style="float:right;">Current Dataset: Validation</button>
+<!-- <button id="swap_dataset_button" class="red_button"  style="float:right;">Current Dataset: Validation</button> -->
+<br/>
 
 <!-- <select id="dataset-select" onChange="change_dataset();" style="float:right;">
 <option value="test">Validation</option>
 <option value="train">Train</option>
 </select> -->
-<div id="explain_selections"> 
-<select id="explain-1" onChange="change_order(1);">
-  <option value="textarea">Edit text</option>
-  <option value="brushed_features">Selected features</option>
-</select>
-<!-- <select id="explain-2" onChange="change_order(2);">
-  <option value="text" selected>View text</option>
-  <option value="textarea">Edit text</option>
-  <option value="prediction">Prediction probabilities</option>
-  <option value="feature_contribution">Feature contributions</option>
-  <option value="brushed_features">Selected features</option>
-</select> -->
-<select id="explain-3" onChange="change_order(3);">
-  <option value="prediction" selected>Prediction probabilities</option>
-  <option value="feature_contribution">Feature contributions</option>
-</select>
-</div>
 <div id="info_button">
 </div>
 <br />
 </div>
 <svg class="hovercard"></svg>
+
+<div id="ops_container">
+<div id="explain_selections">
+<div class="editfeatures_onoffswitch">
+    <input type="checkbox" name="editfeatures_onoffswitch" class="editfeatures_onoffswitch-checkbox" id="myeditfeatures_onoffswitch" onchange="change_order(1)" checked>
+    <label class="editfeatures_onoffswitch-label" for="myeditfeatures_onoffswitch">
+        <span class="editfeatures_onoffswitch-inner"></span>
+        <span class="editfeatures_onoffswitch-switch"></span>
+    </label>
+</div>
+<select id="explain-3" onChange="change_order(3);">
+  <option value="prediction" selected>Prediction probabilities</option>
+  <option value="feature_contribution">Feature contributions</option>
+</select>
+
+</div>
+
 
     <div id="textarea_div" class="top_explain visible">
         <textarea id="textarea_explain">
@@ -113,6 +121,7 @@
       style="bottom:0;left:50;">Apply</button>
       <br />
       </div>
+</div>
 
 
 <script src="info_box.js"></script>
