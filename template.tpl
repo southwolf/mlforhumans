@@ -45,41 +45,59 @@
 <!---->
 
 <div id ="top_part_options_div">
-<select id="view-select" onChange="change_mode();">
+
+<!-- Tab Buttons -->
+<button class="blue_button" onclick="tab_change_explain()">Explain prediction</button>
+<button class="blue_button" onclick="tab_change_statistics()">Global Statistics</button>
+<button class="blue_button" onclick="tab_change_feedback()">Feedback</button>
+
+<!-- <select id="view-select" onChange="change_mode();">
 <option value="explain">Explain prediction</option>
 <option value="statistics">Global statistics</option>
 <option value="feedback">Feedback</option>
-</select>
-<select id="dataset-select" onChange="change_dataset();">
+</select> -->
+
+<div class="onoffswitch" style="float:right;">
+    <input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox" id="myonoffswitch" onchange="swap_dataset()" checked>
+    <label class="onoffswitch-label" for="myonoffswitch">
+        <span class="onoffswitch-inner"></span>
+        <span class="onoffswitch-switch"></span>
+    </label>
+</div>
+
+<!-- <button id="swap_dataset_button" class="red_button"  style="float:right;">Current Dataset: Validation</button> -->
+<br/>
+
+<!-- <select id="dataset-select" onChange="change_dataset();" style="float:right;">
 <option value="test">Validation</option>
 <option value="train">Train</option>
-</select>
-<div id="explain_selections"> 
-<select id="explain-1" onChange="change_order(1);">
-  <option value="textarea">Edit text</option>
-  <!--<option value="text">View text</option>
-  <option value="prediction">Prediction probabilities</option>
-  <option value="feature_contribution">Feature contributions</option> -->
-  <option value="brushed_features">Selected features</option>
-</select>
-<!-- <select id="explain-2" onChange="change_order(2);">
-  <option value="text" selected>View text</option>
-  <option value="textarea">Edit text</option>
-  <option value="prediction">Prediction probabilities</option>
-  <option value="feature_contribution">Feature contributions</option>
-  <option value="brushed_features">Selected features</option>
 </select> -->
-<select id="explain-3" onChange="change_order(3);">
-  <!--<option value="textarea">Edit text</option>
-  <option value="text">View text</option> -->
-  <option value="prediction" selected>Prediction probabilities</option>
-  <option value="feature_contribution">Feature contributions</option>
-  <!--<option value="brushed_features">Selected features</option> -->
-</select>
+<div id="info_button">
 </div>
 <br />
 </div>
 <svg class="hovercard"></svg>
+
+<div id="ops_container">
+<div id="explain_selections">
+      <div class="probabilities_onoffswitch" style="float:right;">
+          <input type="checkbox" name="probabilities_onoffswitch" class="probabilities_onoffswitch-checkbox" id="myprobabilities_onoffswitch" onchange="change_order(3)" checked>
+          <label class="probabilities_onoffswitch-label" for="myprobabilities_onoffswitch">
+              <span class="probabilities_onoffswitch-inner"></span>
+              <span class="probabilities_onoffswitch-switch"></span>
+          </label>
+      </div>
+<div class="editfeatures_onoffswitch">
+    <input type="checkbox" name="editfeatures_onoffswitch" class="editfeatures_onoffswitch-checkbox" id="myeditfeatures_onoffswitch" onchange="change_order(1)" checked>
+    <label class="editfeatures_onoffswitch-label" for="myeditfeatures_onoffswitch">
+        <span class="editfeatures_onoffswitch-inner"></span>
+        <span class="editfeatures_onoffswitch-switch"></span>
+    </label>
+</div>
+
+</div>
+
+
     <div id="textarea_div" class="top_explain visible">
         <textarea id="textarea_explain">
         </textarea>
@@ -89,6 +107,7 @@
     <div id="prediction_bar_div" class="top_explain top_right visible">
       <svg id="prediction_bar"></svg>
     </div>
+    <br>
     <div id="explain_features_div" class="top_explain hidden"> </div>
     <div id="feature_brush_div" class="top_explain hidden"> Active features: <br /></div>
 	  <div id="statistics_div" class="top_statistics"> </div>
@@ -108,6 +127,7 @@
       style="bottom:0;left:50;">Apply</button>
       <br />
       </div>
+</div>
 
 
 <script src="info_box.js"></script>
