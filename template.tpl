@@ -43,11 +43,18 @@
 <!---->
 
 <div id ="top_part_options_div">
-<select id="view-select" onChange="change_mode();">
+
+<button class="blue_button" onclick="tab_change_explain()">Explain prediction</button>
+<button class="blue_button" onclick="tab_change_statistics()">Global Statistics</button>
+<button class="blue_button" onclick="tab_change_feedback()">Feedback</button>
+
+
+
+<!-- <select id="view-select" onChange="change_mode();">
 <option value="explain">Explain prediction</option>
 <option value="statistics">Global statistics</option>
 <option value="feedback">Feedback</option>
-</select>
+</select> -->
 <select id="dataset-select" onChange="change_dataset();">
 <option value="test">Validation</option>
 <option value="train">Train</option>
@@ -75,9 +82,12 @@
   <!--<option value="brushed_features">Selected features</option> -->
 </select>
 </div>
+<div id="info_button">
+</div>
 <br />
 </div>
 <svg class="hovercard"></svg>
+
     <div id="textarea_div" class="top_explain visible">
         <textarea id="textarea_explain">
         </textarea>

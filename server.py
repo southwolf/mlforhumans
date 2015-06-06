@@ -477,7 +477,7 @@ def main():
     @route('/<filename>')
     def server_static(filename):
         return static_file(filename, root='./static/')
-    run(host='localhost', port=8870, debug=False)
+    run(host='localhost', port=8870, debug=True)
   
 
 

@@ -75,7 +75,13 @@ function LoadJson() {
         GetPredictionAndShowExample(current_docs[selected_document].features, current_docs[selected_document].true_class);
         ShowFeedbackExample(current_docs[0]);
         //d3.select("#view-select").node().value = "explain";
-        change_mode();
+        //change_mode();
+
+        ChangeVisibility(d3.selectAll(".top_statistics"), false);
+        ChangeVisibility(d3.selectAll(".top_feedback"), false);
+        ChangeVisibility(d3.select("#explain_selections"), true);
+        change_order(1);
+        GetPredictionAndShowExample(current_docs[selected_document].features, current_docs[selected_document].true_class);
         StopLoading();
       }
   };
@@ -1000,6 +1006,32 @@ function change_mode() {
     ChangeVisibility(d3.select("#explain_selections"), false);
     ShowFeedbackExample(current_docs[selected_document]);
   }
+}
+
+function tab_change_explain() {
+  console.log("TAB CHANGE")
+  ChangeVisibility(d3.selectAll(".top_statistics"), false);
+  ChangeVisibility(d3.selectAll(".top_feedback"), false);
+  ChangeVisibility(d3.select("#explain_selections"), true);
+  change_order(1);
+  GetPredictionAndShowExample(current_docs[selected_document].features, current_docs[selected_document].true_class);
+}
+
+function tab_change_statistics() {
+  console.log("TAB CHANGE")
+  ChangeVisibility(d3.selectAll(".top_explain"), false);
+  ChangeVisibility(d3.selectAll(".top_feedback"), false);
+  ChangeVisibility(d3.selectAll(".top_statistics"), true);
+  ChangeVisibility(d3.select("#explain_selections"), false);
+}
+
+function tab_change_feedback() {
+  console.log("TAB CHANGE")
+  ChangeVisibility(d3.selectAll(".top_explain"), false);
+  ChangeVisibility(d3.selectAll(".top_statistics"), false);
+  ChangeVisibility(d3.selectAll(".top_feedback"), true);
+  ChangeVisibility(d3.select("#explain_selections"), false);
+  ShowFeedbackExample(current_docs[selected_document]);
 }
 
 function AssignDots(svg_obj, docs) {
