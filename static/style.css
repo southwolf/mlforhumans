@@ -14,12 +14,14 @@
 }
 
 .green_button,
+.red_button,
 .blue_button {
     color: #fff;
     padding: 5px 10px;
 }
 
 .green_button:hover,
+.red_button:hover,
 .blue_button:hover {
     text-decoration: none;
 }
@@ -48,6 +50,16 @@
 .blue_button:hover {
     background-color: #83a2be;
     border: 1px solid #83a2be;
+}
+
+.red_button {
+  background-color: indianred;
+  border: 1px solid indianred;
+}
+
+.red_button:hover {
+  background-color: darkred;
+  border: 1px solid darkred;
 }
 
 .black_overlay{
@@ -240,6 +252,11 @@
     background-color: rgba(0,0,0,.1);
     -webkit-box-shadow: 0 0 1px rgba(255,255,255,.5);
 }
+
+/* Other layout changes */
+/*.dataset-select {*/
+  /*float:right;*/
+/*}*/
 
 /*Tabular layout style*/
 .tab_span {

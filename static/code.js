@@ -961,14 +961,16 @@ function map_examples_to_bin(docs, focus_class) {
   }
 }
 
-function change_dataset() {
-  dataset = d3.select("#dataset-select").node().value
-  if(dataset === "train") {
+
+function swap_dataset() {
+  if(current_train === false) {
+    document.getElementById("swap_dataset_button").innerHTML="Current Dataset: Train";
     current_train = true;
     current_docs = train_docs;
     DrawStatistics("Train", train_statistics, train_statistics.confusion_matrix)
   }
   else {
+    document.getElementById("swap_dataset_button").innerHTML="Current Dataset: Validation";
     current_train = false;
     current_docs = test_docs;
     DrawStatistics("Validation", test_statistics, test_statistics.confusion_matrix)
@@ -977,39 +979,65 @@ function change_dataset() {
   GetPredictionAndShowExample(current_docs[0].features, current_docs[0].true_class);
   ShowFeedbackExample(current_docs[selected_document]);
   ShowDatabinForClass(-1);
-  if (mode === 'explain') {
+  if (tab_mode === 'explain') {
     FeatureBrushing(current_feature_brush, true);
   }
-  else if (mode === 'feedback') {
+  else if (tab_mode === 'feedback') {
     BrushRegex(true);
   }
 }
-function change_mode() {
-  mode = d3.select("#view-select").node().value
-  if (mode === "explain") {
-    ChangeVisibility(d3.selectAll(".top_statistics"), false);
-    ChangeVisibility(d3.selectAll(".top_feedback"), false);
-    ChangeVisibility(d3.select("#explain_selections"), true);
-    change_order(1);
-    GetPredictionAndShowExample(current_docs[selected_document].features, current_docs[selected_document].true_class);
-  }
-  else if (mode === "statistics") {
-    ChangeVisibility(d3.selectAll(".top_explain"), false);
-    ChangeVisibility(d3.selectAll(".top_feedback"), false);
-    ChangeVisibility(d3.selectAll(".top_statistics"), true);
-    ChangeVisibility(d3.select("#explain_selections"), false);
-  }
-  else if (mode === "feedback"){ 
-    ChangeVisibility(d3.selectAll(".top_explain"), false);
-    ChangeVisibility(d3.selectAll(".top_statistics"), false);
-    ChangeVisibility(d3.selectAll(".top_feedback"), true);
-    ChangeVisibility(d3.select("#explain_selections"), false);
-    ShowFeedbackExample(current_docs[selected_document]);
-  }
-}
 
+//function change_dataset() {
+//  dataset = d3.select("#dataset-select").node().value
+//  if(dataset === "train") {
+//    current_train = true;
+//    current_docs = train_docs;
+//    DrawStatistics("Train", train_statistics, train_statistics.confusion_matrix)
+//  }
+//  else {
+//    current_train = false;
+//    current_docs = test_docs;
+//    DrawStatistics("Validation", test_statistics, test_statistics.confusion_matrix)
+//  }
+//  AssignDots(svg_hist, current_docs);
+//  GetPredictionAndShowExample(current_docs[0].features, current_docs[0].true_class);
+//  ShowFeedbackExample(current_docs[selected_document]);
+//  ShowDatabinForClass(-1);
+//  if (mode === 'explain') {
+//    FeatureBrushing(current_feature_brush, true);
+//  }
+//  else if (mode === 'feedback') {
+//    BrushRegex(true);
+//  }
+//}
+//function change_mode() {
+//  mode = d3.select("#view-select").node().value
+//  if (mode === "explain") {
+//    ChangeVisibility(d3.selectAll(".top_statistics"), false);
+//    ChangeVisibility(d3.selectAll(".top_feedback"), false);
+//    ChangeVisibility(d3.select("#explain_selections"), true);
+//    change_order(1);
+//    GetPredictionAndShowExample(current_docs[selected_document].features, current_docs[selected_document].true_class);
+//  }
+//  else if (mode === "statistics") {
+//    ChangeVisibility(d3.selectAll(".top_explain"), false);
+//    ChangeVisibility(d3.selectAll(".top_feedback"), false);
+//    ChangeVisibility(d3.selectAll(".top_statistics"), true);
+//    ChangeVisibility(d3.select("#explain_selections"), false);
+//  }
+//  else if (mode === "feedback"){
+//    ChangeVisibility(d3.selectAll(".top_explain"), false);
+//    ChangeVisibility(d3.selectAll(".top_statistics"), false);
+//    ChangeVisibility(d3.selectAll(".top_feedback"), true);
+//    ChangeVisibility(d3.select("#explain_selections"), false);
+//    ShowFeedbackExample(current_docs[selected_document]);
+//  }
+//}
+
+var tab_mode = "explain";
 function tab_change_explain() {
-  console.log("TAB CHANGE")
+  tab_mode = "explain";
+
   ChangeVisibility(d3.selectAll(".top_statistics"), false);
   ChangeVisibility(d3.selectAll(".top_feedback"), false);
   ChangeVisibility(d3.select("#explain_selections"), true);
@@ -1018,7 +1046,8 @@ function tab_change_explain() {
 }
 
 function tab_change_statistics() {
-  console.log("TAB CHANGE")
+  tab_mode = "statistics";
+
   ChangeVisibility(d3.selectAll(".top_explain"), false);
   ChangeVisibility(d3.selectAll(".top_feedback"), false);
   ChangeVisibility(d3.selectAll(".top_statistics"), true);
@@ -1026,7 +1055,8 @@ function tab_change_statistics() {
 }
 
 function tab_change_feedback() {
-  console.log("TAB CHANGE")
+  tab_mode = "feedback";
+
   ChangeVisibility(d3.selectAll(".top_explain"), false);
   ChangeVisibility(d3.selectAll(".top_statistics"), false);
   ChangeVisibility(d3.selectAll(".top_feedback"), true);
