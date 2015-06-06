@@ -225,7 +225,6 @@ function RunRegex() {
           // update_saved_regex()
           FeatureBrushing(current_feature_brush, true)
           current = 0;
-          confusion_matrix.populateMatrix(test_statistics.confusion_matrix)
           set_doc_ids(train_docs);
           set_doc_ids(test_docs);
           // TODO: tirar os numeros, e nao ta assigning doc_id de nada.
