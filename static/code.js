@@ -1706,7 +1706,16 @@ function change_order(changed_select) {
   //sel1 = d3.select("#explain-1").node().value
   //sel2 = d3.select("#explain-2").node().value
   sel2 = "text";
-  sel3 = d3.select("#explain-3").node().value
+
+  prob_switch = document.getElementById("myprobabilities_onoffswitch");
+
+  if (prob_switch.checked) {
+    sel3 = "prediction";
+  } else {
+    sel3 = "feature_contribution";
+  }
+
+  //sel3 = d3.select("#explain-3").node().value
   //top_divs_order[sel3] = 3
   //top_divs_order[sel2] = 2
   //top_divs_order[sel1] = 1

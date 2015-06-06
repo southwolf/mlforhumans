@@ -85,10 +85,6 @@
         <span class="editfeatures_onoffswitch-switch"></span>
     </label>
 </div>
-<select id="explain-3" onChange="change_order(3);">
-  <option value="prediction" selected>Prediction probabilities</option>
-  <option value="feature_contribution">Feature contributions</option>
-</select>
 
 </div>
 
@@ -100,6 +96,13 @@
     </div>
     <div id="explain_text_div" class="top_explain top_mid visible"> </div>
     <div id="prediction_bar_div" class="top_explain top_right visible">
+      <div class="probabilities_onoffswitch">
+          <input type="checkbox" name="probabilities_onoffswitch" class="probabilities_onoffswitch-checkbox" id="myprobabilities_onoffswitch" onchange="change_order(3)" checked>
+          <label class="probabilities_onoffswitch-label" for="myprobabilities_onoffswitch">
+              <span class="probabilities_onoffswitch-inner"></span>
+              <span class="probabilities_onoffswitch-switch"></span>
+          </label>
+      </div>
       <svg id="prediction_bar"></svg>
     </div>
     <div id="explain_features_div" class="top_explain hidden"> </div>
