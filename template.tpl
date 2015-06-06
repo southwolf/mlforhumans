@@ -3,7 +3,9 @@
 <head>
     <script type="text/javascript" src="d3.min.js"></script>
     <script type="text/javascript" src="lodash.js"></script>
+    <script type="text/javascript" src="intro.min.js"></script>
     <link rel="stylesheet" type="text/css" href="style.css">
+    <link rel="stylesheet" type="text/css" href="introjs.min.css">
 </head>
 
 <body>

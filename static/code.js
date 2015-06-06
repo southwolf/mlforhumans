@@ -77,12 +77,41 @@ function LoadJson() {
         //d3.select("#view-select").node().value = "explain";
         change_mode();
         StopLoading();
+        Intro();
       }
   };
 xhr.send();
 }
 
 LoadJson()
+
+function Intro() {
+  var current_step = 0;
+  d3.select("#body").attr("data-intro", "Welcome! This visualization will help you understand and interact with your classification algorithm.").attr("data-step", current_step++);
+  d3.select("#dataset-select").attr("data-intro", "This ").attr("data-step", current_step++);
+  d3.select("#databin_div").attr("data-intro", "Welcome! This is ").attr("data-step", current_step++).attr("data-position", "top");
+  d3.select("#legend_div").attr("data-intro", "Welcome! This is ").attr("data-step", current_step++).attr("data-position", "bottom");
+  d3.select("#legend_div").selectAll("text").each(function(d, i) {
+    if (i == 1) {
+      d3.select(this).attr("data-intro", "Hello").attr("data-step", current_step++);
+    }
+  });
+
+  introJs().onchange(function(targetElement) {
+    //switch(targetElement.getAttribute("data-step")) {
+    //  case "feature_brush_div":
+    //    ChangeVisibility(d3.select("#textarea_div"), false);
+    //    ChangeVisibility(d3.select("#feature_brush_div"), true);
+    //    d3.select("#explain_text_div").attr("data-intro", "This is not so nice now").attr("data-step", 4);
+    //  break;
+    //  case "textarea_div":
+    //    ChangeVisibility(d3.select("#feature_brush_div"), false);
+    //    ChangeVisibility(d3.select("#textarea_div"), true);
+    //  break;
+    //}
+  }).start();
+  //introJs().start();
+}
 function NotInTrain(feature) {
   return typeof feature_attributes[feature] == 'undefined';
 }
@@ -1226,6 +1255,7 @@ function DrawLegend() {
     .attr("x", function(d, i) { return legend_x + 30 + (i % elements_per_line) *140;})
     .attr("y", function(d, i) { return legend_y + 20 + Math.floor(i / elements_per_line) * 15; })
     .style("font-size", "14px")
+    .on("click", function(d) { ShowDatabinForClass(class_names.indexOf(d)); })
     .text(function(d) { return d;});
   legend.append("rect")
     .attr("x", function(d, i) { return legend_x + 15 + (i % elements_per_line) *140;})
