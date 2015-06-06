@@ -78,6 +78,13 @@
 
 <div id="ops_container">
 <div id="explain_selections">
+      <div class="probabilities_onoffswitch" style="float:right;">
+          <input type="checkbox" name="probabilities_onoffswitch" class="probabilities_onoffswitch-checkbox" id="myprobabilities_onoffswitch" onchange="change_order(3)" checked>
+          <label class="probabilities_onoffswitch-label" for="myprobabilities_onoffswitch">
+              <span class="probabilities_onoffswitch-inner"></span>
+              <span class="probabilities_onoffswitch-switch"></span>
+          </label>
+      </div>
 <div class="editfeatures_onoffswitch">
     <input type="checkbox" name="editfeatures_onoffswitch" class="editfeatures_onoffswitch-checkbox" id="myeditfeatures_onoffswitch" onchange="change_order(1)" checked>
     <label class="editfeatures_onoffswitch-label" for="myeditfeatures_onoffswitch">
@@ -96,15 +103,9 @@
     </div>
     <div id="explain_text_div" class="top_explain top_mid visible"> </div>
     <div id="prediction_bar_div" class="top_explain top_right visible">
-      <div class="probabilities_onoffswitch">
-          <input type="checkbox" name="probabilities_onoffswitch" class="probabilities_onoffswitch-checkbox" id="myprobabilities_onoffswitch" onchange="change_order(3)" checked>
-          <label class="probabilities_onoffswitch-label" for="myprobabilities_onoffswitch">
-              <span class="probabilities_onoffswitch-inner"></span>
-              <span class="probabilities_onoffswitch-switch"></span>
-          </label>
-      </div>
       <svg id="prediction_bar"></svg>
     </div>
+    <br>
     <div id="explain_features_div" class="top_explain hidden"> </div>
     <div id="feature_brush_div" class="top_explain hidden"> Active features: <br /></div>
 	  <div id="statistics_div" class="top_statistics"> </div>

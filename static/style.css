@@ -586,6 +586,7 @@ span ~ #tab > ul li:first-child a,
 .probabilities_onoffswitch {
     position: relative; width: 200px;
     -webkit-user-select:none; -moz-user-select:none; -ms-user-select: none;
+    margin-right: 20%;
 }
 .probabilities_onoffswitch-checkbox {
     display: none;
