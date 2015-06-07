@@ -96,6 +96,7 @@ options = {"enableAnimation":false,
 "showNavigation": true,
 "delay": -1,
 "tripIndex": 0,
+"showCloseBox": true,
 "tripTheme" : 'black'}
 var trip = new Trip([
     {
