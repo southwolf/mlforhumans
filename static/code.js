@@ -58,7 +58,7 @@ function LoadJson() {
         min = 0;
         max = 1;
         size = d3.scale.linear().domain([min, max]).range([15, 40]);
-        top_part_height = parseInt(d3.select("#explain_text_div").style("height"));
+        top_part_height = parseInt(d3.select("#explain_text_div").style("height")) + parseInt(d3.select("#top_part_options_div").style("height"));
         top_divs_width = parseInt(d3.select("#explain_text_div").style("width"));
         DrawLegend();
         SetupDatabin();
