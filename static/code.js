@@ -422,7 +422,6 @@ function GetRegexResults(regex) {
           current_regex = JSON.parse(xhr.responseText);
           BrushRegex();
           ShowFeedbackExample(current_docs[selected_document]);
-          console.log("Got regex results");
           StopLoading();
       }
   };
@@ -975,11 +974,9 @@ function DatabinMaxMinAndDivisor() {
  //var bin_square_width = Math.ceil(max_in_a_bin/ (squares_in_height - 2));
  var space_between_bins = 2;
  var bin_square_width = Math.min(Math.floor((hist_width / class_names.length) / real_square_size) - space_between_bins, 40);
- console.log(bin_square_width);
  //bin_width = 20;
  bin_width_sort_by_class = bin_square_width;
  rows_below = Math.max(7, Math.ceil(max_neg_bin / bin_square_width))
- console.log("Below" + rows_below);
  databin_y_divisor = hist_height - rows_below * real_square_size;
  space_below = rows_below * real_square_size;
  space_above = hist_height - space_below - 1;
@@ -1135,7 +1132,6 @@ function map_examples_to_bin(docs, focus_class) {
     reduce_nbins = false;
     previous_correct_index = 0;
     previous_wrong_index = 0;
-    console.log("Bin size " + n_bins);
     for (var i = 1; i <= n_bins; ++i) {
       correct_in_bin = binaryIndexOf.call(sorted_correct, i / n_bins - 0.000000000001) - previous_correct_index + 1;
       wrong_in_bin = binaryIndexOf.call(sorted_wrong, i / n_bins - 0.000000000001) - previous_wrong_index + 1;
@@ -1304,7 +1300,6 @@ function ShowDatabinForClass(focus_class) {
   // Then map them to an actual x/y position within [0, 1]
   databin_x_scale.domain([0, n_bins]);
   var baseline = databin_y_divisor;
-  console.log("REAL " + real_square_size);
   dots.transition().duration(1000)
        .attr("x", function(d) {
          return databin_x_scale(d.pred_bin) + (real_square_size) * d.bin_x;
@@ -1627,7 +1622,7 @@ function Matrix(svg_object, height) {
   //this.mouseoverColor = defaultMouseover;
   //this.cellColor = defaultRegular;
   this.svgContainerSize = (this.cellSize * this.numClasses) + this.strokeSize * 2 + this.labelContainerSize + this.axisLabelContainerSize;
-  console.log("Height: " + height + " new: " + (this.svgContainerSize + this.footerContainerSize));
+  //console.log("Height: " + height + " new: " + (this.svgContainerSize + this.footerContainerSize));
   this.svg = svg_object
         .attr("class", "confusion_matrix")
         .attr("width", this.svgContainerSize)
@@ -1922,7 +1917,6 @@ top_divs = d3.selectAll(".top_explain").data(["textarea", "text", "prediction", 
 var visible;
 /* Changing order of explain predictions */
 function change_order(changed_select) {
-  console.log("CHANGE ORDEr");
   // Hide everything
   ChangeVisibility(d3.selectAll(".top_explain").filter(".visible"), false)
 
