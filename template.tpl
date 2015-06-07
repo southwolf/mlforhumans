@@ -3,9 +3,10 @@
 <head>
     <script type="text/javascript" src="d3.min.js"></script>
     <script type="text/javascript" src="lodash.js"></script>
-    <script type="text/javascript" src="intro.min.js"></script>
+    <script type="text/javascript" src="jquery-1.11.3.min.js"></script>
+    <script type="text/javascript" src="trip.min.js"></script>
     <link rel="stylesheet" type="text/css" href="style.css">
-    <link rel="stylesheet" type="text/css" href="introjs.min.css">
+    <link rel="stylesheet" type="text/css" href="trip.min.css">
 </head>
 
 <body>
