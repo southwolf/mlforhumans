@@ -22,6 +22,8 @@ breaklinks=true,
 \definecolor{Orange}{rgb}{1,0.5,0}
 \newcommand{\todo}[1]{\textsf{\textbf{\textcolor{Orange}{[[#1]]}}}}
 
+\usepackage{subfig}
+
 \pagenumbering{arabic}  % Arabic page numbers for submission.  Remove this line to eliminate page numbers for the camera ready copy
 
 \begin{document}
@@ -59,7 +61,7 @@ breaklinks=true,
 %   you have submitted to SIGCHI conferences before, for some format
 %   details have changed relative to previous years. These include the
 %   formatting of table captions, the formatting of references, and a
-%   requirement to include ACM DL indexing information.
+%   requirement to include ACM DL indexing informati:n.
 % \end{abstract}
 
 % \keywords{put author keywords here} 
@@ -236,6 +238,55 @@ an easy interpretation: if all of the words that are explained as important
 were removed, the prediction changes.
 
 \section{The Databin}
+\begin{figure}
+  \subfloat[Likelihood binning]{\includegraphics[width=.5\textwidth]{likelihood_bin}}\\
+  \subfloat[Class binning]{\includegraphics[width=.5\textwidth]{class_bin}}
+  \caption{Two databin modes}
+  \label{fig:databin}
+\end{figure}
+
+The main tool we use for visualizing a dataset as a whole is the
+\textit{databin} (see Figure~\ref{fig:databin}). With this visualization, the
+user is given an overview of how the model classifies each document. In
+addition, the databin is interactive, and allows users to examine certain
+documents by clicking on them, or seeing more information about an example by
+hovering over it. With the encodings we've chosen, it is immediately evident
+what documents the model may be overfitting on, thereby speeding up the Explain
+and Feedback steps.
+
+This visualization is similar to and inspired by \cite{modeltracker}, but with
+several notable changes. A major limitation of Modeltracker is that it cannot
+handle more than two classes, but most non-trivial machine learning
+classification problems consist of multiple classes. Hence, we've used different
+encodings and interactions in order to represent the performance on multiple
+classes in a two-dimensional space. In addition, in contrast to the positional
+encodings used by Modeltracker and our initial databin mode (\textit{likelihood
+binning}), we've added an additional mode (which we call \textit{class
+binning}). In this mode, examples can be binned by class instead of their model
+likelihood. 
+
+\textbf{Likelihood binning} In this mode, each example $x_i$ is represented with
+a single square whose color is determined by the true class of the example $y_i$
+We encode the likelihood $p(y\ |\ x_i)$ of an example $x_i$ belonging to a
+particular class $y$ with the horizontal bin of the square. The class $y$
+can be changed by clicking on the corresponding legend entry, and any changes
+are animated. We use the vertical position to encode whether or not an example
+was classified correctly. All examples whose true class $y_i$ equals the model's
+prediction $y$ are binned above the horizontal line, and vice versa for
+mistakes. This makes it very simple to see which examples the model has
+classified incorrectly. For instance, the model is very confident on examples at
+either extreme of the horizontal. If there exist some examples below the
+horizontal line at these extremes, then the model has made a very confident
+mistake, which is usually indicitive of some underlying problem that needs to be
+rectified by a user.
+
+\textbf{Class binning} We can use an alternative horizontal encoding to see the
+performance on all classes in parallel. Instead of using the likelihood to
+encode which bin an example, we simply bin each class separately. We still use
+the same vertical and color encodings. In this mode, it is simple to see if a
+model is underperforming on one class in particular.
+
+
 \section{Explaining individual predictions}
 \section{Global statistics}
 \section{Feedback}
