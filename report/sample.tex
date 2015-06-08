@@ -4,6 +4,7 @@
 \usepackage{graphics}
 \usepackage{color}
 \usepackage[pdftex]{hyperref}
+\usepackage[]{algorithm2e}
 \hypersetup{%
 pdftitle={Your Title},
 pdfauthor={Your Authors},
@@ -187,6 +188,53 @@ extent), and (6) being model-agnostic - i.e. working with any machine learning
 classification model.
 
 \section{The Backend, Feature Importance}
+We wrote the backend of our visualization in python, on top of
+scikit-learn\footnote{http://scikit-learn.org/}. We used different text dataset
+corpora, but in this report we will restrict our examples to subsets of the 20
+newsgroups dataset\footnote{http://qwone.com/~jason/20Newsgroups/}. This is a
+widely used dataset in the literature, and it consists of distinguishing between
+emails sent to different newsgroups. In this report, we either use a 2-class
+subset which tries to distinguish between Christianity and Atheism newsgroups,
+or a 3-class subset which tries to distinguish between ``windows-misc'',
+``ibm-hardware'' and ``windows-x''. As a classification algorithm, all of our
+examples use L2 regularized logistic regression, although any classification
+algorithms that produces class prediction probabilities can be used in our tool.
+
+In order to assess the importance of a feature (in our case, word) to a
+prediction, we follow a greedy procedure. We assume our classifier can return
+$P(Y=y|x)$ for any $x$, and that the classifier predicts the example as $y$
+(i.e. $pred(x) = y$). If
+the example being explained is $x$, we start with $x' = x$ and define $x'_{-w}$
+as a copy of $x'$ without feature $w$. We follow the procedure outlined in
+Algorithm 1, which removes words from $x$ until the class changes. The
+importance of a word is then defined as how much it influences the prediction if
+it is re-added to $x$ afterwards.
+
+\begin{algorithm}
+ let $x' = x$\;
+ let $words = list()$\;
+ \While{$pred(x') = y$ and $x'$ is not empty}{
+  $w' = {\operatorname{argmax}}_w \quad P(Y=y|x') - P(Y=y | x'_{-w})$\;
+  append $w'$ to $words$\;
+  \If{$pred(x') \ne y$}{
+   Append to $words$ every word $w'$ such that $pred(x'_{-w'}) \ne y$\, and
+   remove every such $w'$ from $x'$;
+   }
+ $x' = x'_{-w'}$\;
+ }
+ \ForEach{$w \in words$} {
+  Importance$(w)$ = $p(Y=y | x'_{-w}) - p(Y=y | x')$;
+ }
+ \caption{Explain prediction $y$ for example $x$}
+\end{algorithm}
+
+Although it is greedy and approximate, this algorithm has the following
+advantages: (1) it is relatively fast, assuming fast predictions are available
+(which is usually the case), (2) it is general, so that any classifier that
+outputs a prediction probability can be explained, and (3) the explanation has
+an easy interpretation: if all of the words that are explained as important
+were removed, the prediction changes.
+
 \section{The Databin}
 \section{Explaining individual predictions}
 \section{Global statistics}
