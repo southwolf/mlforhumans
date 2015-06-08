@@ -15,7 +15,7 @@ In reality, we would like the model to learn to place high weights on features r
 We have produced an interactive visualization that lets users better understand what their algorithms are actually doing. We have included several datasets as an example, although this tool can be used with other text corpora. For the model, we used a standard L2 regularized logistic regression, a baseline for many papers, such as [this recent one](http://www.cs.cmu.edu/~dyogatam/papers/yogatama+smith.icml2014.pdf). Our visualization itself is a combination of the raw dataset and the machine learning model learned from it.
 
 Our visualization tool allows a user to:
-* Quickly see what words the model thinks are most important for each class (in this case, the 'importance' is measured by the logistic regression weights).
+* Quickly see what words the model thinks are most important for each class.
 * Interactively edit a document, and see how the prediction for that particular document changes.
 * Edit the entire dataset using search and replace to see if the model learns something different
 * Hover over particular words (by hovering), to better understand why the model is learning what it is learning by  way of summary statistics in the training data. We show the frequency of the word, and the class distribution in the training data.
@@ -26,7 +26,7 @@ When running the visualization for the first time, a detailed tutorial is given 
 
 ## Running Instructions
 
-Access our visualization at [this link](https://cse512-15s.github.io/a3-marcotcr-shrainik-bdol/). Generate a JSON-ized version of the dataset with `python server.py -d 3ng -j static/3ng.json`, and run the server with `python server.py -d 3ng -l static/3ng.json`. Access the tool at http://localhost:8870/.
+Generate a JSON-ized version of the dataset with `python server.py -d 3ng -j static/3ng.json`, and run the server with `python server.py -d 3ng -l static/3ng.json`. Access the tool at http://localhost:8870/.
 
 ## Development Process and breakdown
 
