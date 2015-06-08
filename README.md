@@ -5,7 +5,6 @@
 
 1. Marco Tulio Ribeiro marcotcr@cs.washington.edu
 2. Brian Dolhansky bdol@cs.washington.edu
-3. 
 
 ## Overview
 
