@@ -33,7 +33,7 @@ breaklinks=true,
 
 % use this command to override the default ACM copyright statement 
 % (e.g. for preprints). Remove for camera ready copy.
-\toappear{Progress report.}
+\toappear{Final project Paper}
 
 \title{A Visualization Tool for Human-in-the-loop Machine Learning}
 \numberofauthors{2}
@@ -68,6 +68,53 @@ breaklinks=true,
 %TODO:
 %It seems to be a consensus amongst machine learning researchers and
 %practitioners that ``we need to spend more time with the data'', ...
+
+\section{Introduction}
+As the amount of data produced by the world’s population increases year by year,
+the need for efficient ways to process and learn from that data arises. The
+field of machine learning, a marriage of statistics and computer science, is one
+attempt at distilling large amounts of data into a usable format. However, many
+machine learning models are difficult to interpret, or they learn something
+different from the true desire of their designers. 
+
+Our project brings a human into the “learning loop” (see Figure \ref{hmloop}) so
+that more accurate models can be produced. The idea is that we would start with
+a trained machine learning
+model (\emph{train} and \emph{model} boxes). The system (or the user) would then
+pick a set of examples and/or summary statistics to look at(\emph{pick} box),
+which are then explained to the user in some way (\emph{explain box}). Having
+understood what the model's strengths and weaknesses, the user is in a position
+of providing some sort of feedback (\emph{feedback box}), which could be in the
+form of labeling more examples, adding or removing features, changing models,
+etc. The loop then starts again. This formulation of the problem encompasses
+techniques like active learning (amongst many others), where \emph{pick} is the
+most important step, and \emph{feedback} involves labeling examples, while
+\emph{explain} is ignored.
+
+\begin{figure}[hb]
+\includegraphics[width=.5\textwidth]{feedback_loop_cropped.pdf}
+\caption{Machine learning loop}
+\label{hmloop}
+\end{figure}
+
+The critical part in the loop where visualization comes is the \emph{explain}
+box. This involves giving an overview of what the models are learning, as well
+as explaining individual predictions. This is the primary focus of this work -
+along with a simple mechanism for \textbf{feedback}, which is required if we are
+to have a full loop. We focus primarily on text data, and on the multi-class
+classification task. For simplicity, we assume that the bag-of-words
+representation is used, although we plan on relaxing this assumption in future
+work, as our visualizations generally do not depend on it.
+
+Our tool has three top ``views'', which share a common visualization underneath
+that allows the users to interact with the dataset. The first view is meant to explain
+individual predictions to users, in terms of feature contributions. The second
+view gives the users a global ``summary'' of the model, in the form of summary
+statistics and an interactive confusion matrix. Finally, the third view allows
+the user to give feedback to the model. The kind of feedback we allow currently
+concerns mainly data cleaning - which we argue is already important enough to
+significantly improve most text classifiers.
+
 
 \section{Literature Review}
 The statement that understanding what machine learning models are really
@@ -132,13 +179,19 @@ most participants in their study really wanted - being able to change something
 and seeing the results right away. 
 
 Our main contributions are combining all of the following in one system: (1)
-treating the process as a loop and allowing for feedback (this may be future
-work, as it is less related to visualization), (2) explaining individual
+treating the process as a loop and allowing for feedback, (2) explaining individual
 predictions - visually and interactively, (3) allowing for multiclass
 classification, (4) interactivity in both the individual prediction explanations
-and ``global'' model explanations, (5) handling larger datasets, and (6) being
-model-agnostic - i.e. working with any machine learning classification model.
-\pagebreak
+and ``global'' model explanations, (5) handling larger datasets (to a certain
+extent), and (6) being model-agnostic - i.e. working with any machine learning
+classification model.
+
+\section{The Backend, Feature Importance}
+\section{The Databin}
+\section{Explaining individual predictions}
+\section{Global statistics}
+\section{Feedback}
+\section{Conclusions / Future work}
 
 % \section{Page Size and Columns}
 % 
