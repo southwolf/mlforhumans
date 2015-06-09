@@ -1,0 +1,78 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+
+<head>
+  <title>CSE512: Data Visualization</title>
+  <meta name="robots" content="index,follow" />
+  <link rel="stylesheet" type="text/css" href="http://courses.cs.washington.edu/courses/cse512/15sp/style.css"/>
+
+</head>
+
+<body>
+  <div class='content wider'>
+
+    <div class='title'>
+      <a href="http://courses.cs.washington.edu/courses/cse512/15sp/"><strong>CSE512</strong></a>
+         Projects
+         <small>(Spring 2015)</small>
+    </div>
+    <br/>
+
+    <div class='pub' data-spy="scroll" data-target=".navbar">
+
+      <h1 class="title">A visualization tool for human-in-the-loop machine
+        learning</h1>
+      <div class="authors">
+        <a href="http://homes.cs.washington.edu/~marcotcr/">Marco Tulio Ribeiro</a>,
+        <a href="http://briandolhansky.com/">Brian Dolhansky</a>
+      </div>
+
+      <div class="figure">
+        <img src="summary.png" width="100%"/>
+        <div class="caption">A tool that allows for deep inspection of machine learning models.</div>
+      </div>
+
+      <p>
+      Many people use machine learning algorithms blindly, just looking at summary statistics (i.e. accuracy). However, many times a model learns (what humans deem to be) irrelevant information, like email addresses or names in an email corpus. This type of behavior is called typically called overfitting, and is in general undesirable, as the model cannot be generalized to other datasets.
+      <br><br>
+
+In reality, we would like the model to learn to place high weights on features relevant to the classification task. For instance, if we wish to predict whether an email was posted to a Windows or OS X list, we would like the model to place high weights on words like "Microsoft" and "Apple". If the model doesn't do this initially, then we must make changes either to the model or to the data so that the model can be applied to documents outside of the training corpus. That is, we introduce a human into the development loop.
+</p>
+      <div class="figure">
+        <img src="feedback_loop_cropped.png" width="100%"/>
+        <div class="caption">Human-in-the-loop machine learning</div>
+      </div>
+
+<p>
+We have produced an interactive visualization that inserts the user into the loop and lets them  better understand what their algorithms are actually doing. We have included several datasets as an example, although this tool can be used with other text corpora. For the model, we used a standard L2 regularized logistic regression, a baseline for many papers, such as this recent one. Our visualization itself is a combination of the raw dataset and the machine learning model learned from it.
+      </p>
+      
+      <h2>Software</h2>
+      <p>
+      Our tool requires a server that trains a model and runs the machine learning analyses. You can get the full package <a href="https://github.com/CSE512-15S/fp-marcotcr-bdol/tree/master">here</a>, and detailed setup instructions are available in our project's README file. In addition, the visualization itself includes a short tutorial so that you can familiarize yourself with the tool.
+      </p>
+
+      <h2>Materials</h2>
+      <div class="links">
+        <a href="final/paper-marcotcr-bdol.pdf" >PDF</a>
+        |
+        <a href="final/poster-marcotcr-bdol.pdf" >Poster</a>
+        |
+        <a href="https://github.com/CSE512-15S/fp-marcotcr-bdol/tree/master">Code</a>
+      </div>
+
+
+      <div class='footer'>
+        <a href='http://cs.washington.edu'>Computer Science &amp; Engineering</a> -
+        <a href='http://www.washington.edu'>University of Washington</a>
+      </div>
+    </div>
+    <br/>
+    <br/>
+
+
+  </div>
+</body>
+
+</html>
+
