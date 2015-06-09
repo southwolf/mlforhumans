@@ -341,6 +341,33 @@ impact - one is able to remove very common words, remove parts of the document
 that may lead to overfitting (e.g. headers in the 20 newsgroups dataset), and
 etc.
 \section{Conclusions / Future work}
+In this work, we propose and implement a tool that enables human-in-the-loop
+machine learning. We primarily focused on the ``explain'' aspect, which allows
+the practitioner to understand what kind of concepts the system is learning, and
+why. We also provide a simple form of feedback, which allows for data cleaning.
+We received a lot of positive feedback when presenting the poster for this work.
+Some notable comments were to the effect of ``this is great - I took a machine
+learning course last quarter and it really bothered me that I didn't know what
+it was learning, or how to improve it'', or ``are you guys thinking of turning
+this into a startup?''.
+
+As for future work, an obvious next step is doing a user study to validate the
+usefulness of our tool. We claim that our system allows users to come up with
+models that generalize better, so a study where models are evaluated on a held
+out dataset that was collected in a different manner than the training and
+validation datasets seems like the right approach. Another line of work would be
+overcoming the databin size limitation, by aggregating nearby points into
+``clusters'', which could then be expanded by hovering or clicking. More work on
+the feedback side of the picture would greatly improve the usefulness of the
+tool. One can imagine the full range of feature engineering being done in the
+tool - and maybe even model and hyperparameter selection. Someone in the poster
+session suggested that we allow for explanations of classes other than the
+predicted one - so that one could know how to ``force'' the model to predict the
+right class, and not only to stop predicting the wrong one. Finally, one last
+line of work would be to expand this to other kinds of data, such as images and
+tabular data, which are widely used in the scientific community.
+
+
 \bibliographystyle{abbrv}
 \bibliography{sample}
 
