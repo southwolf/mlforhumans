@@ -295,7 +295,54 @@ documents. While these measures still donot allow for huge datasets, it makes th
 visualization more flexible to medium-sized datasets.
 
 \section{Explaining individual predictions}
-% TODO: Add some anecdotal evidence that this is useful
+It is helpful to look at specific examples to get a finer-grained idea of what
+the model is learning. One particularly helpful method is to select items from
+the databin that have very high or very low likelihood but are classified
+incorrectly. These documents can be selected, and they are displayed in the
+upper portion of our visualization. An example of this portion of our
+visualization is given in Figure~\ref{fig:explain_pred}.
+
+\begin{figure}
+  \includegraphics[width=.5\textwidth]{explain_pred}
+  \caption{The ``Explain prediction'' window.}
+  \label{fig:explain_pred}
+\end{figure}
+
+The text is interactive; that is, a user can edit the text in the left window
+and apply it. The document will then be (non-destructively) reclassified, and
+the prediction probabilities on the right are animated to show changes. This
+technique can be used to determine the effectiveness of specific changes, like
+removing certain features. In addition, the user can hover over a specific
+feature to see the distribution of that feature throughout the training set.
+This is illustrated in Figure~\ref{fig:feature_explain}. A user can ``brush''
+certain features in this window by clicking on them. One or more features can be
+selected, and the examples that contain these features are ``brushed'' in the
+databin as in Figures~\ref{fig:statistics} and \ref{fig:feedback}.
+
+The importance of the features are encoded with color and size so that they can
+quickly be discerned from the document. Intuitively, if all of the colored words
+were removed from the example, the example's classification would change.
+
+\begin{figure}
+  \subfloat[Feature hover]{\includegraphics[width=.5\textwidth]{feature_hover}}\\
+  \centering
+  \subfloat[Feature
+  importance]{\includegraphics[width=.3\textwidth]{feature_importance}}\\
+  \caption{The statistics that are shown when a user hovers over a feature (a)
+    and the overall importance of features in the example (b). Note
+    that this particular example reveals an issue with the model - the irrelevant
+    feature ``mit'' appears mostly in the ``windows-x'' group, but it is not
+    relevant to distinguishing between Windows and IBM hardware.}
+  \label{fig:feature_explain}
+\end{figure}
+
+An example of the usefulness of this type of inspection is given in
+Figure~\ref{fig:feature_explain}. The irrelevant feature ``mit'' is given high
+weight simply because it appears mostly within the ``windows-x'' class. In
+addition, other irrelevant features like email header keywords are marked as
+important. The user could then use this information to apply specific feedback
+to the model.
+
 \section{Global statistics}
 \begin{figure}
   \subfloat[Cells in the confusion matrix are
