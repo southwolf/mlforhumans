@@ -31,6 +31,8 @@ Generate a JSON-ized version of the dataset with `python server.py -d 3ng -j sta
 
 ## Development Process and breakdown
 
+Note that final deliverables can be found in the "final" directory.
+
 A rough breakdown of our development process and workload is:
 * Marco: Generalizing the machine learning portion of the tool so that it runs on top of scikit-learn (a general-purpose Python ML library). This way it is simpler to plug and play different ML models. Added additional statistical tools such as the confusion matrix and "feature brushing." Implemented the dataset search and replace tool.
 * Brian: Added additional databin modes. Website design and layout. Revamped the graphics from A3.
