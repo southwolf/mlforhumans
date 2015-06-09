@@ -84,7 +84,7 @@ Our project brings a human into the “learning loop” (see Figure \ref{hmloop}
 that more accurate models can be produced. The idea is that we would start with
 a trained machine learning
 model (\emph{train} and \emph{model} boxes). The system (or the user) would then
-pick a set of examples and/or summary statistics to look at(\emph{pick} box),
+pick a set of examples and/or summary statistics to look at (\emph{pick} box),
 which are then explained to the user in some way (\emph{explain box}). Having
 understood what the model's strengths and weaknesses, the user is in a position
 of providing some sort of feedback (\emph{feedback box}), which could be in the
@@ -99,11 +99,12 @@ most important step, and \emph{feedback} involves labeling examples, while
 \caption{Machine learning loop}
 \label{hmloop}
 \end{figure}
+\pagebreak
 
 The critical part in the loop where visualization comes is the \emph{explain}
 box. This involves giving an overview of what the models are learning, as well
 as explaining individual predictions. This is the primary focus of this work -
-along with a simple mechanism for \textbf{feedback}, which is required if we are
+along with a simple mechanism for \emph{feedback}, which is required if we are
 to have a full loop. We focus primarily on text data, and on the multi-class
 classification task. For simplicity, we assume that the bag-of-words
 representation is used, although we plan on relaxing this assumption in future
@@ -188,6 +189,7 @@ classification, (4) interactivity in both the individual prediction explanations
 and ``global'' model explanations, (5) handling larger datasets (to a certain
 extent), and (6) being model-agnostic - i.e. working with any machine learning
 classification model.
+\pagebreak
 
 \section{The Backend, Feature Importance}
 We wrote the backend of our visualization in python, on top of
@@ -267,7 +269,7 @@ likelihood.
 
 \textbf{Likelihood binning} In this mode, each example $x_i$ is represented with
 a single square whose color is determined by the true class of the example $y_i$
-We encode the likelihood $p(y\ |\ x_i)$ of an example $x_i$ belonging to a
+We encode the likelihood $p(Y=y\ |\ x_i)$ of an example $x_i$ belonging to a
 particular class $y$ with the horizontal bin of the square. The class $y$
 can be changed by clicking on the corresponding legend entry, and any changes
 are animated. We use the vertical position to encode whether or not an example
