@@ -1,6 +1,8 @@
 # A visualization tool for human-in-the-loop machine learning
 ===============
 
+![Human-in-the-loop ML](summary.png)
+
 ## Team Members
 
 1. Marco Tulio Ribeiro marcotcr@cs.washington.edu
